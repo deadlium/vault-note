@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability Reporting
+    url: https://github.com/deadlium/vault-note/security/policy
+    about: Please report security vulnerabilities privately according to our security policy.
+  - name: GitHub Discussions & Questions
+    url: https://github.com/deadlium/vault-note/discussions
+    about: Ask questions, share ideas, and chat with the VaultNote community.
