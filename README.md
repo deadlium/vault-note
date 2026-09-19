@@ -1,4 +1,4 @@
-# <p align="center"><img src="logo.png" alt="VaultNote Logo" width="120" /><br>VaultNote</p>
+# <p align="center"><img src="assets/icon.png" alt="VaultNote Logo" width="120" /><br>VaultNote</p>
 
 <p align="center">
   <strong>Your secrets. Your device. No cloud required.</strong>

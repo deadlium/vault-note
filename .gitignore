@@ -57,3 +57,7 @@ coverage/
 *.swp
 *.swo
 *~
+commit.txt
+design/
+agent.md
+.claude/
