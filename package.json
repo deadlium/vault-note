@@ -1,0 +1,40 @@
+{
+  "name": "vault-note",
+  "version": "1.0.0",
+  "description": "Offline-first, zero-knowledge personal credentials and encrypted note vault for iOS & Android.",
+  "author": "VaultNote Contributors",
+  "license": "MIT",
+  "homepage": "https://github.com/deadlium/vault-note#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deadlium/vault-note.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deadlium/vault-note/issues"
+  },
+  "keywords": [
+    "vault",
+    "security",
+    "zero-knowledge",
+    "offline-first",
+    "react-native",
+    "expo",
+    "privacy",
+    "argon2id",
+    "aes-256-gcm",
+    "totp"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "expo": "~57.0.24",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  }
+}

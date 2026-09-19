@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, build]
+  pull_request:
+    branches: [main, master, build]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (if package.json exists)
+        run: |
+          if [ -f package.json ]; then
+            npm ci || npm install
+          else
+            echo "No package.json found; skipping dependency installation."
+          fi
+
+      - name: Verify strict offline integrity (Zero-Telemetry scan)
+        run: |
+          echo "Scanning repository for unauthorized analytics and telemetry patterns..."
+          FORBIDDEN_PATTERNS="firebase/analytics|@sentry|mixpanel|amplitude|segment|google-analytics"
+          if grep -rE "$FORBIDDEN_PATTERNS" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.github . ; then
+            echo "ERROR: Disallowed telemetry or tracking package detected!"
+            exit 1
+          else
+            echo "Offline integrity check passed: Zero telemetry detected."
+          fi
+
+      - name: Run ESLint
+        run: |
+          if [ -f package.json ]; then
+            npm run lint --if-present
+          fi
+
+      - name: TypeScript Typecheck
+        run: |
+          if [ -f package.json ]; then
+            npm run typecheck --if-present
+          fi
+
+      - name: Run Test Suite
+        run: |
+          if [ -f package.json ]; then
+            npm test --if-present -- --coverage
+          fi
