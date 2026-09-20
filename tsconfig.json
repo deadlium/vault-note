@@ -9,7 +9,8 @@
     "jsx": "react-native",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": [
     "**/*.ts",
