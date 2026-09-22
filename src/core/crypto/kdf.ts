@@ -1,7 +1,7 @@
 /**
  * VaultNote Memory-Hard Key Derivation Function (KDF) Module
  * Implements Argon2id with PBKDF2-SHA256 fallback
- * Phase 1: Cryptographic Perimeter (Day 2)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { argon2id } from '@noble/hashes/argon2.js';

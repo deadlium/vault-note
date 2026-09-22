@@ -1,6 +1,6 @@
 /**
  * VaultNote Cryptographic Engine Barrel Export
- * Phase 1: Cryptographic Perimeter (Day 2)
+ * Phase 1: Cryptographic Perimeter
  */
 
 export * from './types';

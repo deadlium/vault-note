@@ -1,7 +1,7 @@
 /**
  * VaultNote Master Password Onboarding & First Time Setup Screen
  * Pixel-matched with design/first_time_setup.png
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import React, { useState } from 'react';

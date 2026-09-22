@@ -1,7 +1,7 @@
 /**
  * VaultNote SQLite Connection Manager
  * Manages database lifecycle, connection pooling, and PRAGMA configurations
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { DatabaseClient, DatabaseError } from './types';

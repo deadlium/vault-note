@@ -1,6 +1,6 @@
 /**
  * VaultNote Authenticated Symmetric Encryption (AES-256-GCM)
- * Phase 1: Cryptographic Perimeter (Day 2)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { gcm } from '@noble/ciphers/aes.js';

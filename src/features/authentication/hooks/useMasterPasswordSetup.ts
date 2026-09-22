@@ -1,7 +1,7 @@
 /**
  * VaultNote Master Password Onboarding Hook
  * Manages multi-step vault initialization and recovery phrase generation
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import { useState, useCallback } from 'react';

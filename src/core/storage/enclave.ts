@@ -1,7 +1,7 @@
 /**
  * VaultNote Platform Secure Enclave Bridge
  * Integrates hardware-backed keychain (iOS Secure Enclave) and Android Keystore
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { EnclaveOptions, EnclaveStorageAdapter, EnclaveStorageError } from './types';

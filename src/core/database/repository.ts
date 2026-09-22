@@ -1,7 +1,7 @@
 /**
  * VaultNote Encrypted SQLite Repository
  * High-level transactional persistence layer for encrypted vault items and metadata
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { getDatabaseClient } from './connection';

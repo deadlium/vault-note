@@ -1,6 +1,6 @@
 /**
  * VaultNote Platform Enclave & Storage Types
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 export interface EnclaveOptions {

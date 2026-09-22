@@ -1,7 +1,7 @@
 /**
  * VaultNote Database Migration Runner
  * Manages incremental SQLite schema versioning and execution
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { DatabaseClient, DatabaseMigration, DatabaseError } from './types';

@@ -1,6 +1,6 @@
 /**
  * VaultNote 24-Word BIP-39 Mnemonic Grid Display
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import React, { useState } from 'react';

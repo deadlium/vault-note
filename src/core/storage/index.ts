@@ -1,6 +1,6 @@
 /**
  * VaultNote Storage & Platform Enclave Barrel Export
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 export * from './types';

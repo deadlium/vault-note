@@ -1,7 +1,7 @@
 /**
  * VaultNote BIP-39 Emergency Recovery Kit Engine
  * Generates 24-word cryptographic mnemonic recovery phrases from 256-bit CSPRNG entropy
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import * as bip39 from '@scure/bip39';

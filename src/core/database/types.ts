@@ -1,6 +1,6 @@
 /**
  * VaultNote SQLite Database Layer Type Definitions
- * Phase 1: Cryptographic Perimeter (Day 3)
+ * Phase 1: Cryptographic Perimeter
  */
 
 import { EncryptedPayload } from '../crypto/types';

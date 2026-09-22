@@ -1,7 +1,7 @@
 /**
  * VaultNote Emergency Recovery Phrase Restore Screen
  * Restores a vault using a 24-word BIP-39 mnemonic phrase
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import React, { useState } from 'react';

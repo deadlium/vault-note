@@ -1,6 +1,6 @@
 /**
  * VaultNote Password Strength Bar & Real-Time Entropy Scorer
- * Phase 2: Authentication, Session State & Hardware Security (Day 4)
+ * Phase 2: Authentication, Session State & Hardware Security
  */
 
 import React, { useMemo } from 'react';

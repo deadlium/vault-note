@@ -1,6 +1,6 @@
 /**
  * VaultNote Cryptographic Engine Type Definitions
- * Phase 1: Cryptographic Perimeter (Day 2)
+ * Phase 1: Cryptographic Perimeter
  */
 
 export type CipherAlgorithm = 'AES-256-GCM';
