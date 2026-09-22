@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
+import { copyToClipboard } from '../core/clipboard';
 
 interface VaultItem {
   id: string;
@@ -120,13 +121,27 @@ const CATEGORIES = [
   { id: 'identity', label: 'Identity', count: 1 },
 ];
 
-export default function VaultHomeLaunch() {
+export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'vault' | 'favorites' | 'search' | 'settings'>('vault');
   const [selectedItem, setSelectedItem] = useState<VaultItem | null>(null);
   const [revealedPassword, setRevealedPassword] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
+
+  const handleCopy = async (
+    contentToCopy: string,
+    toastMessage: string,
+    isSensitive: boolean = false
+  ) => {
+    try {
+      await copyToClipboard(contentToCopy, { isSensitive });
+    } catch {
+      // safe fallback
+    }
+    setCopiedNotification(toastMessage);
+    setTimeout(() => setCopiedNotification(null), 2500);
+  };
 
   const showCopyToast = (text: string) => {
     setCopiedNotification(text);
@@ -366,13 +381,20 @@ export default function VaultHomeLaunch() {
               <View style={styles.cardActionsRow}>
                 <Pressable
                   style={styles.iconActionButton}
-                  onPress={() => showCopyToast(`Key copied for ${item.title}`)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleCopy(item.subtitle, `Username copied for ${item.title}`);
+                  }}
                 >
                   <Ionicons name="key-outline" size={14} color={colors.textSecondary} />
                 </Pressable>
                 <Pressable
                   style={styles.iconActionButton}
-                  onPress={() => showCopyToast(`Password copied for ${item.title}`)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    const password = item.id === 'google' ? 'vX9!mQ7#L2@pZ8' : 'ObsidianVault#2026';
+                    handleCopy(password, `Password copied for ${item.title} (30s auto-wipe)`, true);
+                  }}
                 >
                   <Ionicons name="copy-outline" size={14} color={colors.textSecondary} />
                 </Pressable>
@@ -615,7 +637,7 @@ export default function VaultHomeLaunch() {
                   </View>
                   <Pressable
                     style={styles.fieldCopyBtn}
-                    onPress={() => showCopyToast('Username copied to clipboard')}
+                    onPress={() => handleCopy(selectedItem?.subtitle || 'alex.turner@gmail.com', 'Username copied to clipboard')}
                   >
                     <Ionicons name="copy-outline" size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
                     <Text style={styles.fieldCopyText}>Copy</Text>
@@ -646,7 +668,7 @@ export default function VaultHomeLaunch() {
                     </Pressable>
                     <Pressable
                       style={styles.fieldCopyBtnActive}
-                      onPress={() => showCopyToast('Password copied (30s auto-wipe)')}
+                      onPress={() => handleCopy('vX9!mQ7#L2@pZ8', 'Password copied (30s auto-wipe)', true)}
                     >
                       <Ionicons name="copy-outline" size={13} color={colors.primaryLight} style={{ marginRight: 4 }} />
                       <Text style={styles.fieldCopyTextActive}>Copy</Text>
@@ -683,7 +705,7 @@ export default function VaultHomeLaunch() {
                 <View style={styles.totpBottomRow}>
                   <Pressable
                     style={styles.copyTotpBtn}
-                    onPress={() => showCopyToast('TOTP Code 483921 copied')}
+                    onPress={() => handleCopy('483921', 'TOTP Code 483921 copied (30s auto-wipe)', true)}
                   >
                     <Ionicons name="keypad-outline" size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
                     <Text style={styles.copyTotpBtnText}>Copy 6-Digit Code</Text>
@@ -707,7 +729,10 @@ export default function VaultHomeLaunch() {
                     <Pressable style={styles.circleDomainBtn}>
                       <Feather name="external-link" size={14} color={colors.textSecondary} />
                     </Pressable>
-                    <Pressable style={styles.circleDomainBtn}>
+                    <Pressable
+                      style={styles.circleDomainBtn}
+                      onPress={() => handleCopy('https://accounts.google.com', 'URL copied to clipboard')}
+                    >
                       <Feather name="link" size={14} color={colors.textSecondary} />
                     </Pressable>
                   </View>
