@@ -42,6 +42,20 @@ export const typography = {
     wide: 0.5,
     mono: 1.2,
   },
+
+  // Semantic Typography Shorthands
+  code: {
+    fontFamily: Platform.select({
+      ios: 'Menlo',
+      android: 'monospace',
+      default: 'monospace',
+    }),
+  },
+  caption: { fontSize: 12, lineHeight: 16 },
+  body1: { fontSize: 16, lineHeight: 24 },
+  body2: { fontSize: 14, lineHeight: 20 },
+  subheading: { fontSize: 18, lineHeight: 26, fontWeight: '600' as TextStyle['fontWeight'] },
+  heading: { fontSize: 24, lineHeight: 32, fontWeight: '700' as TextStyle['fontWeight'] },
 } as const;
 
 export type TypographySize = keyof typeof typography.sizes;
