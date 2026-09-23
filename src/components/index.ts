@@ -4,3 +4,7 @@ export * from './button/SecondaryButton';
 export * from './input/SecureInput';
 export * from './badge/Tag';
 export * from './security/PrivacyShield';
+export * from './icon/ServiceIcon';
+export * from './category/CategoryChipBar';
+export * from './item/VaultItemRow';
+export * from './common/EmptyState';

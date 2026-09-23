@@ -100,3 +100,34 @@ export interface VaultItem<T = AnyVaultPayload> {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface CategoryOption {
+  id: string;
+  label: string;
+  type?: VaultItemType;
+}
+
+export const VAULT_CATEGORY_OPTIONS: CategoryOption[] = [
+  { id: 'all', label: 'All' },
+  { id: 'LOGIN', label: 'Logins', type: 'LOGIN' },
+  { id: 'SECURE_NOTE', label: 'Notes', type: 'SECURE_NOTE' },
+  { id: 'CARD', label: 'Cards', type: 'CARD' },
+  { id: 'TOTP', label: 'TOTP', type: 'TOTP' },
+  { id: 'API_KEY', label: 'API Keys', type: 'API_KEY' },
+  { id: 'IDENTITY', label: 'Identity', type: 'IDENTITY' },
+  { id: 'RECOVERY_CODES', label: 'Recovery', type: 'RECOVERY_CODES' },
+];
+
+export interface VaultItemRowData {
+  id: string;
+  title: string;
+  subtitle?: string;
+  category: VaultItemType | string;
+  tag?: string;
+  iconType?: string;
+  isFavorite: boolean;
+  isProtected?: boolean;
+  hasTOTP?: boolean;
+  totpLabel?: string;
+  twoFactorLabel?: string;
+}
