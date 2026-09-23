@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../theme';
 import { copyToClipboard } from '../core/clipboard';
+import { useSessionStore, AutoLockTimeout } from '../core/session';
 
 interface VaultItem {
   id: string;
@@ -128,6 +129,8 @@ export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}
   const [selectedItem, setSelectedItem] = useState<VaultItem | null>(null);
   const [revealedPassword, setRevealedPassword] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
+  const autoLockTimeout = useSessionStore((s) => s.autoLockTimeout);
+  const setAutoLockTimeout = useSessionStore((s) => s.setAutoLockTimeout);
 
   const handleCopy = async (
     contentToCopy: string,
@@ -230,14 +233,101 @@ export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}
         </View>
       </View>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* User Greeting & Enclave Badge */}
-        <View style={styles.greetingRow}>
-          <Text style={styles.greetingText}>Good evening, Alex</Text>
+      {activeTab === 'settings' ? (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Settings User Greeting & Status */}
+          <View style={styles.greetingRow}>
+            <Text style={styles.greetingText}>Vault Configuration</Text>
+            <View style={styles.enclaveBadge}>
+              <Ionicons name="shield-checkmark-outline" size={12} color={colors.emerald} style={{ marginRight: 4 }} />
+              <Text style={styles.enclaveBadgeText}>Enclave Armed</Text>
+            </View>
+          </View>
+
+          <View style={styles.titleRow}>
+            <Text style={styles.mainTitle}>Security & Lock</Text>
+            <Text style={styles.secretsCountText}>Zero Knowledge</Text>
+          </View>
+
+          {/* Inactivity & Background Auto-Lock Card */}
+          <View style={styles.settingsSectionCard}>
+            <View style={styles.settingsSectionHeader}>
+              <Ionicons name="timer-outline" size={18} color={colors.primaryLight} />
+              <Text style={styles.settingsSectionTitle}>INACTIVITY & BACKGROUND AUTO-LOCK</Text>
+            </View>
+            <Text style={styles.settingsSectionSubtitle}>
+              Automatically locks your vault and zeroizes decrypted keys from volatile memory when the application is idle or backgrounded.
+            </Text>
+
+            <View style={styles.policyList}>
+              {[
+                { id: 'immediate', label: 'Immediate', desc: 'Locks instantly upon switching apps or leaving screen' },
+                { id: '1m', label: '1 Minute', desc: 'Locks after 60 seconds of background or user inactivity' },
+                { id: '5m', label: '5 Minutes (Default)', desc: 'Standard security & convenience balance' },
+                { id: '15m', label: '15 Minutes', desc: 'Extended working session' },
+                { id: 'never', label: 'Never', desc: 'Remains unlocked until manually locked' },
+              ].map((option) => {
+                const isSelected = autoLockTimeout === option.id;
+                return (
+                  <Pressable
+                    key={option.id}
+                    style={[styles.policyOptionRow, isSelected && styles.policyOptionRowSelected]}
+                    onPress={() => setAutoLockTimeout(option.id as AutoLockTimeout)}
+                  >
+                    <View style={styles.policyOptionRadio}>
+                      <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
+                        {isSelected && <View style={styles.radioInnerDot} />}
+                      </View>
+                    </View>
+                    <View style={styles.policyOptionTextGroup}>
+                      <Text style={[styles.policyOptionLabel, isSelected && styles.policyOptionLabelSelected]}>
+                        {option.label}
+                      </Text>
+                      <Text style={styles.policyOptionDesc}>{option.desc}</Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Anti-Snapshot Privacy Shield Card */}
+          <View style={styles.settingsSectionCard}>
+            <View style={styles.settingsSectionHeader}>
+              <MaterialCommunityIcons name="shield-lock-outline" size={18} color={colors.emerald} />
+              <Text style={styles.settingsSectionTitle}>ANTI-SNAPSHOT PRIVACY SHIELD</Text>
+            </View>
+            <Text style={styles.settingsSectionSubtitle}>
+              Armed. An opaque obsidian shield automatically conceals your screen whenever the OS app switcher or multitasking menu is opened.
+            </Text>
+            <View style={styles.privacyShieldStatusPill}>
+              <View style={styles.greenDot} />
+              <Text style={styles.privacyShieldStatusText}>Active in Task Switcher</Text>
+            </View>
+          </View>
+
+          {/* Manual Lock Action Button */}
+          <Pressable
+            style={styles.manualLockButton}
+            onPress={onLock}
+          >
+            <Ionicons name="lock-closed" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.manualLockButtonText}>Lock Vault Now</Text>
+          </Pressable>
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* User Greeting & Enclave Badge */}
+          <View style={styles.greetingRow}>
+            <Text style={styles.greetingText}>Good evening, Alex</Text>
           <View style={styles.enclaveBadge}>
             <Ionicons name="shield-checkmark-outline" size={12} color={colors.emerald} style={{ marginRight: 4 }} />
             <Text style={styles.enclaveBadgeText}>Offline Enclave</Text>
@@ -476,6 +566,7 @@ export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}
           ))}
         </View>
       </ScrollView>
+      )}
 
       {/* Toast Notification */}
       {copiedNotification && (
@@ -486,9 +577,11 @@ export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}
       )}
 
       {/* Floating Action Button (+) */}
-      <Pressable style={styles.fabButton} onPress={() => showCopyToast('Create secret modal')}>
-        <Ionicons name="add" size={28} color="#0D0E11" />
-      </Pressable>
+      {activeTab !== 'settings' && (
+        <Pressable style={styles.fabButton} onPress={() => showCopyToast('Create secret modal')}>
+          <Ionicons name="add" size={28} color="#0D0E11" />
+        </Pressable>
+      )}
 
       {/* Bottom Tab Navigation Bar */}
       <View style={styles.bottomTabBar}>
@@ -1719,5 +1812,117 @@ const styles = StyleSheet.create({
     color: colors.crimson,
     fontSize: 14,
     fontWeight: '600',
+  },
+  settingsSectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  settingsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  settingsSectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 0.8,
+  },
+  settingsSectionSubtitle: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    lineHeight: 16,
+    marginBottom: spacing.md,
+  },
+  policyList: {
+    gap: 8,
+  },
+  policyOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm + 2,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  policyOptionRowSelected: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(123, 97, 255, 0.08)',
+  },
+  policyOptionRadio: {
+    marginRight: spacing.sm,
+  },
+  radioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: colors.textTertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleSelected: {
+    borderColor: colors.primaryLight,
+  },
+  radioInnerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primaryLight,
+  },
+  policyOptionTextGroup: {
+    flex: 1,
+  },
+  policyOptionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  policyOptionLabelSelected: {
+    color: colors.primaryLight,
+  },
+  policyOptionDesc: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+  privacyShieldStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    gap: 6,
+    marginTop: spacing.xs,
+  },
+  privacyShieldStatusText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.emerald,
+  },
+  manualLockButton: {
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+  manualLockButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
