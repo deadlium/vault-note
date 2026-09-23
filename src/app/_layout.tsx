@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from '../theme';
+import { PrivacyShield } from '../components/security/PrivacyShield';
 
 export default function RootLayout({ children }: { children?: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function RootLayout({ children }: { children?: React.ReactNode })
       <View style={styles.container}>
         <StatusBar style="light" />
         {children}
+        <PrivacyShield />
       </View>
     </SafeAreaProvider>
   );
