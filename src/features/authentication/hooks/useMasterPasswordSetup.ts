@@ -10,6 +10,7 @@ import { deriveKeyArgon2id } from '../../../core/crypto/kdf';
 import { generateMasterEnclaveToken, bytesToHex } from '../../../core/crypto/csprng';
 import {
   storeMasterEnclaveToken,
+  storeBiometricSecret,
   setVaultInitialized,
   setEnclaveItem,
   ENCLAVE_KEYS,
@@ -138,6 +139,7 @@ export function useMasterPasswordSetup() {
 
       // 4. Store tokens in hardware Secure Enclave
       await storeMasterEnclaveToken(enclaveToken);
+      await storeBiometricSecret(enclaveToken);
       await setEnclaveItem(ENCLAVE_KEYS.PASS_SALT, derivation.saltHex);
       await setVaultInitialized(true);
 

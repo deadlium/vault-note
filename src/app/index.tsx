@@ -220,9 +220,13 @@ export default function VaultHomeLaunch({ onLock }: { onLock?: () => void } = {}
 
         <View style={styles.topBarRight}>
           <Text style={styles.vaultHeaderText}>Vault</Text>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="person" size={15} color={colors.primaryLight} />
-          </View>
+          <Pressable
+            style={styles.avatarCircle}
+            onPress={onLock}
+            accessibilityLabel="Lock vault"
+          >
+            <Ionicons name="lock-closed-outline" size={14} color={colors.primaryLight} />
+          </Pressable>
         </View>
       </View>
 

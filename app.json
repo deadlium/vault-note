@@ -22,7 +22,13 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow VaultNote to use Face ID to authenticate and unlock your encrypted private vault."
+        }
+      ]
     ]
   }
 }

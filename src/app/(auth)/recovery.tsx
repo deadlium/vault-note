@@ -22,6 +22,7 @@ import { deriveKeyArgon2id } from '../../core/crypto/kdf';
 import { generateMasterEnclaveToken, bytesToHex } from '../../core/crypto/csprng';
 import {
   storeMasterEnclaveToken,
+  storeBiometricSecret,
   setVaultInitialized,
   setEnclaveItem,
   ENCLAVE_KEYS,
@@ -80,6 +81,7 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
 
       // 4. Update Secure Enclave
       await storeMasterEnclaveToken(enclaveToken);
+      await storeBiometricSecret(enclaveToken);
       await setEnclaveItem(ENCLAVE_KEYS.PASS_SALT, derivation.saltHex);
       await setVaultInitialized(true);
 

@@ -41,6 +41,7 @@
     "expo": "~57.0.24",
     "expo-clipboard": "~57.0.2",
     "expo-crypto": "~57.0.3",
+    "expo-local-authentication": "~57.0.3",
     "expo-secure-store": "~57.0.4",
     "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
@@ -50,8 +51,8 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
-    "@types/react": "^19.3.0",
+    "@types/react": "~19.2.4",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "~6.0.3"
   }
 }

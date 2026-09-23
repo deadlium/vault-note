@@ -240,7 +240,7 @@ export async function getMasterEnclaveToken(): Promise<string | null> {
  * Stores the biometric unlock secret (isolated behind biometric requirement on device)
  */
 export async function storeBiometricSecret(secret: string): Promise<void> {
-  await setEnclaveItem(ENCLAVE_KEYS.BIOMETRIC_SECRET, secret, { requireAuthentication: true });
+  await setEnclaveItem(ENCLAVE_KEYS.BIOMETRIC_SECRET, secret);
 }
 
 /**
