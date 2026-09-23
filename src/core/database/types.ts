@@ -4,8 +4,18 @@
  */
 
 import { EncryptedPayload } from '../crypto/types';
+import { VaultItemType } from '../../types/vault';
 
-export type VaultCategory = 'Login' | 'Secure Note' | 'Card' | 'API Key' | 'Identity';
+export type VaultCategory =
+  | 'Login'
+  | 'Secure Note'
+  | 'Card'
+  | 'API Key'
+  | 'Identity'
+  | 'TOTP'
+  | 'Recovery Codes'
+  | VaultItemType
+  | (string & {});
 
 /**
  * Universal SQLite database interface matching Expo SQLite next-gen API
