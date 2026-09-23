@@ -4,50 +4,66 @@ import VaultHomeLaunch from './app/index';
 import MasterPasswordSetupScreen from './app/(auth)/setup';
 import VaultRecoveryScreen from './app/(auth)/recovery';
 import VaultUnlockScreen from './app/(auth)/unlock';
-import { isVaultInitialized } from './core/storage/enclave';
+import { VaultSessionManager, useSessionStore } from './core/session';
+import { useAutoLock } from './hooks/useAutoLock';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'loading' | 'setup' | 'recovery' | 'unlock' | 'vault'>('loading');
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [navRoute, setNavRoute] = useState<'default' | 'recovery'>('default');
+  const sessionStatus = useSessionStore((s) => s.status);
+
+  // Initialize auto-lock lifecycle and AppState listeners
+  useAutoLock();
 
   useEffect(() => {
-    isVaultInitialized()
-      .then((initialized) => {
-        setCurrentScreen(initialized ? 'unlock' : 'setup');
-      })
-      .catch(() => setCurrentScreen('setup'));
+    VaultSessionManager.initializeSession()
+      .finally(() => setIsInitializing(false));
   }, []);
 
-  if (currentScreen === 'loading') {
+  if (isInitializing) {
     return <RootLayout />;
   }
 
-  return (
-    <RootLayout>
-      {currentScreen === 'setup' && (
-        <MasterPasswordSetupScreen
-          onComplete={() => setCurrentScreen('vault')}
-          onNavigateToRestore={() => setCurrentScreen('recovery')}
-        />
-      )}
-      {currentScreen === 'recovery' && (
+  // Active navigation screen derived from central session state machine
+  const renderScreen = () => {
+    if (navRoute === 'recovery') {
+      return (
         <VaultRecoveryScreen
           onCancel={() => {
-            isVaultInitialized()
-              .then((initialized) => setCurrentScreen(initialized ? 'unlock' : 'setup'))
-              .catch(() => setCurrentScreen('setup'));
+            setNavRoute('default');
+            VaultSessionManager.initializeSession();
           }}
-          onRestoreComplete={() => setCurrentScreen('vault')}
+          onRestoreComplete={() => {
+            setNavRoute('default');
+            VaultSessionManager.unlock();
+          }}
         />
-      )}
-      {currentScreen === 'unlock' && (
-        <VaultUnlockScreen
-          onUnlockComplete={() => setCurrentScreen('vault')}
-          onNavigateToRestore={() => setCurrentScreen('recovery')}
+      );
+    }
+
+    if (sessionStatus === 'UNINITIALIZED') {
+      return (
+        <MasterPasswordSetupScreen
+          onComplete={() => VaultSessionManager.unlock()}
+          onNavigateToRestore={() => setNavRoute('recovery')}
         />
-      )}
-      {currentScreen === 'vault' && (
-        <VaultHomeLaunch onLock={() => setCurrentScreen('unlock')} />
-      )}
-    </RootLayout>
-  );
+      );
+    }
+
+    if (sessionStatus === 'UNLOCKED') {
+      return (
+        <VaultHomeLaunch onLock={() => VaultSessionManager.lock()} />
+      );
+    }
+
+    // Default for LOCKED, UNLOCKING, and BACKGROUND states: render lock screen
+    return (
+      <VaultUnlockScreen
+        onUnlockComplete={() => VaultSessionManager.unlock()}
+        onNavigateToRestore={() => setNavRoute('recovery')}
+      />
+    );
+  };
+
+  return <RootLayout>{renderScreen()}</RootLayout>;
 }
