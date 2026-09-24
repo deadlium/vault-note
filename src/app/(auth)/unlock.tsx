@@ -15,8 +15,9 @@ import {
   ActivityIndicator,
   Keyboard,
   Platform,
-  LayoutAnimation,
   KeyboardAvoidingView,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -54,11 +55,21 @@ export default function VaultUnlockScreen({
   const scrollViewRef = React.useRef<ScrollView>(null);
   const textInputRef = React.useRef<TextInput>(null);
 
-  const isCompact = isKeyboardVisible || isInputFocused;
+  // Smooth focus and keyboard animation value
+  const focusAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    const isTargetCompact = isKeyboardVisible || isInputFocused;
+    Animated.timing(focusAnim, {
+      toValue: isTargetCompact ? 1 : 0,
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: true,
+    }).start();
+  }, [isKeyboardVisible, isInputFocused, focusAnim]);
 
   React.useEffect(() => {
     const onShow = () => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setIsKeyboardVisible(true);
     };
 
@@ -67,7 +78,6 @@ export default function VaultUnlockScreen({
       textInputRef.current?.blur();
       setIsKeyboardVisible(false);
       setIsInputFocused(false);
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     };
 
     const showSub = Keyboard.addListener('keyboardDidShow', onShow);
@@ -86,12 +96,6 @@ export default function VaultUnlockScreen({
       willHideSub?.remove();
     };
   }, []);
-
-  React.useEffect(() => {
-    if (isCompact) {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-    }
-  }, [isCompact]);
 
   const handleFocusInput = () => {
     if (textInputRef.current) {
@@ -124,10 +128,7 @@ export default function VaultUnlockScreen({
       >
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[
-            styles.scrollContent,
-            isCompact && styles.scrollContentKeyboard,
-          ]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
@@ -151,44 +152,89 @@ export default function VaultUnlockScreen({
             </View>
           </View>
 
-          {/* Central Lock Squircle / Hero */}
-          <View style={[styles.heroSection, isCompact && styles.heroSectionCompact]}>
-            {!isCompact && (
-              <View style={styles.radarContainer} pointerEvents="none">
-                <View style={styles.radarOuterRing} />
-                <View style={styles.radarInnerRing} />
-              </View>
-            )}
+          {/* Central Lock Squircle / Hero with 60fps Native GPU Smooth Motion */}
+          <Animated.View
+            style={[
+              styles.heroSection,
+              {
+                transform: [
+                  {
+                    translateY: focusAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -22],
+                    }),
+                  },
+                  {
+                    scale: focusAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0.85],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Animated.View
+              style={[
+                styles.radarContainer,
+                {
+                  opacity: focusAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 0.2, 0],
+                  }),
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <View style={styles.radarOuterRing} />
+              <View style={styles.radarInnerRing} />
+            </Animated.View>
 
-            <View style={[styles.avatarSquircle, isCompact && styles.avatarSquircleCompact]}>
-              {!isCompact && <View style={styles.squircleLaserLine} />}
+            <View style={styles.avatarSquircle}>
+              <Animated.View
+                style={[
+                  styles.squircleLaserLine,
+                  {
+                    opacity: focusAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0],
+                    }),
+                  },
+                ]}
+              />
               <View style={styles.lockEmblemContainer}>
                 <MaterialCommunityIcons
                   name="lock-outline"
-                  size={isCompact ? 24 : 44}
+                  size={44}
                   color={colors.primaryLight}
                 />
-                <View style={[styles.fingerprintOverlay, isCompact && styles.fingerprintOverlayCompact]}>
+                <View style={styles.fingerprintOverlay}>
                   <MaterialCommunityIcons
                     name="fingerprint"
-                    size={isCompact ? 12 : 22}
+                    size={22}
                     color={colors.primaryLight}
                   />
                 </View>
               </View>
-              <View style={[styles.squircleDot, isCompact && styles.squircleDotCompact]} />
+              <View style={styles.squircleDot} />
             </View>
 
-            <Text style={[styles.titleText, isCompact && styles.titleTextCompact]}>Vault Locked</Text>
-            <Text
-              style={[styles.subtitleText, isCompact && styles.subtitleTextCompact]}
-              numberOfLines={isCompact ? 1 : 2}
+            <Text style={styles.titleText}>Vault Locked</Text>
+            <Animated.Text
+              style={[
+                styles.subtitleText,
+                {
+                  opacity: focusAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0.7],
+                  }),
+                },
+              ]}
+              numberOfLines={2}
             >
-              {isCompact
-                ? 'Scan credentials to open your private vault.'
-                : 'Local cryptographic perimeter is armed. Scan credentials to open your private vault.'}
-            </Text>
-          </View>
+              Local cryptographic perimeter is armed. Scan credentials to open your private vault.
+            </Animated.Text>
+          </Animated.View>
 
           {/* Error Notification */}
           {error && (
@@ -198,8 +244,8 @@ export default function VaultUnlockScreen({
             </View>
           )}
 
-          {/* Master Password Input & Action Buttons Container (Always rendered per design mockups) */}
-          <View style={[styles.passwordContainer, isCompact && styles.passwordContainerCompact]}>
+          {/* Master Password Input & Action Buttons Container */}
+          <View style={styles.passwordContainer}>
             <View style={styles.passwordInputGroup}>
               <View style={styles.passwordLabelRow}>
                 <Text style={styles.inputLabel}>MASTER PASSWORD</Text>
@@ -208,7 +254,6 @@ export default function VaultUnlockScreen({
               <Pressable
                 style={[
                   styles.passwordInputWrapper,
-                  isCompact && styles.passwordInputWrapperCompact,
                   isInputFocused && styles.passwordInputWrapperFocused,
                 ]}
                 onPress={handleFocusInput}
@@ -234,7 +279,6 @@ export default function VaultUnlockScreen({
                   editable={!isVerifyingPassword}
                   autoFocus={false}
                   onFocus={() => {
-                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     setIsInputFocused(true);
                   }}
                   onBlur={() => setIsInputFocused(false)}
@@ -257,7 +301,6 @@ export default function VaultUnlockScreen({
             <Pressable
               style={[
                 styles.unlockButton,
-                isCompact && styles.unlockButtonCompact,
                 (isVerifyingPassword || isAuthenticating) && styles.buttonDisabled,
               ]}
               onPress={handlePasswordSubmit}
@@ -274,7 +317,6 @@ export default function VaultUnlockScreen({
               <Pressable
                 style={({ pressed }) => [
                   styles.useBiometricButton,
-                  isCompact && styles.useBiometricButtonCompact,
                   pressed && styles.useBiometricButtonPressed,
                   (isVerifyingPassword || isAuthenticating) && styles.buttonDisabled,
                 ]}
@@ -291,10 +333,10 @@ export default function VaultUnlockScreen({
               </Pressable>
             )}
 
-            {/* Recovery link directly below buttons in both states */}
+            {/* Recovery link directly below buttons */}
             {onNavigateToRestore && (
               <Pressable
-                style={[styles.restoreLinkBtn, isCompact && styles.restoreLinkBtnCompact]}
+                style={styles.restoreLinkBtn}
                 onPress={onNavigateToRestore}
                 disabled={isVerifyingPassword || isAuthenticating}
               >
@@ -303,15 +345,24 @@ export default function VaultUnlockScreen({
               </Pressable>
             )}
 
-            {/* Air-Gapped Enclave Status Pill (Only shown when keyboard is closed) */}
-            {!isCompact && (
-              <View style={styles.securityAuditPill}>
-                <Ionicons name="shield-checkmark" size={13} color={colors.emerald} style={{ marginRight: 6 }} />
-                <Text style={styles.securityAuditText}>
-                  Air-Gapped Enclave • 0KB Remote Telemetry
-                </Text>
-              </View>
-            )}
+            {/* Air-Gapped Enclave Status Pill with smooth opacity dissolve */}
+            <Animated.View
+              style={[
+                styles.securityAuditPill,
+                {
+                  opacity: focusAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 0.2, 0],
+                  }),
+                },
+              ]}
+              pointerEvents={isKeyboardVisible || isInputFocused ? 'none' : 'auto'}
+            >
+              <Ionicons name="shield-checkmark" size={13} color={colors.emerald} style={{ marginRight: 6 }} />
+              <Text style={styles.securityAuditText}>
+                Air-Gapped Enclave • 0KB Remote Telemetry
+              </Text>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
