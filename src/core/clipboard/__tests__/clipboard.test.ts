@@ -59,3 +59,43 @@ test('Clipboard: Does not wipe if user replaced clipboard before timeout', async
   // Should still contain 'https://github.com' because it was NOT the sensitive secret
   assert.strictEqual(await getClipboardText(), 'https://github.com');
 });
+
+test('ClipboardManager: copySecret activates countdown and notifies subscribers', async () => {
+  const adapter = new InMemoryClipboardAdapter();
+  const { ClipboardManager } = await import('../clipboardManager');
+  ClipboardManager.setAdapter(adapter);
+
+  let notifiedState: any = null;
+  const unsubscribe = ClipboardManager.subscribe((state) => {
+    notifiedState = state;
+  });
+
+  const secret = 'super_secret_password_123';
+  const success = await ClipboardManager.copySecret(secret, 'Master Password', 30);
+
+  assert.strictEqual(success, true);
+  assert.strictEqual(await adapter.getString(), secret);
+  assert.strictEqual(notifiedState?.isActive, true);
+  assert.strictEqual(notifiedState?.remainingSeconds, 30);
+  assert.strictEqual(notifiedState?.label, 'Master Password');
+
+  // Clear now resets state and purges clipboard
+  await ClipboardManager.clearNow();
+  assert.strictEqual(await adapter.getString(), '');
+  assert.strictEqual(ClipboardManager.getState().isActive, false);
+
+  unsubscribe();
+});
+
+test('ClipboardManager: copyPlain copies without active auto-purge countdown', async () => {
+  const adapter = new InMemoryClipboardAdapter();
+  const { ClipboardManager } = await import('../clipboardManager');
+  ClipboardManager.setAdapter(adapter);
+
+  const plainText = 'https://accounts.google.com';
+  const success = await ClipboardManager.copyPlain(plainText);
+
+  assert.strictEqual(success, true);
+  assert.strictEqual(await adapter.getString(), plainText);
+  assert.strictEqual(ClipboardManager.getState().isActive, false);
+});
