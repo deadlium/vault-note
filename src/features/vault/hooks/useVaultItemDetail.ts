@@ -27,12 +27,18 @@ const DEMO_DETAIL_ITEM: VaultItem<LoginPayload> = {
   updatedAt: Date.now() - 3600 * 1000 * 4,
 };
 
-export function useVaultItemDetail(itemId: string) {
+export function useVaultItemDetail(itemId?: string) {
   const [item, setItem] = useState<VaultItem<AnyVaultPayload> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(itemId));
   const [error, setError] = useState<string | null>(null);
 
   const loadItem = useCallback(async () => {
+    if (!itemId) {
+      setItem(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 

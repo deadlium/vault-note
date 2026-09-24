@@ -1,6 +1,7 @@
 /**
  * Vault Item Edit Screen
  * Edit credential fields, toggle biometric protection, and persist updates with AES-256-GCM
+ * Supports both creating new items and updating existing items
  */
 
 import React, { useState } from 'react';
@@ -21,7 +22,7 @@ import { colors, radius, spacing, typography } from '../../../theme';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
 import { VaultRepository } from '../../../features/vault/repository/vaultRepository';
 import { VaultSessionManager } from '../../../core/session';
-import { LoginPayload } from '../../../types/vault';
+import { VaultItem, LoginPayload } from '../../../types/vault';
 
 export interface VaultItemEditProps {
   id?: string;
@@ -30,25 +31,24 @@ export interface VaultItemEditProps {
 }
 
 export default function VaultItemEditScreen({
-  id = 'demo-google',
+  id,
   onBack,
   onSaveComplete,
 }: VaultItemEditProps) {
+  const isCreateMode = !id;
   const { item, isLoading } = useVaultItemDetail(id);
 
-  const payload = (item?.payload as Partial<LoginPayload>) || {};
-
-  const [title, setTitle] = useState(item?.title || '');
-  const [username, setUsername] = useState(payload.username || '');
-  const [password, setPassword] = useState(payload.password || '');
-  const [websiteUrl, setWebsiteUrl] = useState(payload.websiteUrl || '');
-  const [notes, setNotes] = useState(payload.notes || '');
-  const [isProtected, setIsProtected] = useState(item?.isProtected ?? true);
+  const [title, setTitle] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [notes, setNotes] = useState('');
+  const [isProtected, setIsProtected] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state if item loads after initial mount
+  // Sync state if item loads after initial mount in edit mode
   React.useEffect(() => {
-    if (item) {
+    if (!isCreateMode && item) {
       setTitle(item.title);
       const p = (item.payload as Partial<LoginPayload>) || {};
       setUsername(p.username || '');
@@ -57,9 +57,9 @@ export default function VaultItemEditScreen({
       setNotes(p.notes || '');
       setIsProtected(item.isProtected ?? true);
     }
-  }, [item]);
+  }, [isCreateMode, item]);
 
-  if (isLoading) {
+  if (!isCreateMode && isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -77,7 +77,28 @@ export default function VaultItemEditScreen({
     try {
       const masterKey = VaultSessionManager.getMasterKey();
 
-      if (masterKey && item) {
+      if (isCreateMode) {
+        const newItem: VaultItem<LoginPayload> = {
+          id: `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          type: 'LOGIN',
+          title: title.trim(),
+          isProtected,
+          isFavorite: false,
+          tags: ['login'],
+          payload: {
+            username: username.trim(),
+            password,
+            websiteUrl: websiteUrl.trim(),
+            notes: notes.trim(),
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+
+        if (masterKey) {
+          await VaultRepository.createItem(newItem, masterKey);
+        }
+      } else if (masterKey && item) {
         await VaultRepository.updateItem(
           item.id,
           {
@@ -122,7 +143,7 @@ export default function VaultItemEditScreen({
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>
 
-        <Text style={styles.headerTitle}>Edit Item</Text>
+        <Text style={styles.headerTitle}>{isCreateMode ? 'New Item' : 'Edit Item'}</Text>
 
         <Pressable
           onPress={handleSave}
@@ -137,7 +158,7 @@ export default function VaultItemEditScreen({
           {isSaving ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.saveText}>Save</Text>
+            <Text style={styles.saveText}>{isCreateMode ? 'Create' : 'Save'}</Text>
           )}
         </Pressable>
       </View>

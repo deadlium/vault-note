@@ -9,3 +9,4 @@ export * from './icon/ServiceIcon';
 export * from './category/CategoryChipBar';
 export * from './item/VaultItemRow';
 export * from './common/EmptyState';
+export * from './navigation/CupertinoScreenTransition';
