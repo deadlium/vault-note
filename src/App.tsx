@@ -9,6 +9,7 @@ import MasterPasswordSetupScreen from './app/(auth)/setup';
 import VaultRecoveryScreen from './app/(auth)/recovery';
 import VaultUnlockScreen from './app/(auth)/unlock';
 import { CupertinoScreenTransition } from './components/navigation/CupertinoScreenTransition';
+import { PasswordGeneratorScreen } from './features/password-generator';
 import { VaultSessionManager, useSessionStore } from './core/session';
 import { useAutoLock } from './hooks/useAutoLock';
 
@@ -129,17 +130,21 @@ export default function App() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
             >
-              <VaultHomeScreen
-                onLock={() => VaultSessionManager.lock()}
-                onSelectItem={(item) => {
-                  setIsEditingItem(false);
-                  setSelectedItemId(item.id);
-                }}
-                onAddItem={() => {
-                  setSelectedItemId(null);
-                  setIsAddingItem(true);
-                }}
-              />
+              {activeTab === 'generator' ? (
+                <PasswordGeneratorScreen />
+              ) : (
+                <VaultHomeScreen
+                  onLock={() => VaultSessionManager.lock()}
+                  onSelectItem={(item) => {
+                    setIsEditingItem(false);
+                    setSelectedItemId(item.id);
+                  }}
+                  onAddItem={() => {
+                    setSelectedItemId(null);
+                    setIsAddingItem(true);
+                  }}
+                />
+              )}
             </VaultTabLayout>
 
             {/* Parallax Dimming on Home Layer */}
