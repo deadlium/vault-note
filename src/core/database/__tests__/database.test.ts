@@ -159,7 +159,7 @@ test('Database: Delete vault item cascades and purges tag associations', async (
     id: 'item-to-delete',
     category: 'API Key',
     titlePayload: encrypt('Stripe Production', dummyKey),
-    dataPayload: encrypt('sk_live_12345', dummyKey),
+    dataPayload: encrypt('mock_token_sample_12345', dummyKey),
     tags: ['stripe', 'payments', 'backend'],
     isFavorite: false,
     createdAt: 1000,

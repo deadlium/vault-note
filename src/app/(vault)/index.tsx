@@ -23,139 +23,65 @@ import { VaultItemRow, VaultItemRowData } from '../../components/item/VaultItemR
 import { EmptyState } from '../../components/common/EmptyState';
 import { VaultSessionManager } from '../../core/session';
 import { VaultRepository } from '../../features/vault/repository/vaultRepository';
+import { useVaultStore } from '../../features/vault/store/useVaultStore';
 import { VaultItemType } from '../../types/vault';
 
 export interface VaultHomeDashboardProps {
   onLock?: () => void;
   onSelectItem?: (item: VaultItemRowData) => void;
   onAddItem?: () => void;
+  refreshTrigger?: number;
 }
-
-// Built-in initial items for rich out-of-the-box experience
-const INITIAL_DEMO_ITEMS: VaultItemRowData[] = [
-  {
-    id: 'demo-google',
-    title: 'Google (Gmail)',
-    subtitle: 'alex.turner@gmail.com',
-    category: 'LOGIN',
-    tag: 'Login',
-    iconType: 'google',
-    isFavorite: true,
-    isProtected: true,
-    hasTOTP: true,
-    totpLabel: 'TOTP Active',
-  },
-  {
-    id: 'demo-github',
-    title: 'GitHub',
-    subtitle: 'alexturner-dev (Work)',
-    category: 'LOGIN',
-    tag: 'Login',
-    iconType: 'github',
-    isFavorite: true,
-    isProtected: true,
-    twoFactorLabel: '2FA Active',
-  },
-  {
-    id: 'demo-aws',
-    title: 'AWS Console',
-    subtitle: 'production-root',
-    category: 'API_KEY',
-    tag: 'Cloud API',
-    iconType: 'aws',
-    isFavorite: true,
-    isProtected: true,
-  },
-  {
-    id: 'demo-stripe',
-    title: 'Stripe Secret Key',
-    subtitle: 'sk_live_992x...',
-    category: 'API_KEY',
-    tag: 'Payments',
-    iconType: 'key',
-    isFavorite: false,
-    isProtected: true,
-  },
-  {
-    id: 'demo-apple',
-    title: 'Apple Developer ID',
-    subtitle: 'alex@company.internal',
-    category: 'IDENTITY',
-    tag: 'Identity',
-    iconType: 'apple',
-    isFavorite: false,
-    isProtected: true,
-  },
-  {
-    id: 'demo-slack',
-    title: 'Slack Workspace',
-    subtitle: 'acme-corp.slack.com',
-    category: 'LOGIN',
-    tag: 'Login',
-    iconType: 'slack',
-    isFavorite: false,
-    isProtected: false,
-  },
-  {
-    id: 'demo-note',
-    title: 'Server Recovery Seed',
-    subtitle: 'Encrypted hardware backup instructions',
-    category: 'SECURE_NOTE',
-    tag: 'Secure Note',
-    iconType: 'archive',
-    isFavorite: false,
-    isProtected: true,
-  },
-  {
-    id: 'demo-recovery',
-    title: 'Primary Seed Backup',
-    subtitle: '24-word emergency recovery record',
-    category: 'RECOVERY_CODES',
-    tag: 'Recovery',
-    iconType: 'archive',
-    isFavorite: false,
-    isProtected: true,
-  },
-];
 
 export default function VaultHomeScreen({
   onLock,
   onSelectItem,
   onAddItem,
+  refreshTrigger,
 }: VaultHomeDashboardProps) {
-  const [items, setItems] = useState<VaultItemRowData[]>(INITIAL_DEMO_ITEMS);
+  const rawVaultItems = useVaultStore((state) => state.items);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Map raw vault items to presentation row data with instant reactivity
+  const items: VaultItemRowData[] = useMemo(() => {
+    return rawVaultItems.map((record) => {
+      const payload = record.payload as unknown as Record<string, unknown>;
+      const username =
+        (payload?.username as string) ||
+        (payload?.accountNumber as string) ||
+        (payload?.email as string) ||
+        (payload?.cardholderName as string) ||
+        (payload?.serviceName as string) ||
+        (payload?.fullName as string) ||
+        '';
+
+      const websiteUrl =
+        (payload?.websiteUrl as string) || (payload?.endpointUrl as string) || '';
+
+      return {
+        id: record.id,
+        title: record.title,
+        subtitle: username || websiteUrl || record.type,
+        category: record.type,
+        tag: record.tags?.[0] ? `#${record.tags[0]}` : record.type,
+        iconType:
+          ((record as unknown as Record<string, unknown>).icon as string) ||
+          ((payload?.icon as string) || undefined),
+        isFavorite: record.isFavorite ?? false,
+        isProtected: record.isProtected ?? true,
+        hasTOTP: Boolean(payload?.totpSecret),
+        totpLabel: payload?.totpSecret ? 'TOTP Active' : undefined,
+      };
+    });
+  }, [rawVaultItems]);
 
   // Load items from encrypted SQLite database if unlocked with master key
   const loadVaultItems = useCallback(async () => {
     try {
       const masterKey = VaultSessionManager.getMasterKey();
-      if (!masterKey) return;
-
-      const records = await VaultRepository.getAllItems(masterKey);
-      if (records && records.length > 0) {
-        const mapped: VaultItemRowData[] = records.map((record) => {
-          const payload = record.payload as unknown as Record<string, unknown>;
-          const username = (payload?.username as string) || (payload?.accountNumber as string) || '';
-          return {
-            id: record.id,
-            title: record.title,
-            subtitle: username,
-            category: record.type,
-            tag: record.tags?.[0] ? `#${record.tags[0]}` : record.type,
-            iconType:
-              ((record as unknown as Record<string, unknown>).icon as string) ||
-              ((payload?.icon as string) || undefined),
-            isFavorite: record.isFavorite,
-            isProtected: record.isProtected ?? true,
-            hasTOTP: Boolean(payload?.totpSecret),
-            totpLabel: payload?.totpSecret ? 'TOTP' : undefined,
-          };
-        });
-        setItems(mapped);
-      }
+      await useVaultStore.getState().loadItems(masterKey ?? undefined);
     } catch {
       // In-memory or demo fallback
     }
@@ -163,7 +89,7 @@ export default function VaultHomeScreen({
 
   useEffect(() => {
     loadVaultItems();
-  }, [loadVaultItems]);
+  }, [loadVaultItems, refreshTrigger]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -173,17 +99,7 @@ export default function VaultHomeScreen({
 
   // Handle favorite star toggle
   const handleToggleFavorite = useCallback(async (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-      )
-    );
-
-    try {
-      await VaultRepository.toggleItemFavorite(id);
-    } catch {
-      // Best-effort database update
-    }
+    await useVaultStore.getState().toggleFavorite(id);
   }, []);
 
   // Compute item counts per category

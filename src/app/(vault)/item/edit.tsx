@@ -4,7 +4,7 @@
  * and AES-256-GCM encrypted persistence.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   ScrollView,
   Pressable,
   Switch,
-  Alert,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -21,15 +20,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
 import { VaultRepository } from '../../../features/vault/repository/vaultRepository';
+import { useVaultStore } from '../../../features/vault/store/useVaultStore';
 import { VaultSessionManager } from '../../../core/session';
-import { VaultItem, VaultItemType, AnyVaultPayload, CustomField, CustomFieldType } from '../../../types/vault';
+import { VaultItem, VaultItemType, AnyVaultPayload } from '../../../types/vault';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { PasswordGeneratorModal } from '../../../features/password-generator';
+
+export type CustomFieldType = 'text' | 'password' | 'description';
+
+export interface CustomField {
+  id: string;
+  label: string;
+  value: string;
+  type?: CustomFieldType;
+  isSecret?: boolean;
+}
 
 export interface VaultItemEditProps {
   id?: string;
   onBack?: () => void;
   onSaveComplete?: () => void;
+}
+
+interface SnackbarState {
+  message: string;
+  type?: 'error' | 'success' | 'info';
 }
 
 const CATEGORY_ITEMS: { type: VaultItemType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -114,6 +129,28 @@ export default function VaultItemEditScreen({
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [visibleSecretFieldIds, setVisibleSecretFieldIds] = useState<Record<string, boolean>>({});
+  const [titleError, setTitleError] = useState(false);
+  const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, boolean>>({});
+  const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
+  const snackbarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showSnackbar = (message: string, type: 'error' | 'success' | 'info' = 'error') => {
+    if (snackbarTimeoutRef.current) {
+      clearTimeout(snackbarTimeoutRef.current);
+    }
+    setSnackbar({ message, type });
+    snackbarTimeoutRef.current = setTimeout(() => {
+      setSnackbar(null);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (snackbarTimeoutRef.current) {
+        clearTimeout(snackbarTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Sync state if item loads after initial mount in edit mode
   useEffect(() => {
@@ -233,8 +270,34 @@ export default function VaultItemEditScreen({
   }
 
   const handleSave = async () => {
+    let hasError = false;
+
     if (!title.trim()) {
-      Alert.alert('Validation Error', 'Title is required');
+      setTitleError(true);
+      showSnackbar('Title is required to save item', 'error');
+      hasError = true;
+    }
+
+    const newFieldErrors: Record<string, boolean> = {};
+    customFields.forEach((cf) => {
+      if (cf.value.trim() && !cf.label.trim()) {
+        newFieldErrors[cf.id] = true;
+        hasError = true;
+      }
+    });
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setCustomFieldErrors(newFieldErrors);
+      showSnackbar(
+        !title.trim()
+          ? 'Title and custom field labels are required'
+          : 'Please give your custom field a label',
+        'error'
+      );
+      return;
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -337,11 +400,9 @@ export default function VaultItemEditScreen({
           updatedAt: Date.now(),
         };
 
-        if (masterKey) {
-          await VaultRepository.createItem(newItem, masterKey);
-        }
-      } else if (masterKey && item) {
-        await VaultRepository.updateItem(
+        await useVaultStore.getState().addItem(newItem, masterKey ?? undefined);
+      } else if (item) {
+        await useVaultStore.getState().updateItem(
           item.id,
           {
             title: title.trim(),
@@ -360,16 +421,15 @@ export default function VaultItemEditScreen({
               customFields: customFieldsPayload,
             } as unknown as AnyVaultPayload,
           },
-          masterKey
+          masterKey ?? undefined
         );
       }
 
       onSaveComplete?.();
       onBack?.();
-    } catch {
-      // Best-effort local update
-      onSaveComplete?.();
-      onBack?.();
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Failed to save item';
+      showSnackbar(errMsg, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -614,13 +674,25 @@ export default function VaultItemEditScreen({
           </View>
         </View>
 
-        {/* Title Input */}
+        {/* Title Input with Field Validation Feedback */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>TITLE</Text>
-          <View style={styles.inputContainer}>
+          <View style={styles.fieldLabelRow}>
+            <Text style={[styles.fieldLabel, titleError && styles.fieldLabelError]}>TITLE</Text>
+            {titleError && (
+              <View style={styles.fieldErrorIndicator}>
+                <Ionicons name="alert-circle" size={12} color={colors.crimson} style={{ marginRight: 3 }} />
+                <Text style={styles.inlineErrorText}>Title is required</Text>
+              </View>
+            )}
+          </View>
+          <View style={[styles.inputContainer, titleError && styles.inputContainerError]}>
             <TextInput
               value={title}
-              onChangeText={setTitle}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (titleError) setTitleError(false);
+                if (snackbar) setSnackbar(null);
+              }}
               placeholder="e.g. Google, GitHub, Netflix"
               placeholderTextColor={colors.textMuted}
               style={styles.textInput}
@@ -797,13 +869,29 @@ export default function VaultItemEditScreen({
                   <View key={field.id || index} style={styles.customFieldCard}>
                     {/* Header: Label Input & Delete Button */}
                     <View style={styles.customFieldHeaderRow}>
-                      <View style={styles.customFieldLabelInputWrap}>
-                        <Ionicons name="pricetag-outline" size={12} color={colors.textTertiary} style={{ marginRight: 6 }} />
+                      <View
+                        style={[
+                          styles.customFieldLabelInputWrap,
+                          customFieldErrors[field.id] && styles.customFieldLabelInputWrapError,
+                        ]}
+                      >
+                        <Ionicons
+                          name="pricetag-outline"
+                          size={12}
+                          color={customFieldErrors[field.id] ? colors.crimson : colors.textTertiary}
+                          style={{ marginRight: 6 }}
+                        />
                         <TextInput
                           value={field.label}
-                          onChangeText={(text) => handleUpdateCustomField(field.id, { label: text })}
+                          onChangeText={(text) => {
+                            handleUpdateCustomField(field.id, { label: text });
+                            if (customFieldErrors[field.id]) {
+                              setCustomFieldErrors((prev) => ({ ...prev, [field.id]: false }));
+                            }
+                            if (snackbar) setSnackbar(null);
+                          }}
                           placeholder="Field label (e.g. PIN, Secret Answer, Token)"
-                          placeholderTextColor={colors.textMuted}
+                          placeholderTextColor={customFieldErrors[field.id] ? 'rgba(239, 68, 68, 0.6)' : colors.textMuted}
                           style={styles.customFieldLabelInput}
                         />
                       </View>
@@ -986,6 +1074,64 @@ export default function VaultItemEditScreen({
           setPassword(generatedPassword);
         }}
       />
+
+      {/* Dynamic Sweet Snackbar Alert */}
+      {snackbar && (
+        <Pressable
+          onPress={() => setSnackbar(null)}
+          style={[
+            styles.snackbarContainer,
+            snackbar.type === 'error' && styles.snackbarErrorContainer,
+            snackbar.type === 'success' && styles.snackbarSuccessContainer,
+          ]}
+          accessibilityRole="alert"
+        >
+          <View style={styles.snackbarContent}>
+            <View
+              style={[
+                styles.snackbarIconCircle,
+                snackbar.type === 'error' && styles.snackbarErrorIconCircle,
+                snackbar.type === 'success' && styles.snackbarSuccessIconCircle,
+              ]}
+            >
+              <Ionicons
+                name={
+                  snackbar.type === 'error'
+                    ? 'alert-circle'
+                    : snackbar.type === 'success'
+                    ? 'checkmark-circle'
+                    : 'information-circle'
+                }
+                size={18}
+                color={
+                  snackbar.type === 'error'
+                    ? colors.crimson
+                    : snackbar.type === 'success'
+                    ? colors.emerald
+                    : colors.primaryLight
+                }
+              />
+            </View>
+
+            <View style={styles.snackbarTextWrap}>
+              <Text style={styles.snackbarTitle}>
+                {snackbar.type === 'error' ? 'Validation Error' : 'Notice'}
+              </Text>
+              <Text style={styles.snackbarMessage}>{snackbar.message}</Text>
+            </View>
+
+            <Pressable
+              onPress={() => setSnackbar(null)}
+              hitSlop={8}
+              style={styles.snackbarDismissBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss alert"
+            >
+              <Ionicons name="close" size={16} color={colors.textTertiary} />
+            </Pressable>
+          </View>
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -1495,5 +1641,88 @@ const styles = StyleSheet.create({
   eyeToggleBtn: {
     padding: 4,
     marginLeft: 6,
+  },
+  snackbarContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: spacing.lg,
+    right: spacing.lg,
+    backgroundColor: '#16171E',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+    zIndex: 999,
+  },
+  snackbarErrorContainer: {
+    borderColor: 'rgba(239, 68, 68, 0.45)',
+    backgroundColor: '#19151A',
+  },
+  snackbarSuccessContainer: {
+    borderColor: 'rgba(16, 185, 129, 0.45)',
+    backgroundColor: '#131A17',
+  },
+  snackbarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    gap: spacing.sm,
+  },
+  snackbarIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(123, 97, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  snackbarErrorIconCircle: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  snackbarSuccessIconCircle: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  snackbarTextWrap: {
+    flex: 1,
+  },
+  snackbarTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: 0.3,
+  },
+  snackbarMessage: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  snackbarDismissBtn: {
+    padding: 4,
+  },
+  fieldLabelError: {
+    color: colors.crimson,
+  },
+  fieldErrorIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inlineErrorText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.crimson,
+  },
+  inputContainerError: {
+    borderColor: colors.crimson,
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+  },
+  customFieldLabelInputWrapError: {
+    borderColor: colors.crimson,
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
   },
 });

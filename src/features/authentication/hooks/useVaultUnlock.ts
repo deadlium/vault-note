@@ -18,7 +18,9 @@ import {
   getEnclaveItem,
   ENCLAVE_KEYS,
 } from '../../../core/storage/enclave';
-import { deriveKeyArgon2id } from '../../../core/crypto/kdf';
+import { deriveKeyArgon2id, deriveKeyEncryptionKey } from '../../../core/crypto/kdf';
+import { VaultSessionManager } from '../../../core/session';
+import { useVaultStore } from '../../vault/store/useVaultStore';
 
 export interface UseVaultUnlockOptions {
   onUnlockSuccess?: () => void;
@@ -147,9 +149,14 @@ export function useVaultUnlock(options?: UseVaultUnlockOptions) {
       // 1. Retrieve master salt from hardware enclave
       const storedSaltHex = await getEnclaveItem(ENCLAVE_KEYS.PASS_SALT);
 
+      let derivedKey: Uint8Array;
       if (storedSaltHex) {
         // Derive key with stored salt to verify validity
-        deriveKeyArgon2id(pwdToVerify, storedSaltHex);
+        const derivation = deriveKeyArgon2id(pwdToVerify, storedSaltHex);
+        derivedKey = derivation.key;
+      } else {
+        const derivation = deriveKeyEncryptionKey(pwdToVerify);
+        derivedKey = derivation.key;
       }
 
       // 2. Retrieve master enclave token
@@ -159,6 +166,10 @@ export function useVaultUnlock(options?: UseVaultUnlockOptions) {
         // Re-arm biometric secret in case it was purged
         await storeBiometricSecret(masterToken);
       }
+
+      // 3. Cache derived key in active session and reload items from SQLite
+      VaultSessionManager.unlock(derivedKey, masterToken ?? undefined);
+      await useVaultStore.getState().loadItems(derivedKey);
 
       setIsUnlocked(true);
       setIsAuthenticating(false);

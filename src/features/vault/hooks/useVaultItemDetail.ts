@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { VaultItem, AnyVaultPayload, LoginPayload } from '../../../types/vault';
 import { VaultRepository } from '../repository/vaultRepository';
+import { useVaultStore } from '../store/useVaultStore';
 import { VaultSessionManager } from '../../../core/session';
 
 // Demo item fallback for development & interactive prototypes
@@ -28,13 +29,22 @@ const DEMO_DETAIL_ITEM: VaultItem<LoginPayload> = {
 };
 
 export function useVaultItemDetail(itemId?: string) {
-  const [item, setItem] = useState<VaultItem<AnyVaultPayload> | null>(null);
-  const [isLoading, setIsLoading] = useState(Boolean(itemId));
+  const storeItem = useVaultStore((s) => (itemId ? s.getItemById(itemId) : undefined));
+  const [item, setItem] = useState<VaultItem<AnyVaultPayload> | null>(storeItem ?? null);
+  const [isLoading, setIsLoading] = useState(Boolean(itemId && !storeItem));
   const [error, setError] = useState<string | null>(null);
 
   const loadItem = useCallback(async () => {
     if (!itemId) {
       setItem(null);
+      setIsLoading(false);
+      return;
+    }
+
+    // 1. Check store first for instantaneous 0ms response
+    const existingInStore = useVaultStore.getState().getItemById(itemId);
+    if (existingInStore) {
+      setItem(existingInStore);
       setIsLoading(false);
       return;
     }
@@ -65,8 +75,8 @@ export function useVaultItemDetail(itemId?: string) {
           title: itemId.replace('demo-', '').toUpperCase(),
         } as VaultItem<AnyVaultPayload>);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to decrypt vault item');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to decrypt vault item');
       // Fallback to demo detail item
       setItem(DEMO_DETAIL_ITEM as VaultItem<AnyVaultPayload>);
     } finally {
@@ -75,8 +85,13 @@ export function useVaultItemDetail(itemId?: string) {
   }, [itemId]);
 
   useEffect(() => {
-    loadItem();
-  }, [loadItem]);
+    if (storeItem) {
+      setItem(storeItem);
+      setIsLoading(false);
+    } else {
+      loadItem();
+    }
+  }, [itemId, storeItem, loadItem]);
 
   const toggleFavorite = useCallback(async (): Promise<boolean> => {
     if (!item) return false;
@@ -84,23 +99,15 @@ export function useVaultItemDetail(itemId?: string) {
     const newFavoriteState = !item.isFavorite;
     setItem((prev) => (prev ? { ...prev, isFavorite: newFavoriteState } : null));
 
-    try {
-      await VaultRepository.toggleItemFavorite(item.id);
-      return true;
-    } catch {
-      return false;
-    }
+    await useVaultStore.getState().toggleFavorite(item.id);
+    return true;
   }, [item]);
 
   const deleteItem = useCallback(async (): Promise<boolean> => {
     if (!item) return false;
 
-    try {
-      await VaultRepository.deleteItem(item.id);
-      return true;
-    } catch {
-      return false;
-    }
+    await useVaultStore.getState().deleteItem(item.id);
+    return true;
   }, [item]);
 
   return {

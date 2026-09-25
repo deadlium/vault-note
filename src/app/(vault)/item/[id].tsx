@@ -23,8 +23,9 @@ import { colors, radius, spacing, typography } from '../../../theme';
 import { PasswordField } from '../../../components/input/PasswordField';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
-import { useClipboardManager } from '../../../core/clipboard';
 import { LoginPayload, CustomField } from '../../../types/vault';
+import { useClipboardManager } from '../../../core/clipboard';
+import { TOTPRow } from '../../../features/totp';
 
 export interface VaultItemDetailProps {
   id?: string;
@@ -41,26 +42,6 @@ export default function VaultItemDetailScreen({
   const { isActive, remainingSeconds, totalSeconds, label, copySecret, copyPlain } =
     useClipboardManager();
 
-  // Simulated TOTP state for visual match with design
-  const [totpRemaining, setTotpRemaining] = useState(15);
-  const [totpCode, setTotpCode] = useState('483 921');
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTotpRemaining((prev) => {
-        if (prev <= 1) {
-          // Regenerate mock rotating code
-          const rand = Math.floor(100000 + Math.random() * 900000);
-          setTotpCode(`${String(rand).slice(0, 3)} ${String(rand).slice(3)}`);
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   if (isLoading || !item) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -69,14 +50,15 @@ export default function VaultItemDetailScreen({
     );
   }
 
-  const payload = item.payload as Partial<LoginPayload>;
-  const username = payload.username || '';
-  const password = payload.password || '';
-  const websiteUrl = payload.websiteUrl || 'https://accounts.google.com';
-  const notes = payload.notes || '';
-  const hasTOTP = Boolean(payload.totpSecret);
-  const customFields: CustomField[] = Array.isArray((payload as Record<string, unknown>).customFields)
-    ? ((payload as Record<string, unknown>).customFields as CustomField[])
+  const payload = (item.payload as unknown as Record<string, unknown>) || {};
+  const username = (payload.username as string) || (payload.accountName as string) || '';
+  const password = (payload.password as string) || (payload.apiKey as string) || '';
+  const websiteUrl = (payload.websiteUrl as string) || (payload.endpointUrl as string) || '';
+  const notes = (payload.notes as string) || (payload.content as string) || '';
+  const totpSecret = (payload.totpSecret as string) || (payload.secret as string) || '';
+  const hasTOTP = Boolean(totpSecret && totpSecret.trim().length > 0);
+  const customFields: CustomField[] = Array.isArray(payload.customFields)
+    ? (payload.customFields as CustomField[])
     : [];
 
   const handleCopyUsername = () => {
@@ -85,10 +67,6 @@ export default function VaultItemDetailScreen({
 
   const handleCopyPassword = () => {
     copySecret(password, 'Password', 30);
-  };
-
-  const handleCopyTOTP = () => {
-    copySecret(totpCode.replace(/\s/g, ''), 'TOTP Code', 30);
   };
 
   const handleCopyUrl = () => {
@@ -289,36 +267,11 @@ export default function VaultItemDetailScreen({
               </View>
             </View>
 
-            <View style={styles.card}>
-              <View style={styles.totpHeaderRow}>
-                <View>
-                  <Text style={styles.fieldLabel}>One-Time Passcode</Text>
-                  <Text style={styles.totpCodeText}>{totpCode}</Text>
-                </View>
-
-                {/* Circular timer indicator */}
-                <View style={styles.timerCircle}>
-                  <Text style={styles.timerText}>{totpRemaining}s</Text>
-                </View>
-              </View>
-
-              <View style={styles.totpActionRow}>
-                <Pressable
-                  onPress={handleCopyTOTP}
-                  style={({ pressed }) => [
-                    styles.totpCopyButton,
-                    pressed && styles.totpCopyButtonPressed,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Copy 6-Digit Code"
-                >
-                  <MaterialCommunityIcons name="numeric" size={16} color={colors.textPrimary} style={{ marginRight: 6 }} />
-                  <Text style={styles.totpCopyText}>Copy 6-Digit Code</Text>
-                </Pressable>
-
-                <Text style={styles.rotatesText}>Rotates in {totpRemaining}s</Text>
-              </View>
-            </View>
+            <TOTPRow
+              secret={totpSecret}
+              label={item.title}
+              accountName={username}
+            />
           </View>
         )}
 
