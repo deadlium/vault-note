@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../theme';
 
-export type VaultTab = 'vault' | 'search' | 'generator' | 'settings';
+export type VaultTab = 'vault' | 'search' | 'totp' | 'generator' | 'settings';
 
 export interface VaultLayoutProps {
   children?: React.ReactNode;
@@ -33,10 +33,10 @@ const TAB_CONFIGS: TabItemConfig[] = [
     iconInactive: 'shield-checkmark-outline',
   },
   {
-    key: 'search',
-    label: 'Search',
-    iconActive: 'search',
-    iconInactive: 'search-outline',
+    key: 'totp',
+    label: 'TOTP',
+    iconActive: 'qr-code',
+    iconInactive: 'qr-code-outline',
   },
   {
     key: 'generator',

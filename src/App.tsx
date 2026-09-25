@@ -10,6 +10,7 @@ import VaultRecoveryScreen from './app/(auth)/recovery';
 import VaultUnlockScreen from './app/(auth)/unlock';
 import { CupertinoScreenTransition } from './components/navigation/CupertinoScreenTransition';
 import { PasswordGeneratorScreen } from './features/password-generator';
+import { TOTPScreen } from './features/totp';
 import { VaultSessionManager, useSessionStore } from './core/session';
 import { useAutoLock } from './hooks/useAutoLock';
 
@@ -130,7 +131,14 @@ export default function App() {
               activeTab={activeTab}
               onTabChange={setActiveTab}
             >
-              {activeTab === 'generator' ? (
+              {activeTab === 'totp' ? (
+                <TOTPScreen
+                  onOpenItem={(item) => {
+                    setIsEditingItem(false);
+                    setSelectedItemId(item.id);
+                  }}
+                />
+              ) : activeTab === 'generator' ? (
                 <PasswordGeneratorScreen />
               ) : (
                 <VaultHomeScreen

@@ -37,9 +37,44 @@ export interface ParsedOtpAuthUri {
   type: 'totp' | 'hotp';
   label: string;
   issuer?: string;
+  account?: string;
   secret: string;
   algorithm: TOTPAlgorithm;
   digits: number;
   period: number;
   counter?: number;
+}
+
+export interface TOTPEnrollmentData {
+  type?: 'totp';
+  label?: string;
+  issuer: string;
+  account: string;
+  accountName?: string;
+  secret: string;
+  algorithm: TOTPAlgorithm;
+  digits: number;
+  period: number;
+}
+
+export type TOTPValidationErrorCode =
+  | 'INVALID_SCHEME'
+  | 'UNSUPPORTED_TYPE'
+  | 'HOTP_NOT_SUPPORTED'
+  | 'MISSING_SECRET'
+  | 'INVALID_SECRET'
+  | 'MISSING_ISSUER'
+  | 'CONFLICTING_ISSUER'
+  | 'INVALID_ALGORITHM'
+  | 'INVALID_DIGITS'
+  | 'INVALID_PERIOD'
+  | 'MALFORMED_URI'
+  | 'CAMERA_PERMISSION_DENIED'
+  | 'CAMERA_UNAVAILABLE';
+
+export interface TOTPValidationResult {
+  isValid: boolean;
+  data?: TOTPEnrollmentData;
+  error?: string;
+  code?: TOTPValidationErrorCode;
 }

@@ -14,6 +14,7 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +26,7 @@ import { VaultSessionManager } from '../../../core/session';
 import { VaultItem, VaultItemType, AnyVaultPayload } from '../../../types/vault';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { PasswordGeneratorModal } from '../../../features/password-generator';
+import { TOTPEnrollment, TOTPRow } from '../../../features/totp';
 
 export type CustomFieldType = 'text' | 'password' | 'description';
 
@@ -131,6 +133,8 @@ export default function VaultItemEditScreen({
   const [visibleSecretFieldIds, setVisibleSecretFieldIds] = useState<Record<string, boolean>>({});
   const [titleError, setTitleError] = useState(false);
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, boolean>>({});
+  const [totpSecret, setTotpSecret] = useState('');
+  const [isEnrollingTOTP, setIsEnrollingTOTP] = useState(false);
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
   const snackbarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -186,6 +190,7 @@ export default function VaultItemEditScreen({
         ? (p.customFields as CustomField[])
         : [];
       setCustomFields(loadedCustomFields);
+      setTotpSecret((p.totpSecret as string) || (p.secret as string) || '');
     }
   }, [isCreateMode, item]);
 
@@ -340,7 +345,7 @@ export default function VaultItemEditScreen({
         payload = {
           issuer: title.trim(),
           accountName: username.trim() || 'Account',
-          secret: password.trim().replace(/\s/g, '').toUpperCase() || 'JBSWY3DPEHPK3PXP',
+          secret: (totpSecret.trim() || password.trim()).replace(/\s/g, '').toUpperCase() || 'JBSWY3DPEHPK3PXP',
           notes: notes.trim(),
           icon: cleanIcon,
           customFields: customFieldsPayload,
@@ -378,6 +383,7 @@ export default function VaultItemEditScreen({
           username: username.trim(),
           password,
           websiteUrl: websiteUrl.trim(),
+          totpSecret: totpSecret.trim() || undefined,
           notes: notes.trim(),
           icon: cleanIcon,
           customFields: customFieldsPayload,
@@ -416,6 +422,7 @@ export default function VaultItemEditScreen({
               username: username.trim(),
               password,
               websiteUrl: websiteUrl.trim(),
+              totpSecret: totpSecret.trim() || undefined,
               notes: notes.trim(),
               icon: cleanIcon,
               customFields: customFieldsPayload,
@@ -804,6 +811,66 @@ export default function VaultItemEditScreen({
           )}
         </View>
 
+        {/* Two-Factor Authentication (2FA) Section */}
+        {(selectedCategory === 'LOGIN' || selectedCategory === 'TOTP') && (
+          <View style={styles.fieldGroup}>
+            <View style={styles.sectionHeaderRowWithAction}>
+              <View style={styles.sectionHeaderLeft}>
+                <Ionicons name="shield-checkmark" size={13} color={colors.primaryLight} />
+                <Text style={styles.fieldLabel}>TWO-FACTOR AUTHENTICATION (2FA)</Text>
+              </View>
+              {totpSecret ? (
+                <Pressable
+                  onPress={() => setIsEnrollingTOTP(true)}
+                  style={({ pressed }) => [
+                    styles.changeTotpBtn,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  hitSlop={6}
+                >
+                  <Ionicons name="sync-outline" size={12} color={colors.primaryLight} style={{ marginRight: 4 }} />
+                  <Text style={styles.changeTotpText}>Change Key</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            {totpSecret ? (
+              <View style={styles.totpConfiguredCard}>
+                <TOTPRow
+                  secret={totpSecret}
+                  label={title.trim() || 'Authenticator'}
+                  accountName={username.trim() || '2FA Code'}
+                  onCopy={(code) => showSnackbar(`Copied code ${code}`, 'success')}
+                />
+                <Pressable
+                  onPress={() => setTotpSecret('')}
+                  style={styles.removeTotpBtn}
+                >
+                  <Ionicons name="trash-outline" size={14} color={colors.crimson} />
+                  <Text style={styles.removeTotpText}>Remove 2FA</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setIsEnrollingTOTP(true)}
+                style={({ pressed }) => [
+                  styles.addTotpActionCard,
+                  pressed && styles.addTotpActionCardPressed,
+                ]}
+              >
+                <View style={styles.addTotpIconCircle}>
+                  <Ionicons name="qr-code-outline" size={20} color={colors.primaryLight} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.addTotpTitle}>Scan QR or Enter Key</Text>
+                  <Text style={styles.addTotpSubtext}>Set up time-based one-time passwords for this vault item</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
+            )}
+          </View>
+        )}
+
         {/* Encrypted Safe Notes Input */}
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>
@@ -1074,6 +1141,34 @@ export default function VaultItemEditScreen({
           setPassword(generatedPassword);
         }}
       />
+
+      {/* TOTP QR Scanner & Enrollment Modal */}
+      <Modal
+        visible={isEnrollingTOTP}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setIsEnrollingTOTP(false)}
+      >
+        <SafeAreaView style={styles.modalFullContainer}>
+          <TOTPEnrollment
+            initialServiceName={title.trim()}
+            initialAccountName={username.trim()}
+            onEnroll={(data) => {
+              setTotpSecret(data.secret);
+              if (!title.trim() && data.issuer) {
+                setTitle(data.issuer);
+              }
+              const accountValue = data.account || data.accountName;
+              if (!username.trim() && accountValue) {
+                setUsername(accountValue);
+              }
+              setIsEnrollingTOTP(false);
+              showSnackbar('2FA Key successfully configured!', 'success');
+            }}
+            onCancel={() => setIsEnrollingTOTP(false)}
+          />
+        </SafeAreaView>
+      </Modal>
 
       {/* Dynamic Sweet Snackbar Alert */}
       {snackbar && (
@@ -1724,5 +1819,73 @@ const styles = StyleSheet.create({
   customFieldLabelInputWrapError: {
     borderColor: colors.crimson,
     backgroundColor: 'rgba(239, 68, 68, 0.08)',
+  },
+  modalFullContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  changeTotpBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(123, 97, 255, 0.1)',
+  },
+  changeTotpText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.primaryLight,
+  },
+  totpConfiguredCard: {
+    marginTop: spacing.xs,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+  },
+  removeTotpBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  removeTotpText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.crimson,
+  },
+  addTotpActionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    borderStyle: 'dashed',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.xs,
+  },
+  addTotpActionCardPressed: {
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.primary,
+  },
+  addTotpIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(123, 97, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addTotpTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  addTotpSubtext: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
   },
 });

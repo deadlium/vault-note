@@ -10,6 +10,7 @@ import { sha256, sha512 } from '@noble/hashes/sha2.js';
 import { CryptoError } from '../../core/crypto/types';
 import { base32Decode } from './base32';
 import { TOTPAlgorithm, TOTPConfig, TOTPToken, ParsedOtpAuthUri } from './types';
+import { parseOtpAuthUri } from './parser/otpauthParser';
 
 /**
  * Computes an 8-byte big-endian counter buffer from a 64-bit counter value.
@@ -199,50 +200,4 @@ export function verifyTOTP(
   return false;
 }
 
-/**
- * Parses standard Keyuri / OTPAuth format into structured configuration.
- * Format: otpauth://totp/Example:alice@gmail.com?secret=JBSWY3DPEHPK3PXP&issuer=Example
- */
-export function parseOtpAuthUri(uri: string): ParsedOtpAuthUri {
-  if (!uri || !uri.startsWith('otpauth://')) {
-    throw new CryptoError("Invalid OTP URI: must start with 'otpauth://'");
-  }
-
-  try {
-    const url = new URL(uri);
-    const type = url.host.toLowerCase() as 'totp' | 'hotp';
-    if (type !== 'totp' && type !== 'hotp') {
-      throw new CryptoError(`Unsupported OTP type: ${type}`);
-    }
-
-    const label = decodeURIComponent(url.pathname.replace(/^\//, ''));
-    const secret = url.searchParams.get('secret');
-    if (!secret) {
-      throw new CryptoError("Missing required 'secret' parameter in OTP URI");
-    }
-
-    const issuer = url.searchParams.get('issuer') ?? undefined;
-    const rawAlgorithm = (url.searchParams.get('algorithm') ?? 'SHA1').toUpperCase();
-    const algorithm: TOTPAlgorithm =
-      rawAlgorithm === 'SHA256' ? 'SHA256' : rawAlgorithm === 'SHA512' ? 'SHA512' : 'SHA1';
-
-    const digits = parseInt(url.searchParams.get('digits') ?? '6', 10);
-    const period = parseInt(url.searchParams.get('period') ?? '30', 10);
-    const counterParam = url.searchParams.get('counter');
-    const counter = counterParam ? parseInt(counterParam, 10) : undefined;
-
-    return {
-      type,
-      label,
-      issuer,
-      secret,
-      algorithm,
-      digits: isNaN(digits) ? 6 : digits,
-      period: isNaN(period) ? 30 : period,
-      counter: counter !== undefined && !isNaN(counter) ? counter : undefined,
-    };
-  } catch (err: unknown) {
-    if (err instanceof CryptoError) throw err;
-    throw new CryptoError(`Failed to parse otpauth URI: ${(err as Error).message}`);
-  }
-}
+export { parseOtpAuthUri } from './parser/otpauthParser';
