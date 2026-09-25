@@ -144,8 +144,10 @@ export default function VaultHomeScreen({
             title: record.title,
             subtitle: username,
             category: record.type,
-            tag: record.type,
-            iconType: undefined,
+            tag: record.tags?.[0] ? `#${record.tags[0]}` : record.type,
+            iconType:
+              ((record as unknown as Record<string, unknown>).icon as string) ||
+              ((payload?.icon as string) || undefined),
             isFavorite: record.isFavorite,
             isProtected: record.isProtected ?? true,
             hasTOTP: Boolean(payload?.totpSecret),

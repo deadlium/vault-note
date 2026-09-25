@@ -7,7 +7,8 @@ import { z } from 'zod';
 export const customFieldSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(1).max(100),
-  value: z.string().max(2000),
+  value: z.string().max(10000),
+  type: z.enum(['text', 'password', 'description']).optional(),
   isSecret: z.boolean().optional(),
 });
 
@@ -25,6 +26,7 @@ export const loginPayloadSchema = z.object({
     .or(z.literal(''))
     .optional(),
   notes: z.string().max(10000).optional(),
+  icon: z.string().optional(),
   customFields: z.array(customFieldSchema).optional(),
 });
 
@@ -36,6 +38,7 @@ export const loginItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });

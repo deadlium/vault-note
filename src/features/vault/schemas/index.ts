@@ -20,6 +20,8 @@ export const cardPayloadSchema = z.object({
   pin: z.string().max(12).optional(),
   cardType: z.enum(['visa', 'mastercard', 'amex', 'discover', 'other']).optional(),
   notes: z.string().max(5000).optional(),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const cardItemSchema = z.object({
@@ -30,6 +32,7 @@ export const cardItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });
@@ -42,6 +45,8 @@ export const totpPayloadSchema = z.object({
   algorithm: z.enum(['SHA1', 'SHA256', 'SHA512']).optional(),
   digits: z.union([z.literal(6), z.literal(8)]).optional(),
   period: z.number().int().positive().optional(),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const totpItemSchema = z.object({
@@ -52,6 +57,7 @@ export const totpItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });
@@ -64,6 +70,8 @@ export const apiKeyPayloadSchema = z.object({
   endpointUrl: z.string().url().or(z.literal('')).optional(),
   expiresAt: z.number().int().positive().optional(),
   notes: z.string().max(5000).optional(),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const apiKeyItemSchema = z.object({
@@ -74,6 +82,7 @@ export const apiKeyItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });
@@ -87,6 +96,8 @@ export const identityPayloadSchema = z.object({
   ssnOrNationalId: z.string().max(50).optional(),
   address: z.string().max(500).optional(),
   notes: z.string().max(5000).optional(),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const identityItemSchema = z.object({
@@ -97,6 +108,7 @@ export const identityItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });
@@ -106,6 +118,8 @@ export const recoveryCodesPayloadSchema = z.object({
   service: z.string().trim().min(1, 'Service name is required').max(100),
   codes: z.array(z.string().trim().min(1)).min(1, 'At least one recovery code required'),
   notes: z.string().max(5000).optional(),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const recoveryCodesItemSchema = z.object({
@@ -116,6 +130,7 @@ export const recoveryCodesItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });

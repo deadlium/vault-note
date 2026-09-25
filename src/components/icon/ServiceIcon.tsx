@@ -1,11 +1,11 @@
 /**
  * ServiceIcon Component
- * Dynamic service brand icon and monogram badge with obsidian dark palette
+ * Dynamic service brand icon, remote favicon/image, and monogram badge with obsidian dark palette
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { Ionicons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { colors, radius } from '../../theme';
 import { VaultItemType } from '../../types/vault';
 
@@ -17,10 +17,14 @@ export type ServiceIconType =
   | 'microsoft'
   | 'slack'
   | 'twitter'
+  | 'x'
   | 'discord'
   | 'spotify'
   | 'netflix'
   | 'dropbox'
+  | 'reddit'
+  | 'amazon'
+  | 'youtube'
   | 'archive'
   | 'mail'
   | 'key'
@@ -48,15 +52,57 @@ export function ServiceIcon({
   title = '',
   size = 'md',
 }: ServiceIconProps) {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [iconType]);
+
   const dimensions = {
     sm: { box: 34, icon: 18, radiusVal: radius.sm, font: 12 },
     md: { box: 42, icon: 22, radiusVal: radius.md, font: 14 },
     lg: { box: 52, icon: 26, radiusVal: radius.lg, font: 17 },
   }[size];
 
-  const normalized = (iconType ?? '').toLowerCase().trim();
+  const raw = (iconType ?? '').trim();
+  const normalized = raw.toLowerCase();
 
-  // 1. Known Brand Icons
+  // 1. Remote Image URL or Favicon
+  const isUrl =
+    raw.startsWith('http://') ||
+    raw.startsWith('https://') ||
+    raw.startsWith('data:image/');
+
+  if (!imgError && isUrl) {
+    return (
+      <View
+        style={[
+          styles.box,
+          {
+            width: dimensions.box,
+            height: dimensions.box,
+            borderRadius: dimensions.radiusVal,
+            backgroundColor: '#12141A',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
+            overflow: 'hidden',
+          },
+        ]}
+      >
+        <Image
+          source={{ uri: raw }}
+          style={{
+            width: Math.round(dimensions.box * 0.65),
+            height: Math.round(dimensions.box * 0.65),
+            borderRadius: Math.round(dimensions.radiusVal * 0.3),
+          }}
+          resizeMode="contain"
+          onError={() => setImgError(true)}
+        />
+      </View>
+    );
+  }
+
+  // 2. Known Brand Icons
   if (normalized === 'google') {
     return (
       <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#1A1428', borderColor: 'rgba(234, 67, 53, 0.3)' }]}>
@@ -121,6 +167,54 @@ export function ServiceIcon({
     );
   }
 
+  if (normalized === 'netflix') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#200E12', borderColor: 'rgba(229, 9, 20, 0.35)' }]}>
+        <MaterialCommunityIcons name="netflix" size={dimensions.icon} color="#E50914" />
+      </View>
+    );
+  }
+
+  if (normalized === 'twitter' || normalized === 'x') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#0C1826', borderColor: 'rgba(29, 161, 242, 0.35)' }]}>
+        <MaterialCommunityIcons name="twitter" size={dimensions.icon} color="#1DA1F2" />
+      </View>
+    );
+  }
+
+  if (normalized === 'dropbox') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#0B1728', borderColor: 'rgba(0, 97, 255, 0.35)' }]}>
+        <MaterialCommunityIcons name="dropbox" size={dimensions.icon} color="#0061FF" />
+      </View>
+    );
+  }
+
+  if (normalized === 'reddit') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#20120B', borderColor: 'rgba(255, 69, 0, 0.35)' }]}>
+        <MaterialCommunityIcons name="reddit" size={dimensions.icon} color="#FF4500" />
+      </View>
+    );
+  }
+
+  if (normalized === 'amazon') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#1C160E', borderColor: 'rgba(255, 153, 0, 0.35)' }]}>
+        <FontAwesome name="amazon" size={dimensions.icon} color="#FF9900" />
+      </View>
+    );
+  }
+
+  if (normalized === 'youtube') {
+    return (
+      <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#200E0E', borderColor: 'rgba(255, 0, 0, 0.35)' }]}>
+        <MaterialCommunityIcons name="youtube" size={dimensions.icon} color="#FF0000" />
+      </View>
+    );
+  }
+
   if (normalized === 'wifi') {
     return (
       <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#0E1A1E', borderColor: 'rgba(6, 182, 212, 0.3)' }]}>
@@ -129,7 +223,7 @@ export function ServiceIcon({
     );
   }
 
-  // 2. Category Generic Icons (when iconType maps to category or category provided)
+  // 3. Category Generic Icons
   const cat = (category ?? '').toUpperCase();
   if (cat === 'CARD' || normalized === 'card') {
     return (
@@ -139,7 +233,7 @@ export function ServiceIcon({
     );
   }
 
-  if (cat === 'SECURE_NOTE' || cat === 'SECURE NOTE' || normalized === 'archive') {
+  if (cat === 'SECURE_NOTE' || cat === 'SECURE NOTE' || normalized === 'archive' || normalized === 'note') {
     return (
       <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#111822', borderColor: 'rgba(59, 130, 246, 0.3)' }]}>
         <MaterialCommunityIcons name="note-text-outline" size={dimensions.icon} color="#60A5FA" />
@@ -163,7 +257,7 @@ export function ServiceIcon({
     );
   }
 
-  if (cat === 'IDENTITY') {
+  if (cat === 'IDENTITY' || normalized === 'identity') {
     return (
       <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#131A24', borderColor: 'rgba(56, 189, 248, 0.3)' }]}>
         <Ionicons name="person-outline" size={dimensions.icon} color="#38BDF8" />
@@ -171,7 +265,7 @@ export function ServiceIcon({
     );
   }
 
-  if (cat === 'RECOVERY_CODES') {
+  if (cat === 'RECOVERY_CODES' || normalized === 'recovery') {
     return (
       <View style={[styles.box, { width: dimensions.box, height: dimensions.box, borderRadius: dimensions.radiusVal, backgroundColor: '#1E1218', borderColor: 'rgba(244, 63, 94, 0.35)' }]}>
         <Ionicons name="grid-outline" size={dimensions.icon} color="#FB7185" />
@@ -179,7 +273,7 @@ export function ServiceIcon({
     );
   }
 
-  // 3. Monogram Fallback from Title
+  // 4. Monogram Fallback from Title
   const cleanTitle = title.trim();
   const initials = cleanTitle.length > 0
     ? cleanTitle.substring(0, cleanTitle.length >= 2 && !cleanTitle.includes(' ') ? 2 : 1).toUpperCase()

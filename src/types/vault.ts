@@ -12,10 +12,13 @@ export type VaultItemType =
   | 'IDENTITY'
   | 'RECOVERY_CODES';
 
+export type CustomFieldType = 'text' | 'password' | 'description';
+
 export interface CustomField {
   id: string;
   label: string;
   value: string;
+  type?: CustomFieldType;
   isSecret?: boolean;
 }
 
@@ -25,11 +28,14 @@ export interface LoginPayload {
   websiteUrl?: string;
   totpSecret?: string;
   notes?: string;
+  icon?: string;
   customFields?: CustomField[];
 }
 
 export interface SecureNotePayload {
   content: string;
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export interface TOTPPayload {
@@ -39,6 +45,8 @@ export interface TOTPPayload {
   algorithm?: 'SHA1' | 'SHA256' | 'SHA512';
   digits?: 6 | 8;
   period?: number; // default 30
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export interface CardPayload {
@@ -50,6 +58,8 @@ export interface CardPayload {
   pin?: string;
   cardType?: 'visa' | 'mastercard' | 'amex' | 'discover' | 'other';
   notes?: string;
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export interface APIKeyPayload {
@@ -59,6 +69,8 @@ export interface APIKeyPayload {
   endpointUrl?: string;
   expiresAt?: number;
   notes?: string;
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export interface IdentityPayload {
@@ -69,12 +81,16 @@ export interface IdentityPayload {
   ssnOrNationalId?: string;
   address?: string;
   notes?: string;
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export interface RecoveryCodesPayload {
   service: string;
   codes: string[];
   notes?: string;
+  icon?: string;
+  customFields?: CustomField[];
 }
 
 export type AnyVaultPayload =
@@ -99,6 +115,7 @@ export interface VaultItem<T = AnyVaultPayload> {
   isProtected?: boolean; // Requires biometric re-authentication before reveal
   createdAt: number;
   updatedAt: number;
+  icon?: string;
 }
 
 export interface CategoryOption {

@@ -3,9 +3,12 @@
  */
 
 import { z } from 'zod';
+import { customFieldSchema } from './loginSchema';
 
 export const notePayloadSchema = z.object({
   content: z.string().max(100000, 'Note content must not exceed 100KB'),
+  icon: z.string().optional(),
+  customFields: z.array(customFieldSchema).optional(),
 });
 
 export const noteItemSchema = z.object({
@@ -16,6 +19,7 @@ export const noteItemSchema = z.object({
   tags: z.array(z.string().trim()).default([]),
   isFavorite: z.boolean().default(false),
   isProtected: z.boolean().optional(),
+  icon: z.string().optional(),
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });

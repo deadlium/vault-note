@@ -24,7 +24,7 @@ import { PasswordField } from '../../../components/input/PasswordField';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
 import { useClipboardManager } from '../../../core/clipboard';
-import { LoginPayload } from '../../../types/vault';
+import { LoginPayload, CustomField } from '../../../types/vault';
 
 export interface VaultItemDetailProps {
   id?: string;
@@ -75,6 +75,9 @@ export default function VaultItemDetailScreen({
   const websiteUrl = payload.websiteUrl || 'https://accounts.google.com';
   const notes = payload.notes || '';
   const hasTOTP = Boolean(payload.totpSecret);
+  const customFields: CustomField[] = Array.isArray((payload as Record<string, unknown>).customFields)
+    ? ((payload as Record<string, unknown>).customFields as CustomField[])
+    : [];
 
   const handleCopyUsername = () => {
     copyPlain(username);
@@ -192,7 +195,11 @@ export default function VaultItemDetailScreen({
         <View style={styles.heroCard}>
           <View style={styles.heroAvatarContainer}>
             <ServiceIcon
-              iconType={item.id.replace('demo-', '')}
+              iconType={
+                ((item as unknown as Record<string, unknown>).icon as string) ||
+                ((item.payload as unknown as Record<string, unknown>)?.icon as string) ||
+                item.id.replace('demo-', '')
+              }
               category={item.type}
               title={item.title}
               size="lg"
@@ -354,6 +361,83 @@ export default function VaultItemDetailScreen({
                   </Pressable>
                 </View>
               </View>
+            </View>
+          </View>
+        )}
+
+        {/* Section: Custom Fields */}
+        {customFields.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeader}>CUSTOM FIELDS</Text>
+              <Ionicons name="list-outline" size={13} color={colors.textMuted} />
+            </View>
+
+            <View style={styles.card}>
+              {customFields.map((cf, index) => {
+                const isSecret = cf.type === 'password' || Boolean(cf.isSecret);
+                const isDescription = cf.type === 'description';
+
+                return (
+                  <React.Fragment key={cf.id || index}>
+                    {index > 0 && <View style={styles.divider} />}
+                    {isSecret ? (
+                      <PasswordField
+                        label={cf.label || 'Secret Field'}
+                        value={cf.value}
+                        isProtected={item.isProtected}
+                        onCopy={() => copySecret(cf.value, cf.label || 'Custom Secret', 30)}
+                      />
+                    ) : isDescription ? (
+                      <View style={styles.fieldContainer}>
+                        <View style={styles.customFieldLabelRow}>
+                          <Text style={styles.fieldLabel}>{cf.label || 'Description'}</Text>
+                          {cf.value.length > 0 && (
+                            <Pressable
+                              onPress={() => copyPlain(cf.value)}
+                              style={({ pressed }) => [
+                                styles.copyPill,
+                                pressed && styles.copyPillPressed,
+                              ]}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Copy ${cf.label || 'description'}`}
+                            >
+                              <Ionicons name="copy-outline" size={12} color={colors.textSecondary} style={{ marginRight: 3 }} />
+                              <Text style={styles.copyPillText}>Copy</Text>
+                            </Pressable>
+                          )}
+                        </View>
+                        <View style={styles.customDescBox}>
+                          <Text style={styles.customDescText}>{cf.value || '(Empty)'}</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.fieldContainer}>
+                        <Text style={styles.fieldLabel}>{cf.label || 'Custom Field'}</Text>
+                        <View style={styles.fieldRow}>
+                          <Text style={styles.monotext} numberOfLines={1} ellipsizeMode="middle">
+                            {cf.value || '(Empty)'}
+                          </Text>
+                          {cf.value.length > 0 && (
+                            <Pressable
+                              onPress={() => copyPlain(cf.value)}
+                              style={({ pressed }) => [
+                                styles.copyPill,
+                                pressed && styles.copyPillPressed,
+                              ]}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Copy ${cf.label || 'value'}`}
+                            >
+                              <Ionicons name="copy-outline" size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
+                              <Text style={styles.copyPillText}>Copy</Text>
+                            </Pressable>
+                          )}
+                        </View>
+                      </View>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </View>
           </View>
         )}
@@ -975,5 +1059,25 @@ const styles = StyleSheet.create({
   toastProgressBar: {
     height: '100%',
     backgroundColor: colors.primary,
+  },
+  customFieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  customDescBox: {
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minHeight: 48,
+  },
+  customDescText: {
+    ...typography.body2,
+    color: colors.textPrimary,
+    lineHeight: 20,
   },
 });

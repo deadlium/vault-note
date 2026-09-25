@@ -57,6 +57,7 @@ export class VaultEncryptionService {
       payload,
       tags: record.tags ?? [],
       isFavorite: record.isFavorite,
+      icon: (payload as Record<string, unknown>)?.icon as string | undefined,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     };
