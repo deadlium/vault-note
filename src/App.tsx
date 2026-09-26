@@ -11,6 +11,8 @@ import VaultUnlockScreen from './app/(auth)/unlock';
 import { CupertinoScreenTransition } from './components/navigation/CupertinoScreenTransition';
 import { PasswordGeneratorScreen } from './features/password-generator';
 import { TOTPScreen } from './features/totp';
+import { SearchScreen } from './features/search/components/SearchScreen';
+import { FavoritesScreen } from './features/favorites/components/FavoritesScreen';
 import { VaultSessionManager, useSessionStore } from './core/session';
 import { useAutoLock } from './hooks/useAutoLock';
 
@@ -23,6 +25,8 @@ export default function App() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isEditingItem, setIsEditingItem] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<VaultTab>('vault');
 
   const sessionStatus = useSessionStore((s) => s.status);
@@ -42,7 +46,19 @@ export default function App() {
       .finally(() => setIsInitializing(false));
   }, []);
 
-  const isAnySubscreenOpen = Boolean(selectedItemId) || isAddingItem;
+  // When session locks, reset all subscreen navigation states immediately
+  useEffect(() => {
+    if (sessionStatus !== 'UNLOCKED') {
+      setSelectedItemId(null);
+      setIsEditingItem(false);
+      setIsAddingItem(false);
+      setIsFavoritesOpen(false);
+      setIsSearchOpen(false);
+    }
+  }, [sessionStatus]);
+
+  const isAnySubscreenOpen =
+    Boolean(selectedItemId) || isAddingItem || isFavoritesOpen || isSearchOpen;
 
   useEffect(() => {
     Animated.timing(homeAnim, {
@@ -77,15 +93,9 @@ export default function App() {
     return <RootLayout />;
   }
 
-  const homeTranslateX = homeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH * 0.25],
-    extrapolate: 'clamp',
-  });
-
   const homeDimOpacity = homeAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 0.28],
+    outputRange: [0, 0.18],
     extrapolate: 'clamp',
   });
 
@@ -118,15 +128,8 @@ export default function App() {
     if (sessionStatus === 'UNLOCKED') {
       return (
         <View style={styles.container}>
-          {/* Base Layer: Authenticated Vault Dashboard with Cupertino Parallax */}
-          <Animated.View
-            style={[
-              styles.container,
-              {
-                transform: [{ translateX: homeTranslateX }],
-              },
-            ]}
-          >
+          {/* Base Layer: Authenticated Vault Dashboard */}
+          <View style={styles.container}>
             <VaultTabLayout
               activeTab={activeTab}
               onTabChange={setActiveTab}
@@ -135,16 +138,12 @@ export default function App() {
                 setIsAddingItem(true);
               }}
             >
-              {activeTab === 'totp' ? (
-                <TOTPScreen
-                  onOpenItem={(item) => {
-                    setIsEditingItem(false);
-                    setSelectedItemId(item.id);
-                  }}
-                />
-              ) : activeTab === 'generator' ? (
-                <PasswordGeneratorScreen />
-              ) : (
+              <View
+                style={[
+                  styles.tabScreenWrapper,
+                  { display: activeTab === 'vault' ? 'flex' : 'none' },
+                ]}
+              >
                 <VaultHomeScreen
                   onLock={() => VaultSessionManager.lock()}
                   onSelectItem={(item) => {
@@ -155,11 +154,51 @@ export default function App() {
                     setSelectedItemId(null);
                     setIsAddingItem(true);
                   }}
+                  onOpenSearch={() => setIsSearchOpen(true)}
+                  onOpenFavorites={() => setIsFavoritesOpen(true)}
                 />
-              )}
+              </View>
+
+              <View
+                style={[
+                  styles.tabScreenWrapper,
+                  { display: activeTab === 'totp' ? 'flex' : 'none' },
+                ]}
+              >
+                <TOTPScreen
+                  onOpenItem={(item) => {
+                    setIsEditingItem(false);
+                    setSelectedItemId(item.id);
+                  }}
+                />
+              </View>
+
+              <View
+                style={[
+                  styles.tabScreenWrapper,
+                  { display: activeTab === 'generator' ? 'flex' : 'none' },
+                ]}
+              >
+                <PasswordGeneratorScreen />
+              </View>
+
+              <View
+                style={[
+                  styles.tabScreenWrapper,
+                  { display: activeTab === 'search' ? 'flex' : 'none' },
+                ]}
+              >
+                <SearchScreen
+                  onBack={() => setActiveTab('vault')}
+                  onSelectItem={(item) => {
+                    setIsEditingItem(false);
+                    setSelectedItemId(item.id);
+                  }}
+                />
+              </View>
             </VaultTabLayout>
 
-            {/* Parallax Dimming on Home Layer */}
+            {/* Smooth Dimming Overlay on Base Layer when subscreen is presented */}
             <Animated.View
               pointerEvents="none"
               style={[
@@ -169,7 +208,7 @@ export default function App() {
                 },
               ]}
             />
-          </Animated.View>
+          </View>
 
           {/* Layer 1: Item Detail Screen with Cupertino Parallax Shift when Edit is pushed */}
           <CupertinoScreenTransition
@@ -218,6 +257,36 @@ export default function App() {
               onSaveComplete={() => setIsAddingItem(false)}
             />
           </CupertinoScreenTransition>
+
+          {/* Layer 4: Favorites Hub Screen (pushed on top of home) */}
+          <CupertinoScreenTransition
+            visible={isFavoritesOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsFavoritesOpen(false)}
+          >
+            <FavoritesScreen
+              onBack={() => setIsFavoritesOpen(false)}
+              onSelectItem={(item) => {
+                setIsEditingItem(false);
+                setSelectedItemId(item.id);
+              }}
+            />
+          </CupertinoScreenTransition>
+
+          {/* Layer 5: Dedicated Full Search Screen (pushed on top of home) */}
+          <CupertinoScreenTransition
+            visible={isSearchOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsSearchOpen(false)}
+          >
+            <SearchScreen
+              onBack={() => setIsSearchOpen(false)}
+              onSelectItem={(item) => {
+                setIsEditingItem(false);
+                setSelectedItemId(item.id);
+              }}
+            />
+          </CupertinoScreenTransition>
         </View>
       );
     }
@@ -250,6 +319,9 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  tabScreenWrapper: {
     flex: 1,
   },
   homeDimOverlay: {

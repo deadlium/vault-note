@@ -152,26 +152,19 @@ function FloatingGlassNavbar({
       currentPos.current = targetPos;
       Animated.spring(indicatorAnim, {
         toValue: targetPos,
-        friction: 8,
-        tension: 120,
+        friction: 9,
+        tension: 140,
         useNativeDriver: true,
       }).start();
     }
   }, [activeSlot, slotWidth, indicatorAnim]);
 
-  // Handle direct tab tap with tactile spring
+  // Handle direct tab tap with tactile feedback
   const handleTabPress = useCallback((tab: VaultTab) => {
     const slot = getSlotForTab(tab);
-    const targetPos = slot * slotWidthRef.current;
-    currentPos.current = targetPos;
+    currentPos.current = slot * slotWidthRef.current;
     onTabChange(tab);
-    Animated.spring(indicatorAnim, {
-      toValue: targetPos,
-      friction: 8,
-      tension: 120,
-      useNativeDriver: true,
-    }).start();
-  }, [indicatorAnim, onTabChange]);
+  }, [onTabChange]);
 
   // PanResponder allowing continuous touch-drag across tabs without jumping
   const panResponder = useRef(

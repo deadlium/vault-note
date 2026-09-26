@@ -1,7 +1,8 @@
 /**
  * Vault Home Screen Dashboard
- * Fast category filtering, item cards, service brand icons, and floating action button
- * Designed with Obsidian aesthetic inspired by Apple Notes and Linear
+ * High-craft Obsidian aesthetic inspired by Apple Notes, Linear, and 1Password.
+ * Features biometric security brand header, live ephemeral RAM search,
+ * category selector with iconography, and rich credentials cards.
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -22,15 +23,18 @@ import { CategoryChipBar } from '../../components/category/CategoryChipBar';
 import { VaultItemRow, VaultItemRowData } from '../../components/item/VaultItemRow';
 import { EmptyState } from '../../components/common/EmptyState';
 import { VaultSessionManager } from '../../core/session';
-import { VaultRepository } from '../../features/vault/repository/vaultRepository';
 import { useVaultStore } from '../../features/vault/store/useVaultStore';
 import { VaultItemType } from '../../types/vault';
 import { useNavbarScroll } from '../../components/navigation/NavbarScrollContext';
+import { useVaultSearch } from '../../features/search';
+import { useFavorites } from '../../features/favorites';
 
 export interface VaultHomeDashboardProps {
   onLock?: () => void;
   onSelectItem?: (item: VaultItemRowData) => void;
   onAddItem?: () => void;
+  onOpenSearch?: () => void;
+  onOpenFavorites?: () => void;
   refreshTrigger?: number;
 }
 
@@ -38,46 +42,37 @@ export default function VaultHomeScreen({
   onLock,
   onSelectItem,
   onAddItem,
+  onOpenSearch,
+  onOpenFavorites,
   refreshTrigger,
 }: VaultHomeDashboardProps) {
   const scrollContext = useNavbarScroll();
-  const rawVaultItems = useVaultStore((state) => state.items);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Map raw vault items to presentation row data with instant reactivity
-  const items: VaultItemRowData[] = useMemo(() => {
-    return rawVaultItems.map((record) => {
-      const payload = record.payload as unknown as Record<string, unknown>;
-      const username =
-        (payload?.username as string) ||
-        (payload?.accountNumber as string) ||
-        (payload?.email as string) ||
-        (payload?.cardholderName as string) ||
-        (payload?.serviceName as string) ||
-        (payload?.fullName as string) ||
-        '';
+  const allVaultItems = useVaultStore((state) => state.items);
 
-      const websiteUrl =
-        (payload?.websiteUrl as string) || (payload?.endpointUrl as string) || '';
+  // Connect to Ephemeral RAM Search Index
+  const {
+    searchQuery,
+    setSearchQuery,
+    activeCategory,
+    setActiveCategory,
+    results: searchResults,
+    categoryCounts,
+    isSearching,
+    clearSearch,
+  } = useVaultSearch();
 
-      return {
-        id: record.id,
-        title: record.title,
-        subtitle: username || websiteUrl || record.type,
-        category: record.type,
-        tag: record.tags?.[0] ? `#${record.tags[0]}` : record.type,
-        iconType:
-          ((record as unknown as Record<string, unknown>).icon as string) ||
-          ((payload?.icon as string) || undefined),
-        isFavorite: record.isFavorite ?? false,
-        isProtected: record.isProtected ?? true,
-        hasTOTP: Boolean(payload?.totpSecret),
-        totpLabel: payload?.totpSecret ? 'TOTP Active' : undefined,
-      };
-    });
-  }, [rawVaultItems]);
+  // Connect to Favorites synchronization hook
+  const { toggleFavorite, favoriteCount } = useFavorites();
+
+  // Calculate items with TOTP enabled
+  const totpCount = useMemo(() => {
+    return allVaultItems.filter((i) => {
+      const payload = i.payload as unknown as Record<string, unknown>;
+      return Boolean(payload?.totpSecret);
+    }).length;
+  }, [allVaultItems]);
 
   // Load items from encrypted SQLite database if unlocked with master key
   const loadVaultItems = useCallback(async () => {
@@ -100,73 +95,38 @@ export default function VaultHomeScreen({
   }, [loadVaultItems]);
 
   // Handle favorite star toggle
-  const handleToggleFavorite = useCallback(async (id: string) => {
-    await useVaultStore.getState().toggleFavorite(id);
-  }, []);
+  const handleToggleFavorite = useCallback(
+    async (id: string) => {
+      await toggleFavorite(id);
+    },
+    [toggleFavorite]
+  );
 
-  // Compute item counts per category
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {
-      all: items.length,
-      LOGIN: 0,
-      SECURE_NOTE: 0,
-      CARD: 0,
-      TOTP: 0,
-      API_KEY: 0,
-      IDENTITY: 0,
-      RECOVERY_CODES: 0,
-    };
+  // Map search results or filtered store items to presentation rows
+  const filteredItems: VaultItemRowData[] = useMemo(() => {
+    return searchResults.map(({ entry }) => ({
+      id: entry.id,
+      title: entry.title,
+      subtitle: entry.subtitle,
+      category: entry.type,
+      tag: entry.tags?.[0] ? `#${entry.tags[0]}` : entry.type,
+      iconType: entry.icon,
+      isFavorite: entry.isFavorite,
+      isProtected: entry.isProtected,
+      hasTOTP: entry.hasTOTP,
+      totpLabel: entry.totpLabel,
+    }));
+  }, [searchResults]);
 
-    items.forEach((item) => {
-      const cat = item.category as string;
-      if (counts[cat] !== undefined) {
-        counts[cat] += 1;
-      }
-      if (item.hasTOTP) {
-        counts.TOTP = (counts.TOTP || 0) + 1;
-      }
-    });
-
-    return counts;
-  }, [items]);
-
-  // Filter items by category and search query
-  const filteredItems = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    return items.filter((item) => {
-      // Category filter
-      if (activeCategory !== 'all') {
-        if (activeCategory === 'TOTP') {
-          if (!item.hasTOTP) return false;
-        } else if (item.category !== activeCategory) {
-          return false;
-        }
-      }
-
-      // Search filter
-      if (query.length > 0) {
-        const titleMatch = item.title.toLowerCase().includes(query);
-        const subtitleMatch = (item.subtitle || '').toLowerCase().includes(query);
-        const tagMatch = (item.tag || '').toLowerCase().includes(query);
-        if (!titleMatch && !subtitleMatch && !tagMatch) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [items, activeCategory, searchQuery]);
-
-  // Partition favorites when on 'all' tab without search query
+  // Partition favorites when on 'all' tab without active search query
   const { favoriteItems, otherItems } = useMemo(() => {
-    if (activeCategory !== 'all' || searchQuery.trim().length > 0) {
+    if (activeCategory !== 'all' || isSearching) {
       return { favoriteItems: [], otherItems: filteredItems };
     }
     const favs = filteredItems.filter((i) => i.isFavorite);
     const others = filteredItems.filter((i) => !i.isFavorite);
     return { favoriteItems: favs, otherItems: others };
-  }, [filteredItems, activeCategory, searchQuery]);
+  }, [filteredItems, activeCategory, isSearching]);
 
   const handleLockPress = () => {
     if (onLock) {
@@ -180,55 +140,133 @@ export default function VaultHomeScreen({
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Top Header Bar */}
       <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandPill}>
-            <Ionicons name="lock-closed" size={13} color={colors.primaryLight} />
-            <Text style={styles.brandPillText}>VAULTNOTE</Text>
+        <View style={styles.brandGroup}>
+          <View style={styles.brandIconWrapper}>
+            <Ionicons name="shield-checkmark" size={19} color="#A78BFA" />
           </View>
-
-          <View style={styles.enclaveStatusBadge}>
-            <View style={styles.pulsingDot} />
-            <Text style={styles.enclaveStatusText}>Enclave Protected</Text>
+          <View style={styles.brandTextGroup}>
+            <Text style={styles.brandTitle}>VaultNote</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.pulsingDot} />
+              <Text style={styles.statusText}>Hardware Protected</Text>
+            </View>
           </View>
         </View>
 
-        <Pressable
-          onPress={handleLockPress}
-          style={({ pressed }) => [
-            styles.lockButton,
-            pressed && styles.lockButtonPressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Lock Vault"
-        >
-          <Ionicons name="lock-closed-outline" size={18} color={colors.textSecondary} />
-        </Pressable>
+        <View style={styles.headerRightActions}>
+          {/* Quick Favorites Star Button with Badge */}
+          {favoriteCount > 0 && onOpenFavorites && (
+            <Pressable
+              onPress={onOpenFavorites}
+              style={({ pressed }) => [
+                styles.headerActionButton,
+                styles.starActionButton,
+                pressed && styles.headerActionButtonPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Open Favorites Hub"
+            >
+              <Ionicons name="star" size={15} color="#FBBF24" />
+              <Text style={styles.starBadgeText}>{favoriteCount}</Text>
+            </Pressable>
+          )}
+
+          {/* Lock Vault Button */}
+          <Pressable
+            onPress={handleLockPress}
+            style={({ pressed }) => [
+              styles.headerActionButton,
+              pressed && styles.headerActionButtonPressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Lock Vault"
+          >
+            <Ionicons name="lock-closed-outline" size={17} color={colors.textSecondary} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Instant Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
+          <Pressable
+            onPress={onOpenSearch}
+            accessibilityRole="button"
+            accessibilityLabel="Expand search"
+          >
+            <Ionicons
+              name="search"
+              size={18}
+              color={isSearching ? colors.primaryLight : '#818CF8'}
+              style={styles.searchIcon}
+            />
+          </Pressable>
+
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search credentials, notes, keys..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor="#64748B"
             style={styles.searchInput}
             autoCapitalize="none"
             autoCorrect={false}
-            clearButtonMode="while-editing"
+            clearButtonMode="never"
           />
+
           {searchQuery.length > 0 && (
             <Pressable
-              onPress={() => setSearchQuery('')}
+              onPress={clearSearch}
               style={styles.clearSearchButton}
               accessibilityRole="button"
               accessibilityLabel="Clear search"
             >
-              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              <Ionicons name="close-circle" size={18} color="#94A3B8" />
             </Pressable>
           )}
+
+          {onOpenSearch && (
+            <Pressable
+              onPress={onOpenSearch}
+              style={styles.expandSearchButton}
+              accessibilityRole="button"
+              accessibilityLabel="Open full search screen"
+            >
+              <Ionicons name="options-outline" size={17} color={colors.primaryLight} />
+            </Pressable>
+          )}
+        </View>
+
+        {isSearching && (
+          <View style={styles.ramSearchBanner}>
+            <Ionicons name="flash" size={12} color={colors.emerald} />
+            <Text style={styles.ramSearchBannerText}>
+              {filteredItems.length} {filteredItems.length === 1 ? 'match' : 'matches'} in volatile RAM
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Security & Vault Metrics Strip */}
+      <View style={styles.metricsContainer}>
+        <View style={styles.metricCard}>
+          <View style={styles.metricIconWrap}>
+            <Ionicons name="key" size={12} color={colors.primaryLight} />
+          </View>
+          <Text style={styles.metricLabel}>{allVaultItems.length} Records</Text>
+        </View>
+
+        <View style={styles.metricCard}>
+          <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+            <Ionicons name="time" size={12} color={colors.emerald} />
+          </View>
+          <Text style={styles.metricLabel}>{totpCount} with 2FA</Text>
+        </View>
+
+        <View style={styles.metricCard}>
+          <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(59, 130, 246, 0.12)' }]}>
+            <Ionicons name="shield-checkmark" size={12} color="#60A5FA" />
+          </View>
+          <Text style={styles.metricLabel}>AES-256-GCM</Text>
         </View>
       </View>
 
@@ -236,7 +274,7 @@ export default function VaultHomeScreen({
       <View style={styles.categoryBarContainer}>
         <CategoryChipBar
           activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
+          onSelectCategory={(cat) => setActiveCategory(cat as VaultItemType | 'all' | 'TOTP')}
           counts={categoryCounts}
         />
       </View>
@@ -262,21 +300,44 @@ export default function VaultHomeScreen({
       >
         {filteredItems.length === 0 ? (
           <EmptyState
-            icon={searchQuery.length > 0 ? 'search-outline' : 'folder-open-outline'}
-            title={searchQuery.length > 0 ? 'No Matching Items' : 'No Items in Category'}
+            icon={isSearching ? 'search-outline' : 'shield-outline'}
+            title={isSearching ? 'No Matching Entries' : 'Your Vault is Ready'}
             description={
-              searchQuery.length > 0
-                ? `No credentials found matching "${searchQuery}". Try a different term or clear the filter.`
-                : 'This category does not have any credentials stored yet. Tap the button below to add your first item.'
+              isSearching
+                ? `No credentials found matching "${searchQuery}" in volatile RAM index.`
+                : 'Start securing your credentials, notes, and 2FA secrets with AES-256-GCM encryption.'
             }
-            actionLabel={searchQuery.length > 0 ? 'Clear Filter' : 'Add Item'}
+            quickActions={[
+              {
+                label: 'New Login',
+                icon: 'key-outline',
+                onPress: () => onAddItem?.(),
+              },
+              {
+                label: 'New Card',
+                icon: 'card-outline',
+                onPress: () => onAddItem?.(),
+              },
+              {
+                label: 'Secure Note',
+                icon: 'document-text-outline',
+                onPress: () => onAddItem?.(),
+              },
+            ]}
+            actionLabel={isSearching ? 'Clear Filters' : 'Create First Item'}
             onActionPress={() => {
-              if (searchQuery.length > 0) {
-                setSearchQuery('');
+              if (isSearching) {
+                clearSearch();
                 setActiveCategory('all');
               } else if (onAddItem) {
                 onAddItem();
               }
+            }}
+            secondaryActionLabel={
+              allVaultItems.length === 0 ? 'Load Sample Credentials' : undefined
+            }
+            onSecondaryActionPress={() => {
+              useVaultStore.getState().resetToDemo();
             }}
           />
         ) : (
@@ -284,11 +345,26 @@ export default function VaultHomeScreen({
             {/* Favorites Section (when applicable) */}
             {favoriteItems.length > 0 && (
               <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Ionicons name="star" size={14} color="#FBBF24" />
-                  <Text style={styles.sectionTitle}>FAVORITES</Text>
-                  <Text style={styles.sectionCount}>{favoriteItems.length}</Text>
-                </View>
+                <Pressable
+                  style={styles.sectionHeader}
+                  onPress={onOpenFavorites}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open Favorites Hub"
+                >
+                  <View style={styles.sectionHeaderLeft}>
+                    <Ionicons name="star" size={14} color="#FBBF24" />
+                    <Text style={styles.sectionTitle}>PINNED FAVORITES</Text>
+                    <View style={styles.countBadge}>
+                      <Text style={styles.countBadgeText}>{favoriteItems.length}</Text>
+                    </View>
+                  </View>
+                  {onOpenFavorites && (
+                    <View style={styles.viewHubButton}>
+                      <Text style={styles.viewHubText}>Hub</Text>
+                      <Ionicons name="chevron-forward" size={12} color={colors.amber} />
+                    </View>
+                  )}
+                </Pressable>
 
                 <View style={styles.itemsList}>
                   {favoriteItems.map((item) => (
@@ -305,13 +381,21 @@ export default function VaultHomeScreen({
 
             {/* All / Category Items Section */}
             <View style={styles.section}>
-              {favoriteItems.length > 0 && (
-                <View style={styles.sectionHeader}>
-                  <Ionicons name="layers-outline" size={14} color={colors.textMuted} />
-                  <Text style={styles.sectionTitle}>ALL ITEMS</Text>
-                  <Text style={styles.sectionCount}>{otherItems.length}</Text>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionHeaderLeft}>
+                  <Ionicons name="layers-outline" size={14} color="#94A3B8" />
+                  <Text style={styles.sectionTitle}>
+                    {activeCategory === 'all'
+                      ? 'ALL CREDENTIALS'
+                      : `${activeCategory.toUpperCase()} ITEMS`}
+                  </Text>
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>
+                      {favoriteItems.length > 0 ? otherItems.length : filteredItems.length}
+                    </Text>
+                  </View>
                 </View>
-              )}
+              </View>
 
               <View style={styles.itemsList}>
                 {(favoriteItems.length > 0 ? otherItems : filteredItems).map((item) => (
@@ -342,41 +426,49 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
   },
-  brandRow: {
+  brandGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
   },
-  brandPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(123, 97, 255, 0.12)',
+  brandIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(123, 97, 255, 0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(123, 97, 255, 0.28)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    borderRadius: radius.full,
+    borderColor: 'rgba(157, 141, 255, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.45,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
-  brandPillText: {
-    ...typography.caption,
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primaryLight,
-    letterSpacing: 1.2,
+  brandTextGroup: {
+    justifyContent: 'center',
   },
-  enclaveStatusBadge: {
+  brandTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: -0.3,
+    fontFamily: typography.fontFamily.sans,
+  },
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.full,
+    marginTop: 1,
   },
   pulsingDot: {
     width: 6,
@@ -384,51 +476,136 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.emerald,
   },
-  enclaveStatusText: {
-    ...typography.caption,
+  statusText: {
     fontSize: 10,
     fontWeight: '600',
     color: colors.emerald,
+    fontFamily: typography.fontFamily.sans,
+    letterSpacing: 0.2,
   },
-  lockButton: {
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
     width: 38,
     height: 38,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
+    borderRadius: 19,
+    backgroundColor: 'rgba(22, 24, 34, 0.85)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.10)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  lockButtonPressed: {
-    opacity: 0.7,
-    backgroundColor: colors.surfaceActive,
+  starActionButton: {
+    flexDirection: 'row',
+    width: 'auto',
+    paddingHorizontal: 10,
+    gap: 5,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+  },
+  starBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FBBF24',
+    fontFamily: typography.fontFamily.sans,
+  },
+  headerActionButtonPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.95 }],
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    paddingTop: spacing.xs,
+    paddingBottom: 4,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    backgroundColor: 'rgba(20, 22, 32, 0.85)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(123, 97, 255, 0.22)',
+    borderRadius: radius.xl,
     paddingHorizontal: spacing.md,
-    height: 44,
+    height: 46,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   searchIcon: {
     marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    color: colors.textPrimary,
-    ...typography.body2,
+    color: '#F8FAFC',
+    fontSize: 13.5,
+    fontFamily: typography.fontFamily.sans,
     paddingVertical: 0,
   },
   clearSearchButton: {
     padding: 4,
+  },
+  expandSearchButton: {
+    padding: 6,
+    marginLeft: 4,
+  },
+  ramSearchBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+    paddingHorizontal: 4,
+  },
+  ramSearchBannerText: {
+    fontFamily: typography.fontFamily.sans,
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.emerald,
+    letterSpacing: 0.2,
+  },
+  metricsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 4,
+    gap: 8,
+  },
+  metricCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: radius.md,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  metricIconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: 'rgba(123, 97, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metricLabel: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#94A3B8',
+    fontFamily: typography.fontFamily.sans,
   },
   categoryBarContainer: {
     paddingVertical: spacing.xs,
@@ -445,21 +622,47 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xs + 2,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  viewHubButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  viewHubText: {
+    fontFamily: typography.fontFamily.sans,
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.amber,
   },
   sectionTitle: {
-    ...typography.caption,
+    fontFamily: typography.fontFamily.sans,
     fontSize: 11,
     fontWeight: '700',
-    color: colors.textMuted,
+    color: '#94A3B8',
     letterSpacing: 1.1,
   },
-  sectionCount: {
-    ...typography.caption,
-    fontSize: 11,
-    fontWeight: '600',
+  countBadge: {
+    backgroundColor: 'rgba(123, 97, 255, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.full,
+  },
+  countBadgeText: {
+    fontFamily: typography.fontFamily.sans,
+    fontSize: 10,
+    fontWeight: '700',
     color: colors.primaryLight,
   },
   itemsList: {

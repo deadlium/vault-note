@@ -36,7 +36,16 @@ type ScreenMode = 'scanner' | 'manual' | 'result' | 'list';
 
 export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
   const scrollContext = useNavbarScroll();
-  const [mode, setMode] = useState<ScreenMode>('scanner');
+  const items = useVaultStore((s) => s.items);
+
+  // Filter vault items that have 2FA enabled
+  const totpItems = items.filter((item) => {
+    if (item.type === 'TOTP') return true;
+    const p = (item.payload as unknown as Record<string, unknown>) || {};
+    return Boolean(p.totpSecret || p.secret);
+  });
+
+  const [mode, setMode] = useState<ScreenMode>(totpItems.length > 0 ? 'list' : 'manual');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<AutoEnrollResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -48,15 +57,6 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
   const [manualAlgorithm, setManualAlgorithm] = useState<TOTPAlgorithm>('SHA1');
   const [manualDigits, setManualDigits] = useState<number>(6);
   const [manualPeriod, setManualPeriod] = useState<number>(30);
-
-  const items = useVaultStore((s) => s.items);
-
-  // Filter vault items that have 2FA enabled
-  const totpItems = items.filter((item) => {
-    if (item.type === 'TOTP') return true;
-    const p = (item.payload as unknown as Record<string, unknown>) || {};
-    return Boolean(p.totpSecret || p.secret);
-  });
 
   const handleScan = async (scannedData: string) => {
     if (isProcessing) return;
