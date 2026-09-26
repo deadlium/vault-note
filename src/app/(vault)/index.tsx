@@ -25,6 +25,7 @@ import { VaultSessionManager } from '../../core/session';
 import { VaultRepository } from '../../features/vault/repository/vaultRepository';
 import { useVaultStore } from '../../features/vault/store/useVaultStore';
 import { VaultItemType } from '../../types/vault';
+import { useNavbarScroll } from '../../components/navigation/NavbarScrollContext';
 
 export interface VaultHomeDashboardProps {
   onLock?: () => void;
@@ -39,6 +40,7 @@ export default function VaultHomeScreen({
   onAddItem,
   refreshTrigger,
 }: VaultHomeDashboardProps) {
+  const scrollContext = useNavbarScroll();
   const rawVaultItems = useVaultStore((state) => state.items);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -244,6 +246,11 @@ export default function VaultHomeScreen({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScrollBeginDrag={() => scrollContext?.notifyScrollStart()}
+        onScroll={() => scrollContext?.notifyScrollStart()}
+        onScrollEndDrag={() => scrollContext?.notifyScrollEnd()}
+        onMomentumScrollEnd={() => scrollContext?.notifyScrollEnd()}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -320,19 +327,6 @@ export default function VaultHomeScreen({
           </>
         )}
       </ScrollView>
-
-      {/* Floating Action Button (FAB) */}
-      <Pressable
-        onPress={() => onAddItem?.()}
-        style={({ pressed }) => [
-          styles.fab,
-          pressed && styles.fabPressed,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel="Add New Vault Item"
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </Pressable>
     </SafeAreaView>
   );
 }
@@ -443,7 +437,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: 110,
   },
   section: {
     marginTop: spacing.md,
@@ -471,31 +465,5 @@ const styles = StyleSheet.create({
   itemsList: {
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: colors.primary,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.45,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  fabPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.95 }],
   },
 });

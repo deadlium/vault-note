@@ -130,6 +130,10 @@ export default function App() {
             <VaultTabLayout
               activeTab={activeTab}
               onTabChange={setActiveTab}
+              onAddItem={() => {
+                setSelectedItemId(null);
+                setIsAddingItem(true);
+              }}
             >
               {activeTab === 'totp' ? (
                 <TOTPScreen

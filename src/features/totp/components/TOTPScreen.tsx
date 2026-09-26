@@ -26,6 +26,7 @@ import { QRScanner } from '../scanner/QRScanner';
 import { TOTPRow } from './TOTPRow';
 import { autoEnrollTOTP, AutoEnrollResult } from '../services/totpAutoEnrollment';
 import { TOTPAlgorithm } from '../types';
+import { useNavbarScroll } from '../../../components/navigation/NavbarScrollContext';
 
 export interface TOTPScreenProps {
   onOpenItem?: (item: VaultItem<AnyVaultPayload>) => void;
@@ -34,6 +35,7 @@ export interface TOTPScreenProps {
 type ScreenMode = 'scanner' | 'manual' | 'result' | 'list';
 
 export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
+  const scrollContext = useNavbarScroll();
   const [mode, setMode] = useState<ScreenMode>('scanner');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<AutoEnrollResult | null>(null);
@@ -574,6 +576,11 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
           <ScrollView
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScrollBeginDrag={() => scrollContext?.notifyScrollStart()}
+            onScroll={() => scrollContext?.notifyScrollStart()}
+            onScrollEndDrag={() => scrollContext?.notifyScrollEnd()}
+            onMomentumScrollEnd={() => scrollContext?.notifyScrollEnd()}
           >
             {totpItems.length === 0 ? (
               <View style={styles.emptyListCard}>
@@ -1022,6 +1029,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
+    paddingBottom: 110,
   },
   emptyListCard: {
     backgroundColor: colors.surface,

@@ -20,6 +20,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../../theme';
 import { usePasswordGenerator } from '../hooks/usePasswordGenerator';
 import { GeneratorMode } from '../types';
+import { useNavbarScroll } from '../../../components/navigation/NavbarScrollContext';
 
 export interface PasswordGeneratorViewProps {
   onSelectPassword?: (password: string) => void;
@@ -34,6 +35,7 @@ export function PasswordGeneratorView({
   isModal = false,
   onClose,
 }: PasswordGeneratorViewProps) {
+  const scrollContext = useNavbarScroll();
   const {
     mode,
     setMode,
@@ -108,6 +110,11 @@ export function PasswordGeneratorView({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScrollBeginDrag={() => scrollContext?.notifyScrollStart()}
+        onScroll={() => scrollContext?.notifyScrollStart()}
+        onScrollEndDrag={() => scrollContext?.notifyScrollEnd()}
+        onMomentumScrollEnd={() => scrollContext?.notifyScrollEnd()}
       >
         {/* Output Display Card */}
         <View style={styles.outputCard}>
@@ -580,7 +587,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.md,
     gap: spacing.md,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   outputCard: {
     backgroundColor: colors.surface,
