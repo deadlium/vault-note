@@ -31,6 +31,7 @@ export interface CupertinoScreenTransitionProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   enableHardwareBack?: boolean;
+  zIndex?: number;
 }
 
 export function CupertinoScreenTransition({
@@ -40,6 +41,7 @@ export function CupertinoScreenTransition({
   children,
   style,
   enableHardwareBack = true,
+  zIndex,
 }: CupertinoScreenTransitionProps) {
   const [shouldRender, setShouldRender] = useState(visible);
 
@@ -146,6 +148,7 @@ export function CupertinoScreenTransition({
     <Animated.View
       style={[
         styles.container,
+        zIndex !== undefined ? { zIndex } : null,
         {
           transform: [{ translateX }],
         },

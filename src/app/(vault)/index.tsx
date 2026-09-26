@@ -35,6 +35,8 @@ export interface VaultHomeDashboardProps {
   onAddItem?: () => void;
   onOpenSearch?: () => void;
   onOpenFavorites?: () => void;
+  onOpenSecurity?: () => void;
+  onOpenBackup?: () => void;
   refreshTrigger?: number;
 }
 
@@ -44,6 +46,8 @@ export default function VaultHomeScreen({
   onAddItem,
   onOpenSearch,
   onOpenFavorites,
+  onOpenSecurity,
+  onOpenBackup,
   refreshTrigger,
 }: VaultHomeDashboardProps) {
   const scrollContext = useNavbarScroll();
@@ -140,7 +144,15 @@ export default function VaultHomeScreen({
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Top Header Bar */}
       <View style={styles.header}>
-        <View style={styles.brandGroup}>
+        <Pressable
+          onPress={onOpenSecurity}
+          style={({ pressed }) => [
+            styles.brandGroup,
+            pressed && { opacity: 0.75 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Open Security Center"
+        >
           <View style={styles.brandIconWrapper}>
             <Ionicons name="shield-checkmark" size={19} color="#A78BFA" />
           </View>
@@ -151,9 +163,39 @@ export default function VaultHomeScreen({
               <Text style={styles.statusText}>Hardware Protected</Text>
             </View>
           </View>
-        </View>
+        </Pressable>
 
         <View style={styles.headerRightActions}>
+          {/* Quick Backup & Restore Button */}
+          {onOpenBackup && (
+            <Pressable
+              onPress={onOpenBackup}
+              style={({ pressed }) => [
+                styles.headerActionButton,
+                pressed && styles.headerActionButtonPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Open Backup and Restore"
+            >
+              <Ionicons name="cloud-upload-outline" size={17} color="#8B5CF6" />
+            </Pressable>
+          )}
+
+          {/* Quick Security Center Shield Button */}
+          {onOpenSecurity && (
+            <Pressable
+              onPress={onOpenSecurity}
+              style={({ pressed }) => [
+                styles.headerActionButton,
+                pressed && styles.headerActionButtonPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Open Security Center"
+            >
+              <Ionicons name="shield-checkmark-outline" size={17} color="#A78BFA" />
+            </Pressable>
+          )}
+
           {/* Quick Favorites Star Button with Badge */}
           {favoriteCount > 0 && onOpenFavorites && (
             <Pressable

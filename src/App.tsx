@@ -13,6 +13,8 @@ import { PasswordGeneratorScreen } from './features/password-generator';
 import { TOTPScreen } from './features/totp';
 import { SearchScreen } from './features/search/components/SearchScreen';
 import { FavoritesScreen } from './features/favorites/components/FavoritesScreen';
+import { SecurityCenterScreen } from './features/security-center/components/SecurityCenterScreen';
+import { BackupScreen } from './features/backup/components/BackupScreen';
 import { VaultSessionManager, useSessionStore } from './core/session';
 import { useAutoLock } from './hooks/useAutoLock';
 
@@ -27,6 +29,8 @@ export default function App() {
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<VaultTab>('vault');
 
   const sessionStatus = useSessionStore((s) => s.status);
@@ -54,11 +58,18 @@ export default function App() {
       setIsAddingItem(false);
       setIsFavoritesOpen(false);
       setIsSearchOpen(false);
+      setIsSecurityOpen(false);
+      setIsBackupOpen(false);
     }
   }, [sessionStatus]);
 
   const isAnySubscreenOpen =
-    Boolean(selectedItemId) || isAddingItem || isFavoritesOpen || isSearchOpen;
+    Boolean(selectedItemId) ||
+    isAddingItem ||
+    isFavoritesOpen ||
+    isSearchOpen ||
+    isSecurityOpen ||
+    isBackupOpen;
 
   useEffect(() => {
     Animated.timing(homeAnim, {
@@ -156,6 +167,8 @@ export default function App() {
                   }}
                   onOpenSearch={() => setIsSearchOpen(true)}
                   onOpenFavorites={() => setIsFavoritesOpen(true)}
+                  onOpenSecurity={() => setIsSecurityOpen(true)}
+                  onOpenBackup={() => setIsBackupOpen(true)}
                 />
               </View>
 
@@ -210,7 +223,83 @@ export default function App() {
             />
           </View>
 
-          {/* Layer 1: Item Detail Screen with Cupertino Parallax Shift when Edit is pushed */}
+          {/* Hub Layer 1: Favorites Hub Screen (pushed on top of home) */}
+          <CupertinoScreenTransition
+            visible={isFavoritesOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsFavoritesOpen(false)}
+            zIndex={200}
+          >
+            <FavoritesScreen
+              onBack={() => setIsFavoritesOpen(false)}
+              onSelectItem={(item) => {
+                setIsEditingItem(false);
+                setSelectedItemId(item.id);
+              }}
+            />
+          </CupertinoScreenTransition>
+
+          {/* Hub Layer 2: Dedicated Full Search Screen (pushed on top of home) */}
+          <CupertinoScreenTransition
+            visible={isSearchOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsSearchOpen(false)}
+            zIndex={250}
+          >
+            <SearchScreen
+              onBack={() => setIsSearchOpen(false)}
+              onSelectItem={(item) => {
+                setIsEditingItem(false);
+                setSelectedItemId(item.id);
+              }}
+            />
+          </CupertinoScreenTransition>
+
+          {/* Hub Layer 3: Security Center Dashboard (pushed on top of home) */}
+          <CupertinoScreenTransition
+            visible={isSecurityOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsSecurityOpen(false)}
+            zIndex={300}
+          >
+            <SecurityCenterScreen
+              onBack={() => setIsSecurityOpen(false)}
+              onSelectItem={(item) => {
+                setIsEditingItem(false);
+                setSelectedItemId(item.id);
+              }}
+              onEditItem={(item) => {
+                setSelectedItemId(item.id);
+                setIsEditingItem(true);
+              }}
+              onOpenBackup={() => setIsBackupOpen(true)}
+            />
+          </CupertinoScreenTransition>
+
+          {/* Hub Layer 4: Encrypted Backup & Restore Screen */}
+          <CupertinoScreenTransition
+            visible={isBackupOpen}
+            covered={Boolean(selectedItemId)}
+            onDismiss={() => setIsBackupOpen(false)}
+            zIndex={350}
+          >
+            <BackupScreen onBack={() => setIsBackupOpen(false)} />
+          </CupertinoScreenTransition>
+
+          {/* Action Layer 1: Add New Item Screen (pushed on top of all screens) */}
+          <CupertinoScreenTransition
+            visible={isAddingItem}
+            covered={false}
+            onDismiss={() => setIsAddingItem(false)}
+            zIndex={400}
+          >
+            <VaultItemEditScreen
+              onBack={() => setIsAddingItem(false)}
+              onSaveComplete={() => setIsAddingItem(false)}
+            />
+          </CupertinoScreenTransition>
+
+          {/* Action Layer 2: Item Detail Screen (pushed on top of hubs and home) */}
           <CupertinoScreenTransition
             visible={Boolean(selectedItemId)}
             covered={isEditingItem}
@@ -218,6 +307,7 @@ export default function App() {
               setSelectedItemId(null);
               setIsEditingItem(false);
             }}
+            zIndex={500}
           >
             {selectedItemId && (
               <VaultItemDetailScreen
@@ -231,11 +321,12 @@ export default function App() {
             )}
           </CupertinoScreenTransition>
 
-          {/* Layer 2: Item Edit Screen (pushed on top of detail screen) */}
+          {/* Action Layer 3: Item Edit Screen (pushed on top of detail screen and hubs) */}
           <CupertinoScreenTransition
             visible={Boolean(selectedItemId && isEditingItem)}
             covered={false}
             onDismiss={() => setIsEditingItem(false)}
+            zIndex={600}
           >
             {selectedItemId && (
               <VaultItemEditScreen
@@ -244,48 +335,6 @@ export default function App() {
                 onSaveComplete={() => setIsEditingItem(false)}
               />
             )}
-          </CupertinoScreenTransition>
-
-          {/* Layer 3: Add New Item Screen (pushed on top of home) */}
-          <CupertinoScreenTransition
-            visible={isAddingItem}
-            covered={false}
-            onDismiss={() => setIsAddingItem(false)}
-          >
-            <VaultItemEditScreen
-              onBack={() => setIsAddingItem(false)}
-              onSaveComplete={() => setIsAddingItem(false)}
-            />
-          </CupertinoScreenTransition>
-
-          {/* Layer 4: Favorites Hub Screen (pushed on top of home) */}
-          <CupertinoScreenTransition
-            visible={isFavoritesOpen}
-            covered={Boolean(selectedItemId)}
-            onDismiss={() => setIsFavoritesOpen(false)}
-          >
-            <FavoritesScreen
-              onBack={() => setIsFavoritesOpen(false)}
-              onSelectItem={(item) => {
-                setIsEditingItem(false);
-                setSelectedItemId(item.id);
-              }}
-            />
-          </CupertinoScreenTransition>
-
-          {/* Layer 5: Dedicated Full Search Screen (pushed on top of home) */}
-          <CupertinoScreenTransition
-            visible={isSearchOpen}
-            covered={Boolean(selectedItemId)}
-            onDismiss={() => setIsSearchOpen(false)}
-          >
-            <SearchScreen
-              onBack={() => setIsSearchOpen(false)}
-              onSelectItem={(item) => {
-                setIsEditingItem(false);
-                setSelectedItemId(item.id);
-              }}
-            />
           </CupertinoScreenTransition>
         </View>
       );
