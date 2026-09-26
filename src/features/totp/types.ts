@@ -78,3 +78,26 @@ export interface TOTPValidationResult {
   error?: string;
   code?: TOTPValidationErrorCode;
 }
+
+export interface TOTPRecord {
+  id: string;
+  credentialId?: string;
+  issuer: string;
+  account: string;
+  secret: string;
+  algorithm: TOTPAlgorithm;
+  digits: number;
+  period: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TOTPUpdateInput {
+  issuer?: string;
+  account?: string;
+  secret?: string;
+  algorithm?: TOTPAlgorithm;
+  digits?: number;
+  period?: number;
+}
+

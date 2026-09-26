@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { generateTOTPToken, getRemainingSeconds } from '../totpEngine';
 import { TOTPConfig, TOTPToken } from '../types';
 
@@ -122,7 +123,18 @@ export function useTOTP(
     updateToken();
     // 500ms interval guarantees sub-second countdown fidelity and zero missed tick rollovers
     const timer = setInterval(updateToken, 500);
-    return () => clearInterval(timer);
+
+    // Resynchronize immediately upon returning from background state
+    const appStateSub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        updateToken();
+      }
+    });
+
+    return () => {
+      clearInterval(timer);
+      appStateSub.remove();
+    };
   }, [updateToken]);
 
   return {

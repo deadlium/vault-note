@@ -27,6 +27,14 @@ export interface LoginPayload {
   password: string;
   websiteUrl?: string;
   totpSecret?: string;
+  totpConfig?: {
+    issuer?: string;
+    account?: string;
+    secret: string;
+    algorithm?: 'SHA1' | 'SHA256' | 'SHA512';
+    digits?: 6 | 8;
+    period?: number;
+  };
   notes?: string;
   icon?: string;
   customFields?: CustomField[];
@@ -147,4 +155,28 @@ export interface VaultItemRowData {
   hasTOTP?: boolean;
   totpLabel?: string;
   twoFactorLabel?: string;
+}
+
+export type TOTPAlgorithm = 'SHA1' | 'SHA256' | 'SHA512';
+
+export interface TOTPRecord {
+  id: string;
+  credentialId?: string;
+  issuer: string;
+  account: string;
+  secret: string;
+  algorithm: TOTPAlgorithm;
+  digits: number;
+  period: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TOTPUpdateInput {
+  issuer?: string;
+  account?: string;
+  secret?: string;
+  algorithm?: TOTPAlgorithm;
+  digits?: number;
+  period?: number;
 }

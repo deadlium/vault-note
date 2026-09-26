@@ -25,7 +25,12 @@ import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
 import { LoginPayload, CustomField } from '../../../types/vault';
 import { useClipboardManager } from '../../../core/clipboard';
-import { TOTPRow } from '../../../features/totp';
+import {
+  TOTPCard,
+  TOTPSettings,
+  TOTPCredentialService,
+  TOTPUpdateInput,
+} from '../../../features/totp';
 
 export interface VaultItemDetailProps {
   id?: string;
@@ -50,16 +55,29 @@ export default function VaultItemDetailScreen({
     );
   }
 
+  const [showTOTPSettings, setShowTOTPSettings] = useState(false);
   const payload = (item.payload as unknown as Record<string, unknown>) || {};
+  const loginPayload = item.payload as LoginPayload;
   const username = (payload.username as string) || (payload.accountName as string) || '';
   const password = (payload.password as string) || (payload.apiKey as string) || '';
   const websiteUrl = (payload.websiteUrl as string) || (payload.endpointUrl as string) || '';
   const notes = (payload.notes as string) || (payload.content as string) || '';
-  const totpSecret = (payload.totpSecret as string) || (payload.secret as string) || '';
+  const totpRecord = TOTPCredentialService.getCredentialTOTP(item);
+  const totpConfig = loginPayload?.totpConfig;
+  const totpSecret =
+    totpRecord?.secret || (payload.totpSecret as string) || (payload.secret as string) || '';
   const hasTOTP = Boolean(totpSecret && totpSecret.trim().length > 0);
   const customFields: CustomField[] = Array.isArray(payload.customFields)
     ? (payload.customFields as CustomField[])
     : [];
+
+  const handleSaveTOTP = async (updates: TOTPUpdateInput) => {
+    await TOTPCredentialService.updateTOTP(item.id, updates);
+  };
+
+  const handleDetachTOTP = async () => {
+    await TOTPCredentialService.detachTOTP(item.id);
+  };
 
   const handleCopyUsername = () => {
     copyPlain(username);
@@ -256,24 +274,20 @@ export default function VaultItemDetailScreen({
           </View>
         </View>
 
-        {/* Section: TOTP Authenticator */}
-        {hasTOTP && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeader}>TOTP AUTHENTICATOR</Text>
-              <View style={styles.activeSyncPill}>
-                <View style={styles.activeSyncDot} />
-                <Text style={styles.activeSyncText}>Active Sync</Text>
-              </View>
-            </View>
-
-            <TOTPRow
-              secret={totpSecret}
-              label={item.title}
-              accountName={username}
-            />
-          </View>
-        )}
+        {/* Section: Two-Factor Authentication */}
+        <View style={styles.section}>
+          <TOTPCard
+            record={totpRecord}
+            secret={totpSecret}
+            issuer={totpRecord?.issuer || totpConfig?.issuer || item.title}
+            account={totpRecord?.account || totpConfig?.account || username}
+            algorithm={totpRecord?.algorithm || totpConfig?.algorithm}
+            digits={totpRecord?.digits || totpConfig?.digits}
+            period={totpRecord?.period || totpConfig?.period}
+            credentialId={item.id}
+            onOpenSettings={() => setShowTOTPSettings(true)}
+          />
+        </View>
 
         {/* Section: Associated Domain */}
         {websiteUrl.length > 0 && (
@@ -488,6 +502,16 @@ export default function VaultItemDetailScreen({
           </View>
         </View>
       )}
+
+      {/* Two-Factor Authentication Settings Modal Sheet */}
+      <TOTPSettings
+        visible={showTOTPSettings}
+        onClose={() => setShowTOTPSettings(false)}
+        record={totpRecord}
+        credentialId={item.id}
+        onSave={handleSaveTOTP}
+        onDetach={hasTOTP ? handleDetachTOTP : undefined}
+      />
     </SafeAreaView>
   );
 }
