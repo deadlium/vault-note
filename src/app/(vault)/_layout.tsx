@@ -1,8 +1,8 @@
 /**
  * Authenticated Vault Tab Layout
  * Obsidian Liquid Glass floating capsule navigation bar matching app design pattern.
- * Features 4-tab navigation capsule with purple shiny sliding indicator,
- * separate standalone floating circular Add button, and floating frosted popover menu.
+ * Features 4-tab navigation capsule with purple shiny sliding indicator
+ * and separate standalone floating circular Add button that opens the New Item screen.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -15,11 +15,10 @@ import {
   Animated,
   PanResponder,
   useWindowDimensions,
-  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, typography } from '../../theme';
 import {
   NavbarScrollProvider,
   useNavbarScroll,
@@ -146,11 +145,6 @@ function FloatingGlassNavbar({
   const onTabChangeRef = useRef(onTabChange);
   onTabChangeRef.current = onTabChange;
 
-  // Quick Action Menu state & rotation animation
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuAnim = useRef(new Animated.Value(0)).current;
-  const addRotateAnim = useRef(new Animated.Value(0)).current;
-
   // Synchronize indicator position smoothly on tab changes
   useEffect(() => {
     if (!isDragging.current) {
@@ -167,9 +161,6 @@ function FloatingGlassNavbar({
 
   // Handle direct tab tap with tactile spring
   const handleTabPress = useCallback((tab: VaultTab) => {
-    if (isMenuOpen) {
-      toggleMenu(false);
-    }
     const slot = getSlotForTab(tab);
     const targetPos = slot * slotWidthRef.current;
     currentPos.current = targetPos;
@@ -180,7 +171,7 @@ function FloatingGlassNavbar({
       tension: 120,
       useNativeDriver: true,
     }).start();
-  }, [indicatorAnim, onTabChange, isMenuOpen]);
+  }, [indicatorAnim, onTabChange]);
 
   // PanResponder allowing continuous touch-drag across tabs without jumping
   const panResponder = useRef(
@@ -226,234 +217,85 @@ function FloatingGlassNavbar({
     })
   ).current;
 
-  // Toggle quick-action popover menu
-  const toggleMenu = (open?: boolean) => {
-    const nextState = open !== undefined ? open : !isMenuOpen;
-    setIsMenuOpen(nextState);
-
-    Animated.parallel([
-      Animated.spring(menuAnim, {
-        toValue: nextState ? 1 : 0,
-        friction: 8,
-        tension: 140,
-        useNativeDriver: true,
-      }),
-      Animated.spring(addRotateAnim, {
-        toValue: nextState ? 1 : 0,
-        friction: 8,
-        tension: 140,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handleQuickAction = (action: 'login' | 'totp' | 'generator' | 'note' | 'card') => {
-    toggleMenu(false);
-    if (action === 'totp') {
-      onTabChange('totp');
-    } else if (action === 'generator') {
-      onTabChange('generator');
-    } else {
-      onAddItem?.();
-    }
-  };
-
-  const addSpin = addRotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '45deg'],
-  });
-
   return (
-    <>
-      {/* Modal backdrop when Quick Menu is expanded */}
-      <Modal
-        visible={isMenuOpen}
-        transparent={true}
-        animationType="none"
-        onRequestClose={() => toggleMenu(false)}
-      >
-        <Pressable style={styles.backdropOverlay} onPress={() => toggleMenu(false)}>
+    <Animated.View
+      style={[
+        styles.floatingBarWrapper,
+        {
+          width: barWidth,
+          bottom: Math.max(insets.bottom + 8, 16),
+          transform: [{ scale: navScaleAnim }],
+        },
+      ]}
+    >
+      {/* Main Capsule: 4 Navigation Tabs */}
+      <View style={[styles.glassContainer, { width: capsuleWidth }]}>
+        {/* Draggable Navigation Tabs Area */}
+        <View
+          style={[styles.tabsArea, { width: tabsWidth }]}
+          {...panResponder.panHandlers}
+        >
+          {/* Sliding Purple Shiny Active Indicator Pill */}
           <Animated.View
             style={[
-              styles.quickMenuPopover,
+              styles.slidingIndicator,
               {
-                right: (windowWidth - barWidth) / 2,
-                bottom: Math.max(insets.bottom + 8, 16) + 68,
-                opacity: menuAnim,
-                transform: [
-                  {
-                    scale: menuAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.82, 1],
-                    }),
-                  },
-                  {
-                    translateY: menuAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [18, 0],
-                    }),
-                  },
-                ],
+                width: slotWidth,
+                transform: [{ translateX: indicatorAnim }],
               },
             ]}
           >
-            <View style={styles.menuHeader}>
-              <Ionicons name="sparkles" size={13} color={colors.primaryLight} />
-              <Text style={styles.menuHeaderText}>NEW ITEM</Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => handleQuickAction('login')}
-            >
-              <View style={[styles.menuItemIconCircle, { backgroundColor: 'rgba(123, 97, 255, 0.16)' }]}>
-                <Ionicons name="key-outline" size={16} color={colors.primaryLight} />
-              </View>
-              <View style={styles.menuItemTextCol}>
-                <Text style={styles.menuItemTitle}>Login Credential</Text>
-                <Text style={styles.menuItemSubtitle}>Password & 2FA authenticator</Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => handleQuickAction('totp')}
-            >
-              <View style={[styles.menuItemIconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.16)' }]}>
-                <Ionicons name="qr-code-outline" size={16} color={colors.emerald} />
-              </View>
-              <View style={styles.menuItemTextCol}>
-                <Text style={styles.menuItemTitle}>Scan Authenticator</Text>
-                <Text style={styles.menuItemSubtitle}>TOTP QR code enrollment</Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => handleQuickAction('note')}
-            >
-              <View style={[styles.menuItemIconCircle, { backgroundColor: 'rgba(6, 182, 212, 0.16)' }]}>
-                <Ionicons name="document-text-outline" size={16} color={colors.cyan} />
-              </View>
-              <View style={styles.menuItemTextCol}>
-                <Text style={styles.menuItemTitle}>Secure Note</Text>
-                <Text style={styles.menuItemSubtitle}>Encrypted secret memorandum</Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => handleQuickAction('card')}
-            >
-              <View style={[styles.menuItemIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.16)' }]}>
-                <Ionicons name="card-outline" size={16} color={colors.amber} />
-              </View>
-              <View style={styles.menuItemTextCol}>
-                <Text style={styles.menuItemTitle}>Payment Card</Text>
-                <Text style={styles.menuItemSubtitle}>Debit or credit credentials</Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
-              onPress={() => handleQuickAction('generator')}
-            >
-              <View style={[styles.menuItemIconCircle, { backgroundColor: 'rgba(157, 141, 255, 0.16)' }]}>
-                <Ionicons name="shuffle-outline" size={16} color={colors.primaryLight} />
-              </View>
-              <View style={styles.menuItemTextCol}>
-                <Text style={styles.menuItemTitle}>Password Generator</Text>
-                <Text style={styles.menuItemSubtitle}>Cryptographic entropy passwords</Text>
-              </View>
-            </Pressable>
+            <View style={styles.shinyIndicatorInner} />
           </Animated.View>
-        </Pressable>
-      </Modal>
 
-      <Animated.View
-        style={[
-          styles.floatingBarWrapper,
-          {
-            width: barWidth,
-            bottom: Math.max(insets.bottom + 8, 16),
-            transform: [{ scale: navScaleAnim }],
-          },
-        ]}
-      >
-        {/* Main Capsule: 4 Navigation Tabs */}
-        <View style={[styles.glassContainer, { width: capsuleWidth }]}>
-          {/* Draggable Navigation Tabs Area */}
-          <View
-            style={[styles.tabsArea, { width: tabsWidth }]}
-            {...panResponder.panHandlers}
-          >
-            {/* Sliding Purple Shiny Active Indicator Pill */}
-            <Animated.View
-              style={[
-                styles.slidingIndicator,
-                {
-                  width: slotWidth,
-                  transform: [{ translateX: indicatorAnim }],
-                },
-              ]}
-            >
-              <View style={styles.shinyIndicatorInner}>
-                <View style={styles.shinyIndicatorSheen} />
-              </View>
-            </Animated.View>
-
-            {TAB_SLOT_CONFIGS.map((tabConfig) => {
-              const isSelected = currentTab === tabConfig.key;
-              return (
-                <Pressable
-                  key={tabConfig.key}
-                  onPress={() => handleTabPress(tabConfig.key)}
-                  style={styles.tabSlot}
-                  accessibilityRole="button"
-                  accessibilityLabel={tabConfig.label}
-                  accessibilityState={{ selected: isSelected }}
+          {TAB_SLOT_CONFIGS.map((tabConfig) => {
+            const isSelected = currentTab === tabConfig.key;
+            return (
+              <Pressable
+                key={tabConfig.key}
+                onPress={() => handleTabPress(tabConfig.key)}
+                style={styles.tabSlot}
+                accessibilityRole="button"
+                accessibilityLabel={tabConfig.label}
+                accessibilityState={{ selected: isSelected }}
+              >
+                <Ionicons
+                  name={isSelected ? tabConfig.iconActive : tabConfig.iconInactive}
+                  size={20}
+                  color={isSelected ? colors.textPrimary : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    isSelected ? styles.tabLabelActive : styles.tabLabelInactive,
+                  ]}
+                  numberOfLines={1}
                 >
-                  <Ionicons
-                    name={isSelected ? tabConfig.iconActive : tabConfig.iconInactive}
-                    size={20}
-                    color={isSelected ? colors.textPrimary : colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.tabLabel,
-                      isSelected ? styles.tabLabelActive : styles.tabLabelInactive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {tabConfig.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                  {tabConfig.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
+      </View>
 
-        {/* Separate Standalone Circular Floating Add Action Button */}
-        <Pressable
-          onPress={() => toggleMenu()}
-          style={({ pressed }) => [
-            styles.standaloneAddButton,
-            isMenuOpen && styles.standaloneAddButtonActive,
-            pressed && styles.buttonPressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Quick Add Menu"
-        >
-          <Animated.View style={{ transform: [{ rotate: addSpin }] }}>
-            <Ionicons
-              name="add"
-              size={26}
-              color={isMenuOpen ? colors.textPrimary : colors.fabPurple}
-            />
-          </Animated.View>
-        </Pressable>
-      </Animated.View>
-    </>
+      {/* Separate Standalone Circular Floating Add Action Button */}
+      <Pressable
+        onPress={() => onAddItem?.()}
+        style={({ pressed }) => [
+          styles.standaloneAddButton,
+          pressed && styles.buttonPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Add New Item"
+      >
+        <Ionicons
+          name="add"
+          size={28}
+          color={colors.fabPurple}
+        />
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -549,31 +391,20 @@ const styles = StyleSheet.create({
   shinyIndicatorInner: {
     flex: 1,
     borderRadius: 24,
-    backgroundColor: 'rgba(123, 97, 255, 0.24)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(157, 141, 255, 0.60)',
-    position: 'relative',
-    overflow: 'hidden',
+    backgroundColor: 'rgba(123, 97, 255, 0.22)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(157, 141, 255, 0.55)',
     ...Platform.select({
       ios: {
         shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.80,
-        shadowRadius: 10,
+        shadowOpacity: 0.75,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 6,
+        elevation: 5,
       },
     }),
-  },
-  shinyIndicatorSheen: {
-    position: 'absolute',
-    top: 1,
-    left: 8,
-    right: 8,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    borderRadius: 1,
   },
   tabSlot: {
     flex: 1,
@@ -619,87 +450,8 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  standaloneAddButtonActive: {
-    backgroundColor: colors.primaryDark,
-    borderColor: colors.primaryLight,
-  },
   buttonPressed: {
     opacity: 0.84,
     transform: [{ scale: 0.92 }],
-  },
-  backdropOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(5, 6, 9, 0.55)',
-  },
-  quickMenuPopover: {
-    position: 'absolute',
-    width: 240,
-    backgroundColor: 'rgba(20, 22, 29, 0.96)',
-    borderRadius: 22,
-    borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 16 },
-        shadowOpacity: 0.65,
-        shadowRadius: 24,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
-  },
-  menuHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-    marginBottom: 4,
-  },
-  menuHeaderText: {
-    fontFamily: typography.fontFamily.sans,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    color: colors.primaryLight,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs + 3,
-    borderRadius: radius.md,
-    gap: 10,
-  },
-  menuItemPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  menuItemIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuItemTextCol: {
-    flex: 1,
-  },
-  menuItemTitle: {
-    fontFamily: typography.fontFamily.sans,
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  menuItemSubtitle: {
-    fontFamily: typography.fontFamily.sans,
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginTop: 1,
   },
 });
