@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius } from '../../../theme';
+import { colors, radius, useTheme } from '../../../theme';
 import { PasswordGeneratorView } from './PasswordGeneratorView';
 
 export interface PasswordGeneratorModalProps {
@@ -26,6 +26,8 @@ export function PasswordGeneratorModal({
   onClose,
   onSelectPassword,
 }: PasswordGeneratorModalProps) {
+  const { colors: activeColors, isDark } = useTheme();
+
   return (
     <Modal
       visible={visible}
@@ -33,11 +35,22 @@ export function PasswordGeneratorModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, !isDark && { backgroundColor: 'rgba(15, 23, 42, 0.45)' }]}>
         <Pressable style={styles.backdropPressable} onPress={onClose} />
-        <SafeAreaView style={styles.sheetContainer} edges={['bottom']}>
-          <View style={styles.dragHandleContainer}>
-            <View style={styles.dragHandle} />
+        <SafeAreaView
+          style={[
+            styles.sheetContainer,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.15,
+            },
+          ]}
+          edges={['bottom']}
+        >
+          <View style={[styles.dragHandleContainer, !isDark && { backgroundColor: activeColors.surface }]}>
+            <View style={[styles.dragHandle, !isDark && { backgroundColor: activeColors.border }]} />
           </View>
           <PasswordGeneratorView
             isModal

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 
 export type TagVariant = 'default' | 'primary' | 'emerald' | 'amber' | 'crimson';
 
@@ -15,47 +15,49 @@ export const Tag: React.FC<TagProps> = ({
   variant = 'default',
   size = 'md',
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
+
   const getStyles = (): { container: ViewStyle; text: TextStyle } => {
     switch (variant) {
       case 'primary':
         return {
           container: {
-            backgroundColor: colors.primaryMuted,
-            borderColor: colors.primary,
+            backgroundColor: activeColors.primaryMuted,
+            borderColor: isDark ? activeColors.primary : 'rgba(79, 70, 229, 0.3)',
           },
-          text: { color: colors.primaryLight },
+          text: { color: isDark ? activeColors.primaryLight : activeColors.primary },
         };
       case 'emerald':
         return {
           container: {
-            backgroundColor: colors.emeraldMuted,
-            borderColor: colors.emerald,
+            backgroundColor: activeColors.emeraldMuted,
+            borderColor: activeColors.emeraldBorder,
           },
-          text: { color: colors.emerald },
+          text: { color: isDark ? activeColors.emerald : activeColors.emeraldDark },
         };
       case 'amber':
         return {
           container: {
-            backgroundColor: colors.amberMuted,
-            borderColor: colors.amber,
+            backgroundColor: activeColors.amberMuted,
+            borderColor: activeColors.amberBorder,
           },
-          text: { color: colors.amber },
+          text: { color: isDark ? activeColors.amber : activeColors.amberDark },
         };
       case 'crimson':
         return {
           container: {
-            backgroundColor: colors.crimsonMuted,
-            borderColor: colors.crimson,
+            backgroundColor: activeColors.crimsonMuted,
+            borderColor: isDark ? activeColors.crimson : 'rgba(225, 29, 72, 0.3)',
           },
-          text: { color: colors.crimson },
+          text: { color: isDark ? activeColors.crimson : activeColors.crimsonDark },
         };
       default:
         return {
           container: {
-            backgroundColor: colors.surfaceSubtle,
-            borderColor: colors.border,
+            backgroundColor: activeColors.surfaceSubtle,
+            borderColor: activeColors.border,
           },
-          text: { color: colors.textSecondary },
+          text: { color: activeColors.textSecondary },
         };
     }
   };

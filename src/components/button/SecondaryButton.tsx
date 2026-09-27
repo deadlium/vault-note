@@ -7,7 +7,7 @@ import {
   StyleProp,
   TextStyle,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 
 export interface SecondaryButtonProps {
   title: string;
@@ -24,13 +24,22 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        pressed && !disabled && styles.pressed,
+        !isDark && {
+          backgroundColor: '#FFFFFF',
+          borderColor: activeColors.border,
+        },
+        pressed && !disabled && (isDark ? styles.pressed : {
+          backgroundColor: activeColors.backgroundSubtle,
+          borderColor: activeColors.borderActive,
+        }),
         disabled && styles.disabled,
         style,
       ]}
@@ -38,7 +47,8 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
       <Text
         style={[
           styles.text,
-          disabled && styles.disabledText,
+          !isDark && { color: activeColors.textPrimary },
+          disabled && (isDark ? styles.disabledText : { color: activeColors.textMuted }),
           textStyle,
         ]}
       >

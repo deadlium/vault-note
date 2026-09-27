@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 
 export interface PasswordStrengthResult {
   score: number; // 0 to 4
@@ -100,6 +100,7 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
 }
 
 export function PasswordStrengthBar({ password }: { password: string }) {
+  const { colors: themeColors, isDark } = useTheme();
   const result = useMemo(() => evaluatePasswordStrength(password), [password]);
 
   if (!password) return null;
@@ -115,7 +116,12 @@ export function PasswordStrengthBar({ password }: { password: string }) {
               key={step}
               style={[
                 styles.meterSegment,
-                filled ? { backgroundColor: result.color } : styles.meterSegmentEmpty,
+                filled
+                  ? { backgroundColor: result.color }
+                  : [
+                      styles.meterSegmentEmpty,
+                      !isDark && { backgroundColor: themeColors.surfaceActive },
+                    ],
               ]}
             />
           );
@@ -127,7 +133,12 @@ export function PasswordStrengthBar({ password }: { password: string }) {
         <Text style={[styles.strengthLabel, { color: result.color }]}>
           {result.label}
         </Text>
-        <Text style={styles.entropyText}>
+        <Text
+          style={[
+            styles.entropyText,
+            !isDark && { color: themeColors.textTertiary },
+          ]}
+        >
           {result.entropyBits > 0 ? `${result.entropyBits} bits entropy` : ''}
         </Text>
       </View>
@@ -143,14 +154,32 @@ export function PasswordStrengthBar({ password }: { password: string }) {
 }
 
 function CriteriaItem({ met, text }: { met: boolean; text: string }) {
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <View style={styles.criteriaRow}>
       <Ionicons
         name={met ? 'checkmark-circle' : 'ellipse-outline'}
         size={14}
-        color={met ? colors.emerald : colors.textMuted}
+        color={
+          met
+            ? isDark
+              ? colors.emerald
+              : themeColors.emerald
+            : isDark
+            ? colors.textMuted
+            : themeColors.textMuted
+        }
       />
-      <Text style={[styles.criteriaText, met && styles.criteriaTextMet]}>{text}</Text>
+      <Text
+        style={[
+          styles.criteriaText,
+          !isDark && { color: themeColors.textTertiary },
+          met && styles.criteriaTextMet,
+          met && !isDark && { color: themeColors.textSecondary },
+        ]}
+      >
+        {text}
+      </Text>
     </View>
   );
 }

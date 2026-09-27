@@ -3,7 +3,7 @@
  * Coordinates finite state transitions, inactivity timeouts, and cryptographic zeroization
  */
 
-import { isVaultInitialized } from '../storage/enclave';
+import { isVaultInitialized, getEnclaveAdapter } from '../storage/enclave';
 import { useSessionStore } from './useSessionStore';
 import {
   VaultSessionStatus,
@@ -20,6 +20,16 @@ export class VaultSessionManager {
       const initialized = await isVaultInitialized();
       const initialStatus: VaultSessionStatus = initialized ? 'LOCKED' : 'UNINITIALIZED';
       useSessionStore.getState().setStatus(initialStatus);
+
+      try {
+        const shieldPref = await getEnclaveAdapter().getItem('vaultnote.pref.privacy_shield');
+        if (shieldPref !== null) {
+          useSessionStore.getState().setPrivacyShieldEnabled(shieldPref === 'true');
+        }
+      } catch {
+        // Keep default enabled
+      }
+
       return initialStatus;
     } catch {
       useSessionStore.getState().setStatus('UNINITIALIZED');
@@ -161,8 +171,10 @@ export class VaultSessionManager {
     const state = useSessionStore.getState();
 
     if (nextAppState === 'background' || nextAppState === 'inactive') {
-      // 1. Activate Privacy Shield immediately on background / app switcher
-      useSessionStore.getState().setPrivacyShieldActive(true);
+      // 1. Activate Privacy Shield immediately on background / app switcher if enabled
+      if (useSessionStore.getState().isPrivacyShieldEnabled) {
+        useSessionStore.getState().setPrivacyShieldActive(true);
+      }
 
       // 2. If unlocked, record background timestamp
       if (state.status === 'UNLOCKED') {

@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { PasswordField } from '../../../components/input/PasswordField';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
@@ -43,14 +43,15 @@ export default function VaultItemDetailScreen({
   onBack,
   onEdit,
 }: VaultItemDetailProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const { item, isLoading, toggleFavorite, deleteItem } = useVaultItemDetail(id);
   const { isActive, remainingSeconds, totalSeconds, label, copySecret, copyPlain } =
     useClipboardManager();
 
   if (isLoading || !item) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={[styles.loadingContainer, !isDark && { backgroundColor: activeColors.background }]}>
+        <ActivityIndicator size="large" color={activeColors.primary} />
       </SafeAreaView>
     );
   }
@@ -123,9 +124,9 @@ export default function VaultItemDetailScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, !isDark && { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header Navigation Bar */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDark && { borderBottomColor: activeColors.border }]}>
         <Pressable
           onPress={onBack}
           style={({ pressed }) => [
@@ -135,8 +136,8 @@ export default function VaultItemDetailScreen({
           accessibilityRole="button"
           accessibilityLabel="Back to Vault"
         >
-          <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
-          <Text style={styles.backButtonText}>Vault</Text>
+          <Ionicons name="chevron-back" size={20} color={activeColors.textPrimary} />
+          <Text style={[styles.backButtonText, !isDark && { color: activeColors.textPrimary }]}>Vault</Text>
         </Pressable>
 
         <View style={styles.headerRightActions}>
@@ -144,7 +145,8 @@ export default function VaultItemDetailScreen({
             onPress={toggleFavorite}
             style={({ pressed }) => [
               styles.iconButton,
-              pressed && styles.iconButtonPressed,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+              pressed && (isDark ? styles.iconButtonPressed : { backgroundColor: activeColors.surfaceActive }),
             ]}
             accessibilityRole="button"
             accessibilityLabel="Toggle Favorite"
@@ -152,7 +154,7 @@ export default function VaultItemDetailScreen({
             <Ionicons
               name={item.isFavorite ? 'star' : 'star-outline'}
               size={18}
-              color={item.isFavorite ? '#FBBF24' : colors.textSecondary}
+              color={item.isFavorite ? '#FBBF24' : activeColors.textSecondary}
             />
           </Pressable>
 
@@ -160,24 +162,26 @@ export default function VaultItemDetailScreen({
             onPress={() => onEdit?.(item.id)}
             style={({ pressed }) => [
               styles.editButton,
-              pressed && styles.editButtonPressed,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+              pressed && (isDark ? styles.editButtonPressed : { backgroundColor: activeColors.surfaceActive }),
             ]}
             accessibilityRole="button"
             accessibilityLabel="Edit Credential"
           >
-            <Feather name="edit-2" size={14} color={colors.textPrimary} style={{ marginRight: 6 }} />
-            <Text style={styles.editButtonText}>Edit</Text>
+            <Feather name="edit-2" size={14} color={activeColors.textPrimary} style={{ marginRight: 6 }} />
+            <Text style={[styles.editButtonText, !isDark && { color: activeColors.textPrimary }]}>Edit</Text>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
               styles.iconButton,
-              pressed && styles.iconButtonPressed,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+              pressed && (isDark ? styles.iconButtonPressed : { backgroundColor: activeColors.surfaceActive }),
             ]}
             accessibilityRole="button"
             accessibilityLabel="More Options"
           >
-            <Ionicons name="ellipsis-horizontal" size={18} color={colors.textSecondary} />
+            <Ionicons name="ellipsis-horizontal" size={18} color={activeColors.textSecondary} />
           </Pressable>
         </View>
       </View>
@@ -188,7 +192,18 @@ export default function VaultItemDetailScreen({
         showsVerticalScrollIndicator={false}
       >
         {/* Item Hero Header Card */}
-        <View style={styles.heroCard}>
+        <View style={[
+          styles.heroCard,
+          !isDark && {
+            backgroundColor: activeColors.surface,
+            borderColor: activeColors.border,
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.04,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 6,
+            elevation: 1,
+          },
+        ]}>
           <View style={styles.heroAvatarContainer}>
             <ServiceIcon
               iconType={
@@ -201,30 +216,30 @@ export default function VaultItemDetailScreen({
               size="lg"
             />
             {item.isProtected && (
-              <View style={styles.lockBadge}>
-                <Ionicons name="lock-closed" size={10} color="#0D0E11" />
+              <View style={[styles.lockBadge, !isDark && { borderColor: activeColors.surface }]}>
+                <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
               </View>
             )}
           </View>
 
           <View style={styles.heroInfo}>
             <View style={styles.heroTitleRow}>
-              <Text style={styles.heroTitle}>{item.title}</Text>
+              <Text style={[styles.heroTitle, !isDark && { color: activeColors.textPrimary }]}>{item.title}</Text>
               {item.isProtected && (
-                <View style={styles.protectedPill}>
-                  <View style={styles.protectedDot} />
-                  <Text style={styles.protectedPillText}>Protected</Text>
+                <View style={[styles.protectedPill, !isDark && { backgroundColor: activeColors.emeraldMuted, borderColor: activeColors.emeraldBorder }]}>
+                  <View style={[styles.protectedDot, !isDark && { backgroundColor: activeColors.emerald }]} />
+                  <Text style={[styles.protectedPillText, !isDark && { color: activeColors.emeraldDark }]}>Protected</Text>
                 </View>
               )}
             </View>
 
-            <Text style={styles.heroSubtitle}>
+            <Text style={[styles.heroSubtitle, !isDark && { color: activeColors.textSecondary }]}>
               Personal Workspace • {websiteUrl.replace(/^https?:\/\//, '')}
             </Text>
 
             <View style={styles.securityRow}>
-              <Ionicons name="shield-checkmark" size={13} color={colors.emerald} />
-              <Text style={styles.securityText}>
+              <Ionicons name="shield-checkmark" size={13} color={activeColors.emerald} />
+              <Text style={[styles.securityText, !isDark && { color: activeColors.textTertiary }]}>
                 Updated 4h ago • Hardware Secure Enclave
               </Text>
             </View>
@@ -233,14 +248,25 @@ export default function VaultItemDetailScreen({
 
         {/* Section: Primary Credentials */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>PRIMARY CREDENTIALS</Text>
+          <Text style={[styles.sectionHeader, !isDark && { color: activeColors.textMuted }]}>PRIMARY CREDENTIALS</Text>
 
-          <View style={styles.card}>
+          <View style={[
+            styles.card,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 1,
+            },
+          ]}>
             {/* Username / Email Field */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Username / Email</Text>
-              <View style={styles.fieldRow}>
-                <Text style={styles.monotext} numberOfLines={1} ellipsizeMode="middle">
+              <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textSecondary }]}>Username / Email</Text>
+              <View style={[styles.fieldRow, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                <Text style={[styles.monotext, !isDark && { color: activeColors.textPrimary }]} numberOfLines={1} ellipsizeMode="middle">
                   {username || 'No username set'}
                 </Text>
 
@@ -249,19 +275,20 @@ export default function VaultItemDetailScreen({
                     onPress={handleCopyUsername}
                     style={({ pressed }) => [
                       styles.copyPill,
+                      !isDark && { backgroundColor: '#FFFFFF', borderColor: activeColors.border },
                       pressed && styles.copyPillPressed,
                     ]}
                     accessibilityRole="button"
                     accessibilityLabel="Copy Username"
                   >
-                    <Ionicons name="copy-outline" size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
-                    <Text style={styles.copyPillText}>Copy</Text>
+                    <Ionicons name="copy-outline" size={13} color={activeColors.textSecondary} style={{ marginRight: 4 }} />
+                    <Text style={[styles.copyPillText, !isDark && { color: activeColors.textSecondary }]}>Copy</Text>
                   </Pressable>
                 )}
               </View>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, !isDark && { backgroundColor: activeColors.border }]} />
 
             {/* Password Field with Masking & Biometric Protection */}
             <PasswordField
@@ -292,18 +319,29 @@ export default function VaultItemDetailScreen({
         {/* Section: Associated Domain */}
         {websiteUrl.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>ASSOCIATED DOMAIN</Text>
+            <Text style={[styles.sectionHeader, !isDark && { color: activeColors.textMuted }]}>ASSOCIATED DOMAIN</Text>
 
-            <View style={styles.card}>
+            <View style={[
+              styles.card,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.04,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 1,
+              },
+            ]}>
               <View style={styles.domainRow}>
-                <View style={styles.domainIconCircle}>
-                  <Ionicons name="globe-outline" size={18} color={colors.textSecondary} />
+                <View style={[styles.domainIconCircle, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+                  <Ionicons name="globe-outline" size={18} color={activeColors.textSecondary} />
                 </View>
 
                 <View style={styles.domainDetails}>
-                  <Text style={styles.fieldLabel}>Sign-in Page</Text>
+                  <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textSecondary }]}>Sign-in Page</Text>
                   <Pressable onPress={handleOpenUrl}>
-                    <Text style={styles.domainLink} numberOfLines={1}>
+                    <Text style={[styles.domainLink, !isDark && { color: activeColors.primary }]} numberOfLines={1}>
                       {websiteUrl}
                     </Text>
                   </Pressable>
@@ -312,19 +350,19 @@ export default function VaultItemDetailScreen({
                 <View style={styles.domainActions}>
                   <Pressable
                     onPress={handleOpenUrl}
-                    style={styles.smallIconButton}
+                    style={[styles.smallIconButton, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}
                     accessibilityRole="button"
                     accessibilityLabel="Open in Browser"
                   >
-                    <Feather name="external-link" size={15} color={colors.textSecondary} />
+                    <Feather name="external-link" size={15} color={activeColors.textSecondary} />
                   </Pressable>
                   <Pressable
                     onPress={handleCopyUrl}
-                    style={styles.smallIconButton}
+                    style={[styles.smallIconButton, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}
                     accessibilityRole="button"
                     accessibilityLabel="Copy URL"
                   >
-                    <Ionicons name="link-outline" size={16} color={colors.textSecondary} />
+                    <Ionicons name="link-outline" size={16} color={activeColors.textSecondary} />
                   </Pressable>
                 </View>
               </View>
@@ -336,18 +374,29 @@ export default function VaultItemDetailScreen({
         {customFields.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeader}>CUSTOM FIELDS</Text>
-              <Ionicons name="list-outline" size={13} color={colors.textMuted} />
+              <Text style={[styles.sectionHeader, !isDark && { color: activeColors.textMuted }]}>CUSTOM FIELDS</Text>
+              <Ionicons name="list-outline" size={13} color={activeColors.textMuted} />
             </View>
 
-            <View style={styles.card}>
+            <View style={[
+              styles.card,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.04,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 1,
+              },
+            ]}>
               {customFields.map((cf, index) => {
                 const isSecret = cf.type === 'password' || Boolean(cf.isSecret);
                 const isDescription = cf.type === 'description';
 
                 return (
                   <React.Fragment key={cf.id || index}>
-                    {index > 0 && <View style={styles.divider} />}
+                    {index > 0 && <View style={[styles.divider, !isDark && { backgroundColor: activeColors.border }]} />}
                     {isSecret ? (
                       <PasswordField
                         label={cf.label || 'Secret Field'}
@@ -358,31 +407,32 @@ export default function VaultItemDetailScreen({
                     ) : isDescription ? (
                       <View style={styles.fieldContainer}>
                         <View style={styles.customFieldLabelRow}>
-                          <Text style={styles.fieldLabel}>{cf.label || 'Description'}</Text>
+                          <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textSecondary }]}>{cf.label || 'Description'}</Text>
                           {cf.value.length > 0 && (
                             <Pressable
                               onPress={() => copyPlain(cf.value)}
                               style={({ pressed }) => [
                                 styles.copyPill,
+                                !isDark && { backgroundColor: '#FFFFFF', borderColor: activeColors.border },
                                 pressed && styles.copyPillPressed,
                               ]}
                               accessibilityRole="button"
                               accessibilityLabel={`Copy ${cf.label || 'description'}`}
                             >
-                              <Ionicons name="copy-outline" size={12} color={colors.textSecondary} style={{ marginRight: 3 }} />
-                              <Text style={styles.copyPillText}>Copy</Text>
+                              <Ionicons name="copy-outline" size={12} color={activeColors.textSecondary} style={{ marginRight: 3 }} />
+                              <Text style={[styles.copyPillText, !isDark && { color: activeColors.textSecondary }]}>Copy</Text>
                             </Pressable>
                           )}
                         </View>
-                        <View style={styles.customDescBox}>
-                          <Text style={styles.customDescText}>{cf.value || '(Empty)'}</Text>
+                        <View style={[styles.customDescBox, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                          <Text style={[styles.customDescText, !isDark && { color: activeColors.textPrimary }]}>{cf.value || '(Empty)'}</Text>
                         </View>
                       </View>
                     ) : (
                       <View style={styles.fieldContainer}>
-                        <Text style={styles.fieldLabel}>{cf.label || 'Custom Field'}</Text>
-                        <View style={styles.fieldRow}>
-                          <Text style={styles.monotext} numberOfLines={1} ellipsizeMode="middle">
+                        <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textSecondary }]}>{cf.label || 'Custom Field'}</Text>
+                        <View style={[styles.fieldRow, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                          <Text style={[styles.monotext, !isDark && { color: activeColors.textPrimary }]} numberOfLines={1} ellipsizeMode="middle">
                             {cf.value || '(Empty)'}
                           </Text>
                           {cf.value.length > 0 && (
@@ -390,13 +440,14 @@ export default function VaultItemDetailScreen({
                               onPress={() => copyPlain(cf.value)}
                               style={({ pressed }) => [
                                 styles.copyPill,
+                                !isDark && { backgroundColor: '#FFFFFF', borderColor: activeColors.border },
                                 pressed && styles.copyPillPressed,
                               ]}
                               accessibilityRole="button"
                               accessibilityLabel={`Copy ${cf.label || 'value'}`}
                             >
-                              <Ionicons name="copy-outline" size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
-                              <Text style={styles.copyPillText}>Copy</Text>
+                              <Ionicons name="copy-outline" size={13} color={activeColors.textSecondary} style={{ marginRight: 4 }} />
+                              <Text style={[styles.copyPillText, !isDark && { color: activeColors.textSecondary }]}>Copy</Text>
                             </Pressable>
                           )}
                         </View>
@@ -412,34 +463,45 @@ export default function VaultItemDetailScreen({
         {/* Section: Encrypted Safe Notes */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeader}>ENCRYPTED SAFE NOTES</Text>
-            <Ionicons name="lock-closed-outline" size={13} color={colors.textMuted} />
+            <Text style={[styles.sectionHeader, !isDark && { color: activeColors.textMuted }]}>ENCRYPTED SAFE NOTES</Text>
+            <Ionicons name="lock-closed-outline" size={13} color={activeColors.textMuted} />
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.notesText}>
+          <View style={[
+            styles.card,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 1,
+            },
+          ]}>
+            <Text style={[styles.notesText, !isDark && { color: activeColors.textPrimary }]}>
               {notes || 'No notes added for this credential.'}
             </Text>
 
             {item.tags.length > 0 && (
               <View style={styles.tagsContainer}>
                 {item.tags.map((tag) => (
-                  <View key={tag} style={styles.tagPill}>
-                    <Text style={styles.tagText}>#{tag}</Text>
+                  <View key={tag} style={[styles.tagPill, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                    <Text style={[styles.tagText, !isDark && { color: activeColors.textSecondary }]}>#{tag}</Text>
                   </View>
                 ))}
               </View>
             )}
 
             {/* Cryptographic Strength Assessment */}
-            <View style={styles.strengthBox}>
+            <View style={[styles.strengthBox, !isDark && { backgroundColor: activeColors.emeraldMuted, borderColor: activeColors.emeraldBorder }]}>
               <View style={styles.strengthRow}>
-                <Ionicons name="shield-checkmark" size={14} color={colors.emerald} style={{ marginRight: 6 }} />
-                <Text style={styles.strengthTitle}>
+                <Ionicons name="shield-checkmark" size={14} color={activeColors.emerald} style={{ marginRight: 6 }} />
+                <Text style={[styles.strengthTitle, !isDark && { color: activeColors.emeraldDark }]}>
                   Cryptographic Strength: High (84 bits)
                 </Text>
               </View>
-              <Text style={styles.strengthSubtitle}>
+              <Text style={[styles.strengthSubtitle, !isDark && { color: activeColors.textTertiary }]}>
                 0 compromises in offline HIBP hash catalog
               </Text>
             </View>
@@ -451,49 +513,52 @@ export default function VaultItemDetailScreen({
           <Pressable
             style={({ pressed }) => [
               styles.secondaryButton,
-              pressed && styles.secondaryButtonPressed,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+              pressed && (isDark ? styles.secondaryButtonPressed : { backgroundColor: activeColors.surfaceSubtle }),
             ]}
           >
-            <Ionicons name="time-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
-            <Text style={styles.secondaryButtonText}>View Revision History</Text>
+            <Ionicons name="time-outline" size={16} color={activeColors.textSecondary} style={{ marginRight: 8 }} />
+            <Text style={[styles.secondaryButtonText, !isDark && { color: activeColors.textSecondary }]}>View Revision History</Text>
           </Pressable>
 
           <Pressable
             onPress={handleDelete}
             style={({ pressed }) => [
               styles.deleteButton,
+              !isDark && { backgroundColor: activeColors.crimsonMuted, borderColor: 'rgba(225, 29, 72, 0.25)' },
               pressed && styles.deleteButtonPressed,
             ]}
           >
-            <Ionicons name="trash-outline" size={16} color={colors.crimson} style={{ marginRight: 8 }} />
-            <Text style={styles.deleteButtonText}>Delete Credential</Text>
+            <Ionicons name="trash-outline" size={16} color={activeColors.crimson} style={{ marginRight: 8 }} />
+            <Text style={[styles.deleteButtonText, !isDark && { color: activeColors.crimson }]}>Delete Credential</Text>
           </Pressable>
         </View>
       </ScrollView>
 
       {/* Ephemeral Clipboard Purge Toast Banner */}
       {isActive && (
-        <View style={styles.toastContainer}>
+        <View style={[styles.toastContainer, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
           <View style={styles.toastContent}>
-            <View style={styles.toastIconCircle}>
-              <Ionicons name="shield-checkmark" size={15} color={colors.emerald} />
+            <View style={[styles.toastIconCircle, !isDark && { backgroundColor: activeColors.emeraldMuted }]}>
+              <Ionicons name="shield-checkmark" size={15} color={activeColors.emerald} />
             </View>
             <View style={styles.toastTextContainer}>
-              <Text style={styles.toastTitle}>
+              <Text style={[styles.toastTitle, !isDark && { color: activeColors.textPrimary }]}>
                 {label ?? 'Secret'} copied to clipboard
               </Text>
-              <Text style={styles.toastSubtitle}>
+              <Text style={[styles.toastSubtitle, !isDark && { color: activeColors.textTertiary }]}>
                 Auto-wiping in {remainingSeconds}s
               </Text>
             </View>
-            <View style={styles.toastBadge}>
-              <Text style={styles.toastBadgeText}>{remainingSeconds}s</Text>
+            <View style={[styles.toastBadge, !isDark && { backgroundColor: activeColors.primaryMuted }]}>
+              <Text style={[styles.toastBadgeText, !isDark && { color: activeColors.primary }]}>{remainingSeconds}s</Text>
             </View>
           </View>
-          <View style={styles.toastProgressTrack}>
+          <View style={[styles.toastProgressTrack, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
             <View
               style={[
                 styles.toastProgressBar,
+                !isDark && { backgroundColor: activeColors.primary },
                 {
                   width: `${Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100))}%`,
                 },

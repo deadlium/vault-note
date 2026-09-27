@@ -99,3 +99,22 @@ test('ClipboardManager: copyPlain copies without active auto-purge countdown', a
   assert.strictEqual(await adapter.getString(), plainText);
   assert.strictEqual(ClipboardManager.getState().isActive, false);
 });
+
+test('ClipboardManager: copySecret automatically purges clipboard when timer expires', async () => {
+  const adapter = new InMemoryClipboardAdapter();
+  const { ClipboardManager } = await import('../clipboardManager');
+  ClipboardManager.setAdapter(adapter);
+
+  const secret = 'time_expiring_secret_999';
+  await ClipboardManager.copySecret(secret, 'Short TTL Secret', 1);
+
+  assert.strictEqual(await adapter.getString(), secret);
+  assert.strictEqual(ClipboardManager.getState().isActive, true);
+
+  // Wait 1.1s for countdown to expire and trigger auto-purge
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+
+  assert.strictEqual(await adapter.getString(), '');
+  assert.strictEqual(ClipboardManager.getState().isActive, false);
+});
+

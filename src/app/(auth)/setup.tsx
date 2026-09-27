@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { useMasterPasswordSetup } from '../../features/authentication/hooks/useMasterPasswordSetup';
 import { PasswordStrengthBar } from '../../features/authentication/components/PasswordStrengthBar';
 import { MnemonicGrid } from '../../features/authentication/components/MnemonicGrid';
@@ -28,6 +28,7 @@ interface SetupProps {
 }
 
 export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRestore }: SetupProps) {
+  const { colors: themeColors, isDark } = useTheme();
   const {
     step,
     setStep,
@@ -65,7 +66,12 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
     quizQuestions.every((q) => Boolean(quizAnswers[q.wordNumber]));
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        !isDark && { backgroundColor: themeColors.background },
+      ]}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -78,34 +84,130 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
           <View style={styles.welcomeContainer}>
             {/* Top Status Badges */}
             <View style={styles.topBadgesRow}>
-              <View style={styles.brandPill}>
-                <Ionicons name="lock-closed" size={14} color={colors.primaryLight} />
-                <Text style={styles.brandPillText}>VAULTNOTE</Text>
-                <View style={styles.versionBadge}>
-                  <Text style={styles.versionText}>v2.4</Text>
+              <View
+                style={[
+                  styles.brandPill,
+                  !isDark && {
+                    backgroundColor: themeColors.surfaceElevated,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed"
+                  size={14}
+                  color={isDark ? colors.primaryLight : themeColors.primary}
+                />
+                <Text
+                  style={[
+                    styles.brandPillText,
+                    !isDark && { color: themeColors.textPrimary },
+                  ]}
+                >
+                  VAULTNOTE
+                </Text>
+                <View
+                  style={[
+                    styles.versionBadge,
+                    !isDark && { backgroundColor: themeColors.surfaceActive },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.versionText,
+                      !isDark && { color: themeColors.textSecondary },
+                    ]}
+                  >
+                    v2.4
+                  </Text>
                 </View>
               </View>
 
-              <View style={styles.enclaveActivePill}>
+              <View
+                style={[
+                  styles.enclaveActivePill,
+                  !isDark && {
+                    backgroundColor: themeColors.emeraldMuted,
+                    borderColor: themeColors.emeraldBorder,
+                  },
+                ]}
+              >
                 <View style={styles.greenPulseDot} />
-                <Text style={styles.enclaveActiveText}>Local Enclave Active</Text>
+                <Text
+                  style={[
+                    styles.enclaveActiveText,
+                    !isDark && { color: themeColors.emerald },
+                  ]}
+                >
+                  Local Enclave Active
+                </Text>
               </View>
             </View>
 
             {/* Hero Card */}
-            <View style={styles.heroCard}>
-              <View style={styles.heroIconBox}>
-                <Ionicons name="lock-closed" size={24} color={colors.primaryLight} />
+            <View
+              style={[
+                styles.heroCard,
+                !isDark && {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                  shadowColor: '#0F172A',
+                  shadowOpacity: 0.04,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowRadius: 6,
+                  elevation: 1,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.heroIconBox,
+                  !isDark && {
+                    backgroundColor: themeColors.surfaceElevated,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed"
+                  size={24}
+                  color={isDark ? colors.primaryLight : themeColors.primary}
+                />
               </View>
-              <Text style={styles.heroSubText}>
-                AIR-GAPPED PROTOCOL • <Text style={styles.heroEmeraldText}>0KB TELEMETRY</Text>
+              <Text
+                style={[
+                  styles.heroSubText,
+                  !isDark && { color: themeColors.textSecondary },
+                ]}
+              >
+                AIR-GAPPED PROTOCOL •{' '}
+                <Text
+                  style={[
+                    styles.heroEmeraldText,
+                    !isDark && { color: themeColors.emerald },
+                  ]}
+                >
+                  0KB TELEMETRY
+                </Text>
               </Text>
             </View>
 
             {/* Headline & Subtitle */}
             <View style={styles.heroTitles}>
-              <Text style={styles.heroHeading}>Build your private vault</Text>
-              <Text style={styles.heroSubtitle}>
+              <Text
+                style={[
+                  styles.heroHeading,
+                  !isDark && { color: themeColors.textPrimary },
+                ]}
+              >
+                Build your private vault
+              </Text>
+              <Text
+                style={[
+                  styles.heroSubtitle,
+                  !isDark && { color: themeColors.textSecondary },
+                ]}
+              >
                 Store passwords, secure notes, TOTP codes and sensitive information directly on your device.
               </Text>
             </View>
@@ -113,72 +215,244 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
             {/* Feature Cards Grid */}
             <View style={styles.featuresList}>
               {/* Feature 1 */}
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
+              <View
+                style={[
+                  styles.featureCard,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.borderSubtle,
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    !isDark && { backgroundColor: themeColors.surfaceElevated },
+                  ]}
+                >
                   <Ionicons name="cloud-offline-outline" size={20} color={colors.emerald} />
                 </View>
                 <View style={styles.featureBody}>
                   <View style={styles.featureTitleRow}>
-                    <Text style={styles.featureTitle}>Offline by default</Text>
-                    <View style={styles.zeroCloudBadge}>
-                      <Text style={styles.zeroCloudText}>Zero Cloud</Text>
+                    <Text
+                      style={[
+                        styles.featureTitle,
+                        !isDark && { color: themeColors.textPrimary },
+                      ]}
+                    >
+                      Offline by default
+                    </Text>
+                    <View
+                      style={[
+                        styles.zeroCloudBadge,
+                        !isDark && { backgroundColor: themeColors.emeraldMuted },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.zeroCloudText,
+                          !isDark && { color: themeColors.emerald },
+                        ]}
+                      >
+                        Zero Cloud
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.featureDesc}>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      !isDark && { color: themeColors.textSecondary },
+                    ]}
+                  >
                     No server ping, zero cloud telemetry, 100% local encrypted storage.
                   </Text>
                 </View>
               </View>
 
               {/* Feature 2 */}
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
-                  <Ionicons name="shield-checkmark-outline" size={20} color={colors.primaryLight} />
+              <View
+                style={[
+                  styles.featureCard,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.borderSubtle,
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    !isDark && { backgroundColor: themeColors.surfaceElevated },
+                  ]}
+                >
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={20}
+                    color={isDark ? colors.primaryLight : themeColors.primary}
+                  />
                 </View>
                 <View style={styles.featureBody}>
                   <View style={styles.featureTitleRow}>
-                    <Text style={styles.featureTitle}>End-to-end encrypted</Text>
-                    <View style={styles.aesBadge}>
-                      <Text style={styles.aesBadgeText}>AES-256</Text>
+                    <Text
+                      style={[
+                        styles.featureTitle,
+                        !isDark && { color: themeColors.textPrimary },
+                      ]}
+                    >
+                      End-to-end encrypted
+                    </Text>
+                    <View
+                      style={[
+                        styles.aesBadge,
+                        !isDark && { backgroundColor: themeColors.primaryMuted },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.aesBadgeText,
+                          !isDark && { color: themeColors.primary },
+                        ]}
+                      >
+                        AES-256
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.featureDesc}>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      !isDark && { color: themeColors.textSecondary },
+                    ]}
+                  >
                     AES-256-GCM + Argon2id cryptographic key derivation.
                   </Text>
                 </View>
               </View>
 
               {/* Feature 3 */}
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
+              <View
+                style={[
+                  styles.featureCard,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.borderSubtle,
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    !isDark && { backgroundColor: themeColors.surfaceElevated },
+                  ]}
+                >
                   <Ionicons name="finger-print-outline" size={20} color={colors.gold} />
                 </View>
                 <View style={styles.featureBody}>
                   <View style={styles.featureTitleRow}>
-                    <Text style={styles.featureTitle}>Biometric protection</Text>
-                    <View style={styles.enclaveBadge}>
-                      <Text style={styles.enclaveBadgeText}>Enclave</Text>
+                    <Text
+                      style={[
+                        styles.featureTitle,
+                        !isDark && { color: themeColors.textPrimary },
+                      ]}
+                    >
+                      Biometric protection
+                    </Text>
+                    <View
+                      style={[
+                        styles.enclaveBadge,
+                        !isDark && { backgroundColor: themeColors.amberMuted },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.enclaveBadgeText,
+                          !isDark && { color: themeColors.amber },
+                        ]}
+                      >
+                        Enclave
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.featureDesc}>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      !isDark && { color: themeColors.textSecondary },
+                    ]}
+                  >
                     Seamless Face ID / Fingerprint hardware enclave unlocking.
                   </Text>
                 </View>
               </View>
 
               {/* Feature 4 */}
-              <View style={styles.featureCard}>
-                <View style={styles.featureIconContainer}>
+              <View
+                style={[
+                  styles.featureCard,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.borderSubtle,
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    !isDark && { backgroundColor: themeColors.surfaceElevated },
+                  ]}
+                >
                   <Ionicons name="code-slash-outline" size={20} color={colors.cyan} />
                 </View>
                 <View style={styles.featureBody}>
                   <View style={styles.featureTitleRow}>
-                    <Text style={styles.featureTitle}>Open source</Text>
-                    <View style={styles.auditedBadge}>
-                      <Text style={styles.auditedBadgeText}>Audited</Text>
+                    <Text
+                      style={[
+                        styles.featureTitle,
+                        !isDark && { color: themeColors.textPrimary },
+                      ]}
+                    >
+                      Open source
+                    </Text>
+                    <View
+                      style={[
+                        styles.auditedBadge,
+                        !isDark && { backgroundColor: themeColors.cyanMuted },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.auditedBadgeText,
+                          !isDark && { color: themeColors.cyan },
+                        ]}
+                      >
+                        Audited
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.featureDesc}>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      !isDark && { color: themeColors.textSecondary },
+                    ]}
+                  >
                     Transparent code audited by security researchers.
                   </Text>
                 </View>
@@ -187,22 +461,63 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
 
             {/* Bottom Actions */}
             <View style={styles.buttonGroup}>
-              <Pressable style={styles.createVaultBtn} onPress={startSetup}>
-                <Ionicons name="shield-outline" size={18} color="#0D0E11" />
-                <Text style={styles.createVaultBtnText}>Create Vault</Text>
+              <Pressable
+                style={[
+                  styles.createVaultBtn,
+                  !isDark && { backgroundColor: '#4F46E5' },
+                ]}
+                onPress={startSetup}
+              >
+                <Ionicons
+                  name="shield-outline"
+                  size={18}
+                  color={isDark ? '#0D0E11' : '#FFFFFF'}
+                />
+                <Text
+                  style={[
+                    styles.createVaultBtnText,
+                    !isDark && { color: '#FFFFFF' },
+                  ]}
+                >
+                  Create Vault
+                </Text>
               </Pressable>
 
               <Pressable
-                style={styles.restoreVaultBtn}
+                style={[
+                  styles.restoreVaultBtn,
+                  !isDark && {
+                    backgroundColor: themeColors.surfaceElevated,
+                    borderColor: themeColors.border,
+                  },
+                ]}
                 onPress={onNavigateToRestore ?? (() => setStep('password'))}
               >
-                <Ionicons name="refresh-outline" size={18} color={colors.textPrimary} />
-                <Text style={styles.restoreVaultBtnText}>Restore Existing Vault</Text>
+                <Ionicons
+                  name="refresh-outline"
+                  size={18}
+                  color={themeColors.textPrimary}
+                />
+                <Text
+                  style={[
+                    styles.restoreVaultBtnText,
+                    !isDark && { color: themeColors.textPrimary },
+                  ]}
+                >
+                  Restore Existing Vault
+                </Text>
               </Pressable>
 
               <View style={styles.trustFooter}>
                 <Ionicons name="checkmark-circle-outline" size={15} color={colors.emerald} />
-                <Text style={styles.trustFooterText}>Zero tracking. No email required.</Text>
+                <Text
+                  style={[
+                    styles.trustFooterText,
+                    !isDark && { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Zero tracking. No email required.
+                </Text>
               </View>
             </View>
           </View>
@@ -214,14 +529,32 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
         {step === 'password' && (
           <View style={styles.stepContainer}>
             <View style={styles.stepHeader}>
-              <Pressable style={styles.backBtn} onPress={() => setStep('welcome')}>
-                <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+              <Pressable
+                style={[
+                  styles.backBtn,
+                  !isDark && { backgroundColor: themeColors.surfaceElevated },
+                ]}
+                onPress={() => setStep('welcome')}
+              >
+                <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
               </Pressable>
-              <Text style={styles.stepTitle}>Define Master Password</Text>
+              <Text
+                style={[
+                  styles.stepTitle,
+                  !isDark && { color: themeColors.textPrimary },
+                ]}
+              >
+                Define Master Password
+              </Text>
               <View style={{ width: 32 }} />
             </View>
 
-            <Text style={styles.stepSubtitle}>
+            <Text
+              style={[
+                styles.stepSubtitle,
+                !isDark && { color: themeColors.textSecondary },
+              ]}
+            >
               This password is the sole key used to derive your 256-bit Key Encryption Key (KEK) via Argon2id. It never leaves your device.
             </Text>
 
@@ -234,15 +567,33 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
 
             {/* Inputs */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>MASTER PASSWORD</Text>
-              <View style={styles.inputWrapper}>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  !isDark && { color: themeColors.textTertiary },
+                ]}
+              >
+                MASTER PASSWORD
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
                 <TextInput
-                  style={styles.textInput}
+                  style={[
+                    styles.textInput,
+                    !isDark && { color: themeColors.textPrimary },
+                  ]}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter high-entropy passphrase..."
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={isDark ? colors.textTertiary : themeColors.textTertiary}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
@@ -254,7 +605,7 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={colors.textSecondary}
+                    color={themeColors.textSecondary}
                   />
                 </Pressable>
               </View>
@@ -264,15 +615,33 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>CONFIRM PASSWORD</Text>
-              <View style={styles.inputWrapper}>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  !isDark && { color: themeColors.textTertiary },
+                ]}
+              >
+                CONFIRM PASSWORD
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  !isDark && {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
                 <TextInput
-                  style={styles.textInput}
+                  style={[
+                    styles.textInput,
+                    !isDark && { color: themeColors.textPrimary },
+                  ]}
                   secureTextEntry={!showConfirm}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Confirm passphrase..."
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={isDark ? colors.textTertiary : themeColors.textTertiary}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
@@ -284,19 +653,34 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
                   <Ionicons
                     name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={colors.textSecondary}
+                    color={themeColors.textSecondary}
                   />
                 </Pressable>
               </View>
             </View>
 
             <Pressable
-              style={[styles.primaryActionBtn, !canProceedFromPassword && styles.primaryActionBtnDisabled]}
+              style={[
+                styles.primaryActionBtn,
+                !canProceedFromPassword && styles.primaryActionBtnDisabled,
+                !isDark && { backgroundColor: '#4F46E5' },
+              ]}
               disabled={!canProceedFromPassword}
               onPress={submitMasterPassword}
             >
-              <Text style={styles.primaryActionBtnText}>Generate Emergency Recovery Kit</Text>
-              <Ionicons name="arrow-forward" size={18} color="#0D0E11" />
+              <Text
+                style={[
+                  styles.primaryActionBtnText,
+                  !isDark && { color: '#FFFFFF' },
+                ]}
+              >
+                Generate Emergency Recovery Kit
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={isDark ? '#0D0E11' : '#FFFFFF'}
+              />
             </Pressable>
           </View>
         )}
@@ -307,14 +691,32 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
         {step === 'recovery_phrase' && (
           <View style={styles.stepContainer}>
             <View style={styles.stepHeader}>
-              <Pressable style={styles.backBtn} onPress={() => setStep('password')}>
-                <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+              <Pressable
+                style={[
+                  styles.backBtn,
+                  !isDark && { backgroundColor: themeColors.surfaceElevated },
+                ]}
+                onPress={() => setStep('password')}
+              >
+                <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
               </Pressable>
-              <Text style={styles.stepTitle}>Emergency Recovery Kit</Text>
+              <Text
+                style={[
+                  styles.stepTitle,
+                  !isDark && { color: themeColors.textPrimary },
+                ]}
+              >
+                Emergency Recovery Kit
+              </Text>
               <View style={{ width: 32 }} />
             </View>
 
-            <Text style={styles.stepSubtitle}>
+            <Text
+              style={[
+                styles.stepSubtitle,
+                !isDark && { color: themeColors.textSecondary },
+              ]}
+            >
               These 24 words can restore your vault if your device is lost or damaged. Write them down and keep them offline.
             </Text>
 
@@ -324,9 +726,26 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
               copied={copiedWords}
             />
 
-            <Pressable style={styles.primaryActionBtn} onPress={proceedToVerification}>
-              <Text style={styles.primaryActionBtnText}>I Have Backed Up These Words</Text>
-              <Ionicons name="arrow-forward" size={18} color="#0D0E11" />
+            <Pressable
+              style={[
+                styles.primaryActionBtn,
+                !isDark && { backgroundColor: '#4F46E5' },
+              ]}
+              onPress={proceedToVerification}
+            >
+              <Text
+                style={[
+                  styles.primaryActionBtnText,
+                  !isDark && { color: '#FFFFFF' },
+                ]}
+              >
+                I Have Backed Up These Words
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={isDark ? '#0D0E11' : '#FFFFFF'}
+              />
             </Pressable>
           </View>
         )}
@@ -337,14 +756,32 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
         {step === 'verify_phrase' && (
           <View style={styles.stepContainer}>
             <View style={styles.stepHeader}>
-              <Pressable style={styles.backBtn} onPress={() => setStep('recovery_phrase')}>
-                <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+              <Pressable
+                style={[
+                  styles.backBtn,
+                  !isDark && { backgroundColor: themeColors.surfaceElevated },
+                ]}
+                onPress={() => setStep('recovery_phrase')}
+              >
+                <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
               </Pressable>
-              <Text style={styles.stepTitle}>Verify Recovery Phrase</Text>
+              <Text
+                style={[
+                  styles.stepTitle,
+                  !isDark && { color: themeColors.textPrimary },
+                ]}
+              >
+                Verify Recovery Phrase
+              </Text>
               <View style={{ width: 32 }} />
             </View>
 
-            <Text style={styles.stepSubtitle}>
+            <Text
+              style={[
+                styles.stepSubtitle,
+                !isDark && { color: themeColors.textSecondary },
+              ]}
+            >
               Confirm that you wrote down the words correctly by selecting the matching words below.
             </Text>
 
@@ -358,8 +795,27 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
             {quizQuestions.map((q) => {
               const selected = quizAnswers[q.wordNumber];
               return (
-                <View key={q.wordNumber} style={styles.quizCard}>
-                  <Text style={styles.quizQuestionLabel}>
+                <View
+                  key={q.wordNumber}
+                  style={[
+                    styles.quizCard,
+                    !isDark && {
+                      backgroundColor: themeColors.surface,
+                      borderColor: themeColors.border,
+                      shadowColor: '#0F172A',
+                      shadowOpacity: 0.04,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowRadius: 6,
+                      elevation: 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.quizQuestionLabel,
+                      !isDark && { color: themeColors.textTertiary },
+                    ]}
+                  >
                     SELECT WORD #{q.wordNumber.toString().padStart(2, '0')}
                   </Text>
                   <View style={styles.quizOptionsRow}>
@@ -368,13 +824,28 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
                       return (
                         <Pressable
                           key={opt}
-                          style={[styles.quizOptionBtn, isChosen && styles.quizOptionBtnSelected]}
+                          style={[
+                            styles.quizOptionBtn,
+                            !isDark && {
+                              backgroundColor: themeColors.surfaceElevated,
+                              borderColor: themeColors.borderSubtle,
+                            },
+                            isChosen && styles.quizOptionBtnSelected,
+                            isChosen &&
+                              !isDark && {
+                                backgroundColor: themeColors.primaryMuted,
+                                borderColor: themeColors.primary,
+                              },
+                          ]}
                           onPress={() => answerQuizQuestion(q.wordNumber, opt)}
                         >
                           <Text
                             style={[
                               styles.quizOptionText,
+                              !isDark && { color: themeColors.textSecondary },
                               isChosen && styles.quizOptionTextSelected,
+                              isChosen &&
+                                !isDark && { color: themeColors.primary },
                             ]}
                           >
                             {opt}
@@ -388,16 +859,31 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
             })}
 
             <Pressable
-              style={[styles.primaryActionBtn, !allQuizAnswered && styles.primaryActionBtnDisabled]}
+              style={[
+                styles.primaryActionBtn,
+                !allQuizAnswered && styles.primaryActionBtnDisabled,
+                !isDark && { backgroundColor: '#4F46E5' },
+              ]}
               disabled={!allQuizAnswered || isLoading}
               onPress={finalizeVaultInitialization}
             >
               {isLoading ? (
-                <ActivityIndicator color="#0D0E11" />
+                <ActivityIndicator color={isDark ? '#0D0E11' : '#FFFFFF'} />
               ) : (
                 <>
-                  <Text style={styles.primaryActionBtnText}>Initialize Secure Vault</Text>
-                  <Ionicons name="shield-checkmark" size={18} color="#0D0E11" />
+                  <Text
+                    style={[
+                      styles.primaryActionBtnText,
+                      !isDark && { color: '#FFFFFF' },
+                    ]}
+                  >
+                    Initialize Secure Vault
+                  </Text>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={18}
+                    color={isDark ? '#0D0E11' : '#FFFFFF'}
+                  />
                 </>
               )}
             </Pressable>
@@ -409,9 +895,24 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
         {/* ========================================================== */}
         {step === 'initializing' && (
           <View style={styles.centeredStep}>
-            <ActivityIndicator size="large" color={colors.primaryLight} />
-            <Text style={styles.initTitle}>Securing Vault Perimeter</Text>
-            <Text style={styles.initSubtitle}>
+            <ActivityIndicator
+              size="large"
+              color={isDark ? colors.primaryLight : themeColors.primary}
+            />
+            <Text
+              style={[
+                styles.initTitle,
+                !isDark && { color: themeColors.textPrimary },
+              ]}
+            >
+              Securing Vault Perimeter
+            </Text>
+            <Text
+              style={[
+                styles.initSubtitle,
+                !isDark && { color: themeColors.textSecondary },
+              ]}
+            >
               Deriving Argon2id keys, generating hardware enclave credentials, and encrypting database...
             </Text>
           </View>
@@ -425,14 +926,43 @@ export default function MasterPasswordSetupScreen({ onComplete, onNavigateToRest
             <View style={styles.successIconBox}>
               <Ionicons name="shield-checkmark" size={48} color={colors.emerald} />
             </View>
-            <Text style={styles.initTitle}>Vault Ready & Encrypted</Text>
-            <Text style={styles.initSubtitle}>
+            <Text
+              style={[
+                styles.initTitle,
+                !isDark && { color: themeColors.textPrimary },
+              ]}
+            >
+              Vault Ready & Encrypted
+            </Text>
+            <Text
+              style={[
+                styles.initSubtitle,
+                !isDark && { color: themeColors.textSecondary },
+              ]}
+            >
               Your master key is isolated in hardware. Zero telemetry. 100% offline security active.
             </Text>
 
-            <Pressable style={styles.primaryActionBtn} onPress={onComplete}>
-              <Text style={styles.primaryActionBtnText}>Enter Vault</Text>
-              <Ionicons name="arrow-forward" size={18} color="#0D0E11" />
+            <Pressable
+              style={[
+                styles.primaryActionBtn,
+                !isDark && { backgroundColor: '#4F46E5' },
+              ]}
+              onPress={onComplete}
+            >
+              <Text
+                style={[
+                  styles.primaryActionBtnText,
+                  !isDark && { color: '#FFFFFF' },
+                ]}
+              >
+                Enter Vault
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={isDark ? '#0D0E11' : '#FFFFFF'}
+              />
             </Pressable>
           </View>
         )}

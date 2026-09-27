@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { useVaultItemDetail } from '../../../features/vault/hooks/useVaultItemDetail';
 import { VaultRepository } from '../../../features/vault/repository/vaultRepository';
 import { useVaultStore } from '../../../features/vault/store/useVaultStore';
@@ -112,6 +112,7 @@ export default function VaultItemEditScreen({
   onBack,
   onSaveComplete,
 }: VaultItemEditProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const isCreateMode = !id;
   const { item, isLoading } = useVaultItemDetail(id);
 
@@ -466,9 +467,9 @@ export default function VaultItemEditScreen({
     selectedCategory === 'LOGIN' || selectedCategory === 'API_KEY';
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, !isDark && { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDark && { borderBottomColor: activeColors.border }]}>
         <Pressable
           onPress={onBack}
           style={({ pressed }) => [
@@ -478,16 +479,17 @@ export default function VaultItemEditScreen({
           accessibilityRole="button"
           accessibilityLabel="Cancel editing"
         >
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={[styles.cancelText, !isDark && { color: activeColors.textSecondary }]}>Cancel</Text>
         </Pressable>
 
-        <Text style={styles.headerTitle}>{isCreateMode ? 'New Item' : 'Edit Item'}</Text>
+        <Text style={[styles.headerTitle, !isDark && { color: activeColors.textPrimary }]}>{isCreateMode ? 'New Item' : 'Edit Item'}</Text>
 
         <Pressable
           onPress={handleSave}
           disabled={isSaving}
           style={({ pressed }) => [
             styles.saveButton,
+            !isDark && { backgroundColor: activeColors.primary },
             pressed && styles.saveButtonPressed,
           ]}
           accessibilityRole="button"
@@ -502,15 +504,26 @@ export default function VaultItemEditScreen({
       </View>
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={[styles.scrollView, !isDark && { backgroundColor: activeColors.background }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 80 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Unified Category & Labels Section */}
-        <View style={styles.unifiedCard}>
+        <View style={[
+          styles.unifiedCard,
+          !isDark && {
+            backgroundColor: activeColors.surface,
+            borderColor: activeColors.border,
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.04,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 6,
+            elevation: 1,
+          },
+        ]}>
           <View style={styles.sectionHeaderRow}>
-            <Ionicons name="folder-outline" size={13} color={colors.primaryLight} />
-            <Text style={styles.fieldLabel}>CATEGORY & TAGS</Text>
+            <Ionicons name="folder-outline" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+            <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>CATEGORY & TAGS</Text>
           </View>
 
           {/* Category Horizontal Pills */}
@@ -527,20 +540,22 @@ export default function VaultItemEditScreen({
                   onPress={() => handleSelectCategory(cat.type)}
                   style={({ pressed }) => [
                     styles.categoryPill,
-                    isSelected && styles.categoryPillSelected,
+                    !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                    isSelected && (isDark ? styles.categoryPillSelected : { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary }),
                     pressed && styles.categoryPillPressed,
                   ]}
                 >
                   <Ionicons
                     name={cat.icon}
                     size={13}
-                    color={isSelected ? colors.primaryLight : colors.textMuted}
+                    color={isSelected ? (isDark ? colors.primaryLight : activeColors.primary) : activeColors.textMuted}
                     style={{ marginRight: 5 }}
                   />
                   <Text
                     style={[
                       styles.categoryPillText,
-                      isSelected && styles.categoryPillTextSelected,
+                      !isDark && { color: activeColors.textSecondary },
+                      isSelected && (isDark ? styles.categoryPillTextSelected : { color: activeColors.primary, fontWeight: '700' }),
                     ]}
                   >
                     {cat.label}
@@ -550,7 +565,7 @@ export default function VaultItemEditScreen({
             })}
           </ScrollView>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
           {/* Tags / Labels Row */}
           <View style={styles.tagsContainer}>
@@ -563,7 +578,7 @@ export default function VaultItemEditScreen({
                     style={styles.tagRemoveBtn}
                     hitSlop={8}
                   >
-                    <Ionicons name="close" size={11} color={colors.primaryLight} />
+                    <Ionicons name="close" size={11} color={isDark ? colors.primaryLight : activeColors.primary} />
                   </Pressable>
                 </View>
               ))}
@@ -577,37 +592,42 @@ export default function VaultItemEditScreen({
                     onPress={() => handleAddTag(lower)}
                     style={({ pressed }) => [
                       styles.suggestedTagPill,
+                      !isDark && {
+                        backgroundColor: activeColors.surfaceSubtle,
+                        borderColor: activeColors.border,
+                      },
                       pressed && { opacity: 0.7 },
                     ]}
                   >
-                    <Text style={styles.suggestedTagText}>+ {sug}</Text>
+                    <Text style={[styles.suggestedTagText, !isDark && { color: activeColors.textSecondary }]}>+ {sug}</Text>
                   </Pressable>
                 );
               })}
             </View>
 
             {/* Inline Custom Tag Input */}
-            <View style={styles.compactTagInputRow}>
+            <View style={[styles.compactTagInputRow, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
               <TextInput
                 value={tagInput}
                 onChangeText={setTagInput}
                 onSubmitEditing={() => handleAddTag(tagInput)}
                 placeholder="Add custom label tag..."
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="done"
-                style={styles.compactTagTextInput}
+                style={[styles.compactTagTextInput, !isDark && { color: activeColors.textPrimary }]}
               />
               <Pressable
                 onPress={() => handleAddTag(tagInput)}
                 style={({ pressed }) => [
                   styles.compactAddTagBtn,
+                  !isDark && { backgroundColor: activeColors.primaryMuted },
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Ionicons name="add" size={14} color={colors.primaryLight} />
-                <Text style={styles.compactAddTagBtnText}>Tag</Text>
+                <Ionicons name="add" size={14} color={isDark ? colors.primaryLight : activeColors.primary} />
+                <Text style={[styles.compactAddTagBtnText, !isDark && { color: activeColors.primary }]}>Tag</Text>
               </Pressable>
             </View>
           </View>
@@ -617,17 +637,28 @@ export default function VaultItemEditScreen({
         <View style={styles.fieldGroup}>
           <View style={styles.fieldLabelRow}>
             <View style={styles.sectionHeaderRow}>
-              <Ionicons name="sparkles-outline" size={13} color={colors.primaryLight} />
-              <Text style={styles.fieldLabel}>ITEM ICON</Text>
+              <Ionicons name="sparkles-outline" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+              <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>ITEM ICON</Text>
             </View>
             {icon.length > 0 && (
               <Pressable onPress={() => setIcon('')} hitSlop={6}>
-                <Text style={styles.resetIconText}>Reset to Auto</Text>
+                <Text style={[styles.resetIconText, !isDark && { color: activeColors.textTertiary }]}>Reset to Auto</Text>
               </Pressable>
             )}
           </View>
 
-          <View style={styles.iconSimpleRow}>
+          <View style={[
+            styles.iconSimpleRow,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 1,
+            },
+          ]}>
             <ServiceIcon
               iconType={icon}
               category={selectedCategory}
@@ -648,7 +679,7 @@ export default function VaultItemEditScreen({
                     onPress={() => setIcon(preset.key)}
                     style={({ pressed }) => [
                       styles.presetMiniBtn,
-                      isSelected && styles.presetMiniBtnSelected,
+                      isSelected && (isDark ? styles.presetMiniBtnSelected : { borderColor: activeColors.primary, backgroundColor: activeColors.primaryMuted }),
                       pressed && { opacity: 0.7 },
                     ]}
                   >
@@ -663,17 +694,18 @@ export default function VaultItemEditScreen({
                 disabled={isFetchingIcon}
                 style={({ pressed }) => [
                   styles.addIconActionBtn,
+                  !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
                   pressed && { opacity: 0.7 },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel="Add Icon"
               >
                 {isFetchingIcon ? (
-                  <ActivityIndicator size="small" color={colors.primaryLight} />
+                  <ActivityIndicator size="small" color={isDark ? colors.primaryLight : activeColors.primary} />
                 ) : (
                   <>
-                    <Ionicons name="add" size={13} color={colors.primaryLight} />
-                    <Text style={styles.addIconActionText}>Add Icon</Text>
+                    <Ionicons name="add" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+                    <Text style={[styles.addIconActionText, !isDark && { color: activeColors.primary }]}>Add Icon</Text>
                   </>
                 )}
               </Pressable>
@@ -684,7 +716,7 @@ export default function VaultItemEditScreen({
         {/* Title Input with Field Validation Feedback */}
         <View style={styles.fieldGroup}>
           <View style={styles.fieldLabelRow}>
-            <Text style={[styles.fieldLabel, titleError && styles.fieldLabelError]}>TITLE</Text>
+            <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }, titleError && styles.fieldLabelError]}>TITLE</Text>
             {titleError && (
               <View style={styles.fieldErrorIndicator}>
                 <Ionicons name="alert-circle" size={12} color={colors.crimson} style={{ marginRight: 3 }} />
@@ -692,7 +724,11 @@ export default function VaultItemEditScreen({
               </View>
             )}
           </View>
-          <View style={[styles.inputContainer, titleError && styles.inputContainerError]}>
+          <View style={[
+            styles.inputContainer,
+            !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+            titleError && styles.inputContainerError,
+          ]}>
             <TextInput
               value={title}
               onChangeText={(text) => {
@@ -701,24 +737,24 @@ export default function VaultItemEditScreen({
                 if (snackbar) setSnackbar(null);
               }}
               placeholder="e.g. Google, GitHub, Netflix"
-              placeholderTextColor={colors.textMuted}
-              style={styles.textInput}
+              placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
+              style={[styles.textInput, !isDark && { color: activeColors.textPrimary }]}
             />
           </View>
         </View>
 
         {/* Dynamic Username / Identifier Input */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>{usernameLabel}</Text>
-          <View style={styles.inputContainer}>
+          <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>{usernameLabel}</Text>
+          <View style={[styles.inputContainer, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
             <TextInput
               value={username}
               onChangeText={setUsername}
               placeholder="e.g. alex@example.com"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
-              style={styles.textInput}
+              style={[styles.textInput, !isDark && { color: activeColors.textPrimary }]}
             />
           </View>
         </View>
@@ -727,31 +763,32 @@ export default function VaultItemEditScreen({
         {selectedCategory !== 'SECURE_NOTE' && (
           <View style={styles.fieldGroup}>
             <View style={styles.fieldLabelRow}>
-              <Text style={styles.fieldLabel}>{passwordLabel}</Text>
+              <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>{passwordLabel}</Text>
               {isPasswordGeneratorSupported && (
                 <Pressable
                   onPress={() => setIsGeneratorOpen(true)}
                   style={({ pressed }) => [
                     styles.generateInlineBtn,
+                    !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
                     pressed && styles.generateInlineBtnPressed,
                   ]}
                   hitSlop={6}
                 >
-                  <Ionicons name="key" size={12} color={colors.primaryLight} style={{ marginRight: 4 }} />
-                  <Text style={styles.generateInlineText}>Generate</Text>
+                  <Ionicons name="key" size={12} color={isDark ? colors.primaryLight : activeColors.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.generateInlineText, !isDark && { color: activeColors.primary }]}>Generate</Text>
                 </Pressable>
               )}
             </View>
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter value / secret"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
                 secureTextEntry={selectedCategory === 'LOGIN'}
                 autoCapitalize="none"
                 autoCorrect={false}
-                style={styles.textInput}
+                style={[styles.textInput, !isDark && { color: activeColors.textPrimary }]}
               />
             </View>
           </View>
@@ -760,22 +797,23 @@ export default function VaultItemEditScreen({
         {/* Website / Image URL Input with Dynamic Icon Fetching */}
         <View style={styles.fieldGroup}>
           <View style={styles.fieldLabelRow}>
-            <Text style={styles.fieldLabel}>WEBSITE / IMAGE URL</Text>
+            <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>WEBSITE / IMAGE URL</Text>
             <Pressable
               onPress={handleFetchDynamicIcon}
               disabled={isFetchingIcon}
               style={({ pressed }) => [
                 styles.fetchActionBtn,
+                !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
                 pressed && styles.fetchActionBtnPressed,
               ]}
               hitSlop={6}
             >
               {isFetchingIcon ? (
-                <ActivityIndicator size="small" color={colors.primaryLight} />
+                <ActivityIndicator size="small" color={isDark ? colors.primaryLight : activeColors.primary} />
               ) : (
                 <>
-                  <Ionicons name="flash" size={11} color={colors.primaryLight} style={{ marginRight: 3 }} />
-                  <Text style={styles.fetchActionText}>Fetch Icon</Text>
+                  <Ionicons name="flash" size={11} color={isDark ? colors.primaryLight : activeColors.primary} style={{ marginRight: 3 }} />
+                  <Text style={[styles.fetchActionText, !isDark && { color: activeColors.primary }]}>Fetch Icon</Text>
                 </>
               )}
             </Pressable>
@@ -784,6 +822,7 @@ export default function VaultItemEditScreen({
           <View
             style={[
               styles.inputContainer,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
               urlWarning ? styles.inputContainerWarning : null,
             ]}
           >
@@ -794,11 +833,11 @@ export default function VaultItemEditScreen({
                 if (urlWarning) setUrlWarning('');
               }}
               placeholder="https://example.com or image / icon link"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
-              style={styles.textInput}
+              style={[styles.textInput, !isDark && { color: activeColors.textPrimary }]}
             />
           </View>
 
@@ -816,26 +855,27 @@ export default function VaultItemEditScreen({
           <View style={styles.fieldGroup}>
             <View style={styles.sectionHeaderRowWithAction}>
               <View style={styles.sectionHeaderLeft}>
-                <Ionicons name="shield-checkmark" size={13} color={colors.primaryLight} />
-                <Text style={styles.fieldLabel}>TWO-FACTOR AUTHENTICATION (2FA)</Text>
+                <Ionicons name="shield-checkmark" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+                <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>TWO-FACTOR AUTHENTICATION (2FA)</Text>
               </View>
               {totpSecret ? (
                 <Pressable
                   onPress={() => setIsEnrollingTOTP(true)}
                   style={({ pressed }) => [
                     styles.changeTotpBtn,
+                    !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
                     pressed && { opacity: 0.8 },
                   ]}
                   hitSlop={6}
                 >
-                  <Ionicons name="sync-outline" size={12} color={colors.primaryLight} style={{ marginRight: 4 }} />
-                  <Text style={styles.changeTotpText}>Change Key</Text>
+                  <Ionicons name="sync-outline" size={12} color={isDark ? colors.primaryLight : activeColors.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.changeTotpText, !isDark && { color: activeColors.primary }]}>Change Key</Text>
                 </Pressable>
               ) : null}
             </View>
 
             {totpSecret ? (
-              <View style={styles.totpConfiguredCard}>
+              <View style={[styles.totpConfiguredCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
                 <TOTPRow
                   secret={totpSecret}
                   label={title.trim() || 'Authenticator'}
@@ -855,17 +895,27 @@ export default function VaultItemEditScreen({
                 onPress={() => setIsEnrollingTOTP(true)}
                 style={({ pressed }) => [
                   styles.addTotpActionCard,
+                  !isDark && {
+                    backgroundColor: activeColors.surface,
+                    borderColor: activeColors.border,
+                    borderStyle: 'dashed',
+                    shadowColor: '#0F172A',
+                    shadowOpacity: 0.04,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 6,
+                    elevation: 1,
+                  },
                   pressed && styles.addTotpActionCardPressed,
                 ]}
               >
-                <View style={styles.addTotpIconCircle}>
-                  <Ionicons name="qr-code-outline" size={20} color={colors.primaryLight} />
+                <View style={[styles.addTotpIconCircle, !isDark && { backgroundColor: activeColors.primaryMuted }]}>
+                  <Ionicons name="qr-code-outline" size={20} color={isDark ? colors.primaryLight : activeColors.primary} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.addTotpTitle}>Scan QR or Enter Key</Text>
-                  <Text style={styles.addTotpSubtext}>Set up time-based one-time passwords for this vault item</Text>
+                  <Text style={[styles.addTotpTitle, !isDark && { color: activeColors.textPrimary }]}>Scan QR or Enter Key</Text>
+                  <Text style={[styles.addTotpSubtext, !isDark && { color: activeColors.textSecondary }]}>Set up time-based one-time passwords for this vault item</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={isDark ? colors.textMuted : activeColors.textMuted} />
               </Pressable>
             )}
           </View>
@@ -873,18 +923,22 @@ export default function VaultItemEditScreen({
 
         {/* Encrypted Safe Notes Input */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>
+          <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>
             {selectedCategory === 'SECURE_NOTE' ? 'NOTE CONTENT' : 'ENCRYPTED SAFE NOTES'}
           </Text>
-          <View style={[styles.inputContainer, styles.notesInputContainer]}>
+          <View style={[
+            styles.inputContainer,
+            styles.notesInputContainer,
+            !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+          ]}>
             <TextInput
               value={notes}
               onChangeText={setNotes}
               placeholder="Additional private notes, emergency recovery codes, PINs..."
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
               multiline
               textAlignVertical="top"
-              style={[styles.textInput, styles.notesInput]}
+              style={[styles.textInput, styles.notesInput, !isDark && { color: activeColors.textPrimary }]}
             />
           </View>
         </View>
@@ -893,21 +947,22 @@ export default function VaultItemEditScreen({
         <View style={styles.customFieldsSection}>
           <View style={styles.sectionHeaderRowWithAction}>
             <View style={styles.sectionHeaderLeft}>
-              <Ionicons name="options-outline" size={13} color={colors.primaryLight} />
-              <Text style={styles.fieldLabel}>CUSTOM FIELDS</Text>
+              <Ionicons name="options-outline" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+              <Text style={[styles.fieldLabel, !isDark && { color: activeColors.textMuted }]}>CUSTOM FIELDS</Text>
             </View>
             <Pressable
               onPress={handleAddCustomField}
               style={({ pressed }) => [
                 styles.addFieldButton,
+                !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
                 pressed && styles.addFieldButtonPressed,
               ]}
               hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel="Add custom field"
             >
-              <Ionicons name="add" size={14} color={colors.primaryLight} style={{ marginRight: 2 }} />
-              <Text style={styles.addFieldButtonText}>Add Field</Text>
+              <Ionicons name="add" size={14} color={isDark ? colors.primaryLight : activeColors.primary} style={{ marginRight: 2 }} />
+              <Text style={[styles.addFieldButtonText, !isDark && { color: activeColors.primary }]}>Add Field</Text>
             </Pressable>
           </View>
 
@@ -916,13 +971,14 @@ export default function VaultItemEditScreen({
               onPress={handleAddCustomField}
               style={({ pressed }) => [
                 styles.emptyCustomFieldsCard,
+                !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.borderSubtle },
                 pressed && styles.emptyCustomFieldsCardPressed,
               ]}
               accessibilityRole="button"
               accessibilityLabel="Add extra input field"
             >
-              <Ionicons name="add-circle-outline" size={18} color={colors.primaryLight} style={{ marginRight: 6 }} />
-              <Text style={styles.emptyCustomFieldsText}>
+              <Ionicons name="add-circle-outline" size={18} color={isDark ? colors.primaryLight : activeColors.primary} style={{ marginRight: 6 }} />
+              <Text style={[styles.emptyCustomFieldsText, !isDark && { color: activeColors.textSecondary }]}>
                 Add extra field (text, password, description)
               </Text>
             </Pressable>
@@ -933,19 +989,34 @@ export default function VaultItemEditScreen({
                 const isSecretVisible = Boolean(visibleSecretFieldIds[field.id]);
 
                 return (
-                  <View key={field.id || index} style={styles.customFieldCard}>
+                  <View
+                    key={field.id || index}
+                    style={[
+                      styles.customFieldCard,
+                      !isDark && {
+                        backgroundColor: activeColors.surface,
+                        borderColor: activeColors.border,
+                        shadowColor: '#0F172A',
+                        shadowOpacity: 0.04,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                        elevation: 1,
+                      },
+                    ]}
+                  >
                     {/* Header: Label Input & Delete Button */}
                     <View style={styles.customFieldHeaderRow}>
                       <View
                         style={[
                           styles.customFieldLabelInputWrap,
+                          !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                           customFieldErrors[field.id] && styles.customFieldLabelInputWrapError,
                         ]}
                       >
                         <Ionicons
                           name="pricetag-outline"
                           size={12}
-                          color={customFieldErrors[field.id] ? colors.crimson : colors.textTertiary}
+                          color={customFieldErrors[field.id] ? colors.crimson : (isDark ? colors.textTertiary : activeColors.textTertiary)}
                           style={{ marginRight: 6 }}
                         />
                         <TextInput
@@ -958,8 +1029,8 @@ export default function VaultItemEditScreen({
                             if (snackbar) setSnackbar(null);
                           }}
                           placeholder="Field label (e.g. PIN, Secret Answer, Token)"
-                          placeholderTextColor={customFieldErrors[field.id] ? 'rgba(239, 68, 68, 0.6)' : colors.textMuted}
-                          style={styles.customFieldLabelInput}
+                          placeholderTextColor={customFieldErrors[field.id] ? 'rgba(239, 68, 68, 0.6)' : (isDark ? colors.textMuted : activeColors.textMuted)}
+                          style={[styles.customFieldLabelInput, !isDark && { color: activeColors.textPrimary }]}
                         />
                       </View>
 
@@ -988,18 +1059,20 @@ export default function VaultItemEditScreen({
                         }
                         style={[
                           styles.typeOptionPill,
-                          currentType === 'text' && styles.typeOptionPillSelected,
+                          !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                          currentType === 'text' && (isDark ? styles.typeOptionPillSelected : { backgroundColor: activeColors.primary, borderColor: activeColors.primary }),
                         ]}
                       >
                         <Ionicons
                           name="text-outline"
                           size={11}
-                          color={currentType === 'text' ? '#FFFFFF' : colors.textTertiary}
+                          color={currentType === 'text' ? '#FFFFFF' : (isDark ? colors.textTertiary : activeColors.textTertiary)}
                           style={{ marginRight: 4 }}
                         />
                         <Text
                           style={[
                             styles.typeOptionText,
+                            !isDark && { color: activeColors.textTertiary },
                             currentType === 'text' && styles.typeOptionTextSelected,
                           ]}
                         >
@@ -1016,18 +1089,20 @@ export default function VaultItemEditScreen({
                         }
                         style={[
                           styles.typeOptionPill,
-                          currentType === 'password' && styles.typeOptionPillSelected,
+                          !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                          currentType === 'password' && (isDark ? styles.typeOptionPillSelected : { backgroundColor: activeColors.primary, borderColor: activeColors.primary }),
                         ]}
                       >
                         <Ionicons
                           name="key-outline"
                           size={11}
-                          color={currentType === 'password' ? '#FFFFFF' : colors.textTertiary}
+                          color={currentType === 'password' ? '#FFFFFF' : (isDark ? colors.textTertiary : activeColors.textTertiary)}
                           style={{ marginRight: 4 }}
                         />
                         <Text
                           style={[
                             styles.typeOptionText,
+                            !isDark && { color: activeColors.textTertiary },
                             currentType === 'password' && styles.typeOptionTextSelected,
                           ]}
                         >
@@ -1044,18 +1119,20 @@ export default function VaultItemEditScreen({
                         }
                         style={[
                           styles.typeOptionPill,
-                          currentType === 'description' && styles.typeOptionPillSelected,
+                          !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                          currentType === 'description' && (isDark ? styles.typeOptionPillSelected : { backgroundColor: activeColors.primary, borderColor: activeColors.primary }),
                         ]}
                       >
                         <Ionicons
                           name="document-text-outline"
                           size={11}
-                          color={currentType === 'description' ? '#FFFFFF' : colors.textTertiary}
+                          color={currentType === 'description' ? '#FFFFFF' : (isDark ? colors.textTertiary : activeColors.textTertiary)}
                           style={{ marginRight: 4 }}
                         />
                         <Text
                           style={[
                             styles.typeOptionText,
+                            !isDark && { color: activeColors.textTertiary },
                             currentType === 'description' && styles.typeOptionTextSelected,
                           ]}
                         >
@@ -1066,28 +1143,35 @@ export default function VaultItemEditScreen({
 
                     {/* Value Input Area */}
                     {currentType === 'description' ? (
-                      <View style={[styles.customFieldValueContainer, styles.customFieldDescContainer]}>
+                      <View style={[
+                        styles.customFieldValueContainer,
+                        styles.customFieldDescContainer,
+                        !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                      ]}>
                         <TextInput
                           value={field.value}
                           onChangeText={(text) => handleUpdateCustomField(field.id, { value: text })}
                           placeholder="Enter multiline description or notes..."
-                          placeholderTextColor={colors.textMuted}
+                          placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
                           multiline
                           textAlignVertical="top"
-                          style={[styles.textInput, styles.customFieldDescInput]}
+                          style={[styles.textInput, styles.customFieldDescInput, !isDark && { color: activeColors.textPrimary }]}
                         />
                       </View>
                     ) : (
-                      <View style={styles.customFieldValueContainer}>
+                      <View style={[
+                        styles.customFieldValueContainer,
+                        !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                      ]}>
                         <TextInput
                           value={field.value}
                           onChangeText={(text) => handleUpdateCustomField(field.id, { value: text })}
                           placeholder={currentType === 'password' ? 'Enter secret / password value' : 'Enter field value'}
-                          placeholderTextColor={colors.textMuted}
+                          placeholderTextColor={isDark ? colors.textMuted : activeColors.textMuted}
                           secureTextEntry={currentType === 'password' && !isSecretVisible}
                           autoCapitalize="none"
                           autoCorrect={false}
-                          style={[styles.textInput, { flex: 1 }]}
+                          style={[styles.textInput, { flex: 1 }, !isDark && { color: activeColors.textPrimary }]}
                         />
                         {currentType === 'password' && (
                           <Pressable
@@ -1100,7 +1184,7 @@ export default function VaultItemEditScreen({
                             <Ionicons
                               name={isSecretVisible ? 'eye-off-outline' : 'eye-outline'}
                               size={16}
-                              color={colors.textSecondary}
+                              color={isDark ? colors.textSecondary : activeColors.textSecondary}
                             />
                           </Pressable>
                         )}
@@ -1113,21 +1197,33 @@ export default function VaultItemEditScreen({
           )}
         </View>
 
+
         {/* Biometric Protection Toggle */}
-        <View style={styles.protectionCard}>
-          <View style={styles.protectionIconCircle}>
-            <Ionicons name="finger-print" size={20} color={colors.primaryLight} />
+        <View style={[
+          styles.protectionCard,
+          !isDark && {
+            backgroundColor: activeColors.surface,
+            borderColor: activeColors.border,
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.04,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 6,
+            elevation: 1,
+          },
+        ]}>
+          <View style={[styles.protectionIconCircle, !isDark && { backgroundColor: activeColors.primaryMuted }]}>
+            <Ionicons name="finger-print" size={20} color={isDark ? colors.primaryLight : activeColors.primary} />
           </View>
           <View style={styles.protectionTextContainer}>
-            <Text style={styles.protectionTitle}>Biometric Protection</Text>
-            <Text style={styles.protectionSubtitle}>
+            <Text style={[styles.protectionTitle, !isDark && { color: activeColors.textPrimary }]}>Biometric Protection</Text>
+            <Text style={[styles.protectionSubtitle, !isDark && { color: activeColors.textSecondary }]}>
               Require biometric authentication to reveal credentials
             </Text>
           </View>
           <Switch
             value={isProtected}
             onValueChange={setIsProtected}
-            trackColor={{ false: colors.surfaceElevated, true: colors.primary }}
+            trackColor={{ false: isDark ? colors.surfaceElevated : activeColors.surfaceSubtle, true: activeColors.primary }}
             thumbColor="#FFFFFF"
           />
         </View>

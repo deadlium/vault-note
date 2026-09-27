@@ -8,7 +8,7 @@ import {
   StyleProp,
   TextStyle,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 
 export interface PrimaryButtonProps {
   title: string;
@@ -29,15 +29,17 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   textStyle,
   variant = 'primary',
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
+
   const getBackgroundColor = (pressed: boolean) => {
-    if (disabled) return colors.surfaceSubtle;
+    if (disabled) return activeColors.surfaceSubtle;
     if (variant === 'destructive') {
-      return pressed ? colors.crimsonDark : colors.crimson;
+      return pressed ? activeColors.crimsonDark : activeColors.crimson;
     }
     if (variant === 'emerald') {
-      return pressed ? colors.emeraldDark : colors.emerald;
+      return pressed ? activeColors.emeraldDark : activeColors.emerald;
     }
-    return pressed ? colors.primaryDark : colors.primary;
+    return pressed ? activeColors.primaryDark : activeColors.primary;
   };
 
   return (
@@ -53,7 +55,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.textPrimary} size="small" />
+        <ActivityIndicator color="#FFFFFF" size="small" />
       ) : (
         <Text
           style={[

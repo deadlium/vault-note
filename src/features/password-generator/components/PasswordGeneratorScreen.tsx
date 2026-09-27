@@ -7,21 +7,23 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../../../theme';
+import { colors, radius, spacing, useTheme } from '../../../theme';
 import { PasswordGeneratorView } from './PasswordGeneratorView';
 
 export function PasswordGeneratorScreen() {
+  const { isDark, colors: activeColors } = useTheme();
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: activeColors.borderSubtle }]}>
         <View style={styles.headerTitleGroup}>
-          <View style={styles.headerIconSquircle}>
-            <Ionicons name="key" size={18} color={colors.primaryLight} />
+          <View style={[styles.headerIconSquircle, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.10)', borderColor: 'rgba(79, 70, 229, 0.25)' }]}>
+            <Ionicons name="key" size={18} color={!isDark ? activeColors.primary : colors.primaryLight} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>Password Generator</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: activeColors.textPrimary }]}>Password Generator</Text>
+            <Text style={[styles.headerSubtitle, { color: activeColors.textSecondary }]}>
               CSPRNG • Zero Modulo Bias
             </Text>
           </View>

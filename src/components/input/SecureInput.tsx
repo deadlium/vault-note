@@ -9,7 +9,7 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 
 export interface SecureInputProps extends TextInputProps {
   label?: string;
@@ -31,6 +31,7 @@ export const SecureInput: React.FC<SecureInputProps> = ({
   onBlur,
   ...rest
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [hidePassword, setHidePassword] = useState(isPassword);
 
@@ -38,21 +39,23 @@ export const SecureInput: React.FC<SecureInputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, !isDark && { color: activeColors.textSecondary }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputFocused,
+          !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+          isFocused && (isDark ? styles.inputFocused : { borderColor: activeColors.primary, backgroundColor: activeColors.surface }),
           error ? styles.inputError : null,
         ]}
       >
         <TextInput
           style={[
             styles.input,
+            !isDark && { color: activeColors.textPrimary },
             shouldSecure ? styles.monoInput : null,
             style,
           ]}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={activeColors.textMuted}
           secureTextEntry={shouldSecure}
           onFocus={(e) => {
             setIsFocused(true);
@@ -70,16 +73,16 @@ export const SecureInput: React.FC<SecureInputProps> = ({
             style={styles.toggleButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.toggleText}>
+            <Text style={[styles.toggleText, !isDark && { color: activeColors.primary }]}>
               {hidePassword ? 'SHOW' : 'HIDE'}
             </Text>
           </Pressable>
         )}
       </View>
       {error ? (
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, !isDark && { color: activeColors.crimson }]}>{error}</Text>
       ) : helperText ? (
-        <Text style={styles.helperText}>{helperText}</Text>
+        <Text style={[styles.helperText, !isDark && { color: activeColors.textTertiary }]}>{helperText}</Text>
       ) : null}
     </View>
   );

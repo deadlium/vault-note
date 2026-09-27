@@ -39,6 +39,7 @@ export interface VaultSessionState extends SessionMemoryKeys {
   lastBackgroundTimestamp: number | null;
   autoLockTimeout: AutoLockTimeout;
   isPrivacyShieldActive: boolean;
+  isPrivacyShieldEnabled: boolean;
 
   // Actions
   setStatus: (status: VaultSessionStatus) => void;
@@ -47,6 +48,7 @@ export interface VaultSessionState extends SessionMemoryKeys {
   recordBackground: (timestamp?: number) => void;
   setAutoLockTimeout: (timeout: AutoLockTimeout) => void;
   setPrivacyShieldActive: (active: boolean) => void;
+  setPrivacyShieldEnabled: (enabled: boolean) => void;
   lock: () => void;
   unlock: (masterKey?: Uint8Array, sessionToken?: string) => void;
   resetSession: () => void;

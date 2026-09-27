@@ -18,7 +18,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { isValidBase32 } from '../base32';
 import type { TOTPRecord, TOTPUpdateInput, TOTPAlgorithm } from '../types';
 import { useTOTP } from '../hooks/useTOTP';
@@ -47,6 +47,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
   onSave,
   onDetach,
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
   const [issuer, setIssuer] = useState(record?.issuer || '');
   const [account, setAccount] = useState(record?.account || '');
   const [secret, setSecret] = useState(record?.secret || '');
@@ -155,24 +156,27 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[
+          styles.modalOverlay,
+          !isDark && { backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+        ]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.sheetContainer}>
+        <View style={[styles.sheetContainer, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
           {/* Header Bar */}
-          <View style={styles.sheetHeader}>
+          <View style={[styles.sheetHeader, !isDark && { borderBottomColor: activeColors.border }]}>
             <View style={styles.headerTitleGroup}>
-              <Ionicons name="shield-checkmark" size={18} color={colors.primaryLight} />
-              <Text style={styles.sheetTitle}>2FA Authenticator Settings</Text>
+              <Ionicons name="shield-checkmark" size={18} color={isDark ? colors.primaryLight : activeColors.primary} />
+              <Text style={[styles.sheetTitle, !isDark && { color: activeColors.textPrimary }]}>2FA Authenticator Settings</Text>
             </View>
             <Pressable
               onPress={onClose}
-              style={({ pressed }) => [styles.closeButton, pressed && styles.pressedState]}
+              style={({ pressed }) => [styles.closeButton, !isDark && { backgroundColor: activeColors.surfaceSubtle }, pressed && styles.pressedState]}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Close Settings"
             >
-              <Ionicons name="close" size={20} color={colors.textSecondary} />
+              <Ionicons name="close" size={20} color={activeColors.textSecondary} />
             </Pressable>
           </View>
 
@@ -182,11 +186,11 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
             showsVerticalScrollIndicator={false}
           >
             {/* Live Preview Card */}
-            <View style={styles.previewBox}>
+            <View style={[styles.previewBox, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
               <View style={styles.previewHeader}>
-                <Text style={styles.previewLabel}>LIVE PREVIEW</Text>
-                <View style={styles.previewBadge}>
-                  <Text style={styles.previewBadgeText}>
+                <Text style={[styles.previewLabel, !isDark && { color: activeColors.textMuted }]}>LIVE PREVIEW</Text>
+                <View style={[styles.previewBadge, !isDark && { backgroundColor: activeColors.surface }]}>
+                  <Text style={[styles.previewBadgeText, !isDark && { color: activeColors.textSecondary }]}>
                     {algorithm} • {digits} Digits • {period}s
                   </Text>
                 </View>
@@ -196,7 +200,8 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                 <Text
                   style={[
                     styles.previewCodeText,
-                    !isSecretValid && styles.previewCodePlaceholder,
+                    !isDark && { color: activeColors.textPrimary },
+                    !isSecretValid && [styles.previewCodePlaceholder, !isDark && { color: activeColors.textMuted }],
                   ]}
                 >
                   {isSecretValid ? formattedCode : '------'}
@@ -217,13 +222,13 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Field: Issuer */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.inputLabel}>ISSUER / SERVICE NAME</Text>
+              <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>ISSUER / SERVICE NAME</Text>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border, color: activeColors.textPrimary }]}
                 value={issuer}
                 onChangeText={setIssuer}
                 placeholder="e.g. GitHub, AWS, Google"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={activeColors.textMuted}
                 autoCapitalize="words"
                 accessibilityLabel="Issuer name"
               />
@@ -231,13 +236,13 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Field: Account */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.inputLabel}>ACCOUNT / USERNAME</Text>
+              <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>ACCOUNT / USERNAME</Text>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border, color: activeColors.textPrimary }]}
                 value={account}
                 onChangeText={setAccount}
                 placeholder="e.g. user@example.com"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={activeColors.textMuted}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 accessibilityLabel="Account username"
@@ -247,7 +252,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
             {/* Field: Secret Key */}
             <View style={styles.fieldBlock}>
               <View style={styles.labelRow}>
-                <Text style={styles.inputLabel}>SHARED SECRET KEY (BASE32)</Text>
+                <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>SHARED SECRET KEY (BASE32)</Text>
                 <Pressable
                   onPress={() => setShowSecret(!showSecret)}
                   style={styles.toggleSecretButton}
@@ -256,9 +261,9 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                   <Ionicons
                     name={showSecret ? 'eye-off-outline' : 'eye-outline'}
                     size={14}
-                    color={colors.primaryLight}
+                    color={isDark ? colors.primaryLight : activeColors.primary}
                   />
-                  <Text style={styles.toggleSecretText}>
+                  <Text style={[styles.toggleSecretText, !isDark && { color: activeColors.primary }]}>
                     {showSecret ? 'Hide' : 'Reveal'}
                   </Text>
                 </Pressable>
@@ -271,11 +276,11 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                 ]}
               >
                 <TextInput
-                  style={[styles.textInput, styles.secretInput]}
+                  style={[styles.textInput, styles.secretInput, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border, color: activeColors.textPrimary }]}
                   value={secret}
                   onChangeText={handleSecretChange}
                   placeholder="JBSWY3DPEHPK3PXP"
-                  placeholderTextColor={colors.textMuted}
+                  placeholderTextColor={activeColors.textMuted}
                   autoCapitalize="characters"
                   autoCorrect={false}
                   secureTextEntry={!showSecret}
@@ -284,9 +289,9 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
               </View>
 
               {secretError ? (
-                <Text style={styles.fieldErrorMessage}>{secretError}</Text>
+                <Text style={[styles.fieldErrorMessage, !isDark && { color: activeColors.crimson }]}>{secretError}</Text>
               ) : (
-                <Text style={styles.fieldHint}>
+                <Text style={[styles.fieldHint, !isDark && { color: activeColors.textTertiary }]}>
                   Zero-knowledge: Encrypted with your vault DEK using AES-256-GCM.
                 </Text>
               )}
@@ -294,7 +299,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Selector: Algorithm */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.inputLabel}>HASH ALGORITHM</Text>
+              <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>HASH ALGORITHM</Text>
               <View style={styles.chipRow}>
                 {(['SHA1', 'SHA256', 'SHA512'] as TOTPAlgorithm[]).map((algo) => {
                   const isSelected = algorithm === algo;
@@ -302,12 +307,20 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                     <Pressable
                       key={algo}
                       onPress={() => setAlgorithm(algo)}
-                      style={[styles.chip, isSelected && styles.chipActive]}
+                      style={[
+                        styles.chip,
+                        !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                        isSelected && (isDark ? styles.chipActive : { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary }),
+                      ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Select algorithm ${algo}`}
                     >
                       <Text
-                        style={[styles.chipText, isSelected && styles.chipTextActive]}
+                        style={[
+                          styles.chipText,
+                          !isDark && { color: activeColors.textSecondary },
+                          isSelected && (isDark ? styles.chipTextActive : { color: activeColors.primary, fontWeight: '700' }),
+                        ]}
                       >
                         {algo}
                       </Text>
@@ -319,7 +332,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Selector: Digits */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.inputLabel}>CODE DIGITS</Text>
+              <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>CODE DIGITS</Text>
               <View style={styles.chipRow}>
                 {([6, 8] as const).map((num) => {
                   const isSelected = digits === num;
@@ -327,12 +340,20 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                     <Pressable
                       key={num}
                       onPress={() => setDigits(num)}
-                      style={[styles.chip, isSelected && styles.chipActive]}
+                      style={[
+                        styles.chip,
+                        !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                        isSelected && (isDark ? styles.chipActive : { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary }),
+                      ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Select ${num} digits`}
                     >
                       <Text
-                        style={[styles.chipText, isSelected && styles.chipTextActive]}
+                        style={[
+                          styles.chipText,
+                          !isDark && { color: activeColors.textSecondary },
+                          isSelected && (isDark ? styles.chipTextActive : { color: activeColors.primary, fontWeight: '700' }),
+                        ]}
                       >
                         {num} Digits
                       </Text>
@@ -344,7 +365,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Selector: Period */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.inputLabel}>PERIOD / ROTATION INTERVAL</Text>
+              <Text style={[styles.inputLabel, !isDark && { color: activeColors.textSecondary }]}>PERIOD / ROTATION INTERVAL</Text>
               <View style={styles.chipRow}>
                 {([30, 60] as const).map((sec) => {
                   const isSelected = period === sec;
@@ -352,12 +373,20 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                     <Pressable
                       key={sec}
                       onPress={() => setPeriod(sec)}
-                      style={[styles.chip, isSelected && styles.chipActive]}
+                      style={[
+                        styles.chip,
+                        !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                        isSelected && (isDark ? styles.chipActive : { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary }),
+                      ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Select ${sec} seconds interval`}
                     >
                       <Text
-                        style={[styles.chipText, isSelected && styles.chipTextActive]}
+                        style={[
+                          styles.chipText,
+                          !isDark && { color: activeColors.textSecondary },
+                          isSelected && (isDark ? styles.chipTextActive : { color: activeColors.primary, fontWeight: '700' }),
+                        ]}
                       >
                         {sec} Seconds
                       </Text>
@@ -369,7 +398,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
 
             {/* Detach Option (if attached) */}
             {(record || credentialId) && onDetach && (
-              <View style={styles.detachBlock}>
+              <View style={[styles.detachBlock, !isDark && { borderTopColor: activeColors.border }]}>
                 <Pressable
                   onPress={handleDetachPrompt}
                   style={({ pressed }) => [
@@ -379,8 +408,8 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
                   accessibilityRole="button"
                   accessibilityLabel="Detach Two-Factor Authentication"
                 >
-                  <Feather name="trash-2" size={15} color={colors.crimson} />
-                  <Text style={styles.detachButtonText}>
+                  <Feather name="trash-2" size={15} color={activeColors.crimson} />
+                  <Text style={[styles.detachButtonText, !isDark && { color: activeColors.crimson }]}>
                     Detach Two-Factor Authentication
                   </Text>
                 </Pressable>
@@ -389,14 +418,14 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
           </ScrollView>
 
           {/* Action Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, !isDark && { borderTopColor: activeColors.border }]}>
             <Pressable
               onPress={onClose}
-              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressedState]}
+              style={({ pressed }) => [styles.cancelButton, !isDark && { backgroundColor: activeColors.surfaceSubtle }, pressed && styles.pressedState]}
               accessibilityRole="button"
               accessibilityLabel="Cancel"
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, !isDark && { color: activeColors.textSecondary }]}>Cancel</Text>
             </Pressable>
 
             <Pressable
@@ -404,6 +433,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
               disabled={isSubmitting}
               style={({ pressed }) => [
                 styles.saveButton,
+                !isDark && { backgroundColor: activeColors.primary },
                 isSubmitting && styles.saveButtonDisabled,
                 pressed && styles.pressedState,
               ]}
@@ -413,7 +443,7 @@ export const TOTPSettings: React.FC<TOTPSettingsProps> = ({
               <Ionicons
                 name="shield-checkmark"
                 size={16}
-                color={colors.textPrimary}
+                color="#FFFFFF"
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.saveButtonText}>

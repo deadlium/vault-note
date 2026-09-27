@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { useVaultStore } from '../../vault/store/useVaultStore';
 import { VaultItem, AnyVaultPayload } from '../../../types/vault';
 import { ServiceIcon } from '../../../components/icon/ServiceIcon';
@@ -35,6 +35,7 @@ export interface TOTPScreenProps {
 type ScreenMode = 'scanner' | 'manual' | 'result' | 'list';
 
 export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
+  const { isDark, colors: activeColors } = useTheme();
   const scrollContext = useNavbarScroll();
   const items = useVaultStore((s) => s.items);
 
@@ -104,16 +105,16 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: activeColors.borderSubtle }]}>
         <View style={styles.headerTitleGroup}>
-          <View style={styles.headerIconSquircle}>
-            <Ionicons name="qr-code" size={18} color={colors.primaryLight} />
+          <View style={[styles.headerIconSquircle, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.10)', borderColor: 'rgba(79, 70, 229, 0.25)' }]}>
+            <Ionicons name="qr-code" size={18} color={!isDark ? activeColors.primary : colors.primaryLight} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>TOTP Authenticator</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: activeColors.textPrimary }]}>TOTP Authenticator</Text>
+            <Text style={[styles.headerSubtitle, { color: activeColors.textSecondary }]}>
               RFC 6238 • Auto-Enrollment
             </Text>
           </View>
@@ -128,8 +129,8 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
       </View>
 
       {/* Top Segmented Tabs: Direct access to Scan QR, Manual Key, and Codes */}
-      <View style={styles.topTabsWrapper}>
-        <View style={styles.topTabsContainer}>
+      <View style={[styles.topTabsWrapper, { backgroundColor: activeColors.background, borderBottomColor: activeColors.borderSubtle }]}>
+        <View style={[styles.topTabsContainer, { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
           <Pressable
             onPress={() => {
               setErrorMessage(null);
@@ -137,18 +138,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
             }}
             style={[
               styles.topTabButton,
-              mode === 'scanner' && styles.topTabButtonActive,
+              mode === 'scanner' && [styles.topTabButtonActive, { backgroundColor: activeColors.primary }],
             ]}
           >
             <Ionicons
               name="qr-code-outline"
               size={14}
-              color={mode === 'scanner' ? '#FFFFFF' : colors.textMuted}
+              color={mode === 'scanner' ? '#FFFFFF' : activeColors.textSecondary}
               style={{ marginRight: 6 }}
             />
             <Text
               style={[
                 styles.topTabText,
+                { color: mode === 'scanner' ? '#FFFFFF' : activeColors.textSecondary },
                 mode === 'scanner' && styles.topTabTextActive,
               ]}
             >
@@ -163,18 +165,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
             }}
             style={[
               styles.topTabButton,
-              mode === 'manual' && styles.topTabButtonActive,
+              mode === 'manual' && [styles.topTabButtonActive, { backgroundColor: activeColors.primary }],
             ]}
           >
             <Ionicons
               name="key-outline"
               size={14}
-              color={mode === 'manual' ? '#FFFFFF' : colors.textMuted}
+              color={mode === 'manual' ? '#FFFFFF' : activeColors.textSecondary}
               style={{ marginRight: 6 }}
             />
             <Text
               style={[
                 styles.topTabText,
+                { color: mode === 'manual' ? '#FFFFFF' : activeColors.textSecondary },
                 mode === 'manual' && styles.topTabTextActive,
               ]}
             >
@@ -189,18 +192,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
             }}
             style={[
               styles.topTabButton,
-              mode === 'list' && styles.topTabButtonActive,
+              mode === 'list' && [styles.topTabButtonActive, { backgroundColor: activeColors.primary }],
             ]}
           >
             <Ionicons
               name="timer-outline"
               size={14}
-              color={mode === 'list' ? '#FFFFFF' : colors.textMuted}
+              color={mode === 'list' ? '#FFFFFF' : activeColors.textSecondary}
               style={{ marginRight: 6 }}
             />
             <Text
               style={[
                 styles.topTabText,
+                { color: mode === 'list' ? '#FFFFFF' : activeColors.textSecondary },
                 mode === 'list' && styles.topTabTextActive,
               ]}
             >
@@ -247,25 +251,25 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.manualCard}>
+              <View style={[styles.manualCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border, shadowColor: '#0F172A', shadowOpacity: 0.04, shadowRadius: 3, elevation: 2 }]}>
                 <View style={styles.manualCardHeader}>
-                  <Ionicons name="key" size={18} color={colors.primaryLight} />
-                  <Text style={styles.manualCardTitle}>Manual Authenticator Setup</Text>
+                  <Ionicons name="key" size={18} color={!isDark ? activeColors.primary : colors.primaryLight} />
+                  <Text style={[styles.manualCardTitle, !isDark && { color: activeColors.textPrimary }]}>Manual Authenticator Setup</Text>
                 </View>
-                <Text style={styles.manualCardSubtitle}>
+                <Text style={[styles.manualCardSubtitle, !isDark && { color: activeColors.textSecondary }]}>
                   Enter the secret key provided by your service (e.g. GitHub, Google)
                 </Text>
 
                 {/* Service / Issuer */}
                 <View style={styles.formFieldGroup}>
-                  <Text style={styles.formFieldLabel}>SERVICE OR WEBSITE</Text>
-                  <View style={styles.formInputContainer}>
+                  <Text style={[styles.formFieldLabel, !isDark && { color: activeColors.textSecondary }]}>SERVICE OR WEBSITE</Text>
+                  <View style={[styles.formInputContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                     <TextInput
                       value={manualIssuer}
                       onChangeText={setManualIssuer}
                       placeholder="e.g. GitHub, Google, Discord"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.formTextInput}
+                      placeholderTextColor={activeColors.textTertiary}
+                      style={[styles.formTextInput, !isDark && { color: activeColors.textPrimary }]}
                       autoCapitalize="words"
                     />
                   </View>
@@ -273,14 +277,14 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
 
                 {/* Account / Username / Email */}
                 <View style={styles.formFieldGroup}>
-                  <Text style={styles.formFieldLabel}>ACCOUNT NAME OR EMAIL</Text>
-                  <View style={styles.formInputContainer}>
+                  <Text style={[styles.formFieldLabel, !isDark && { color: activeColors.textSecondary }]}>ACCOUNT NAME OR EMAIL</Text>
+                  <View style={[styles.formInputContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                     <TextInput
                       value={manualAccount}
                       onChangeText={setManualAccount}
                       placeholder="e.g. user@example.com or username"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.formTextInput}
+                      placeholderTextColor={activeColors.textTertiary}
+                      style={[styles.formTextInput, !isDark && { color: activeColors.textPrimary }]}
                       autoCapitalize="none"
                       autoCorrect={false}
                     />
@@ -289,8 +293,8 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
 
                 {/* Base32 Secret */}
                 <View style={styles.formFieldGroup}>
-                  <Text style={styles.formFieldLabel}>BASE32 SECRET KEY *</Text>
-                  <View style={styles.formInputContainer}>
+                  <Text style={[styles.formFieldLabel, !isDark && { color: activeColors.textSecondary }]}>BASE32 SECRET KEY *</Text>
+                  <View style={[styles.formInputContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                     <TextInput
                       value={manualSecret}
                       onChangeText={(val) => {
@@ -298,8 +302,8 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="JBSWY3DPEHPK3PXP"
-                      placeholderTextColor={colors.textMuted}
-                      style={[styles.formTextInput, styles.secretInput]}
+                      placeholderTextColor={activeColors.textTertiary}
+                      style={[styles.formTextInput, styles.secretInput, !isDark && { color: activeColors.textPrimary }]}
                       autoCapitalize="characters"
                       autoCorrect={false}
                     />
@@ -310,19 +314,20 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                 <View style={styles.optionsRow}>
                   {/* Digits Toggle */}
                   <View style={styles.optionBox}>
-                    <Text style={styles.optionLabel}>DIGITS</Text>
-                    <View style={styles.segmentedToggle}>
+                    <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>DIGITS</Text>
+                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualDigits(6)}
                         style={[
                           styles.segmentBtn,
-                          manualDigits === 6 && styles.segmentBtnActive,
+                          manualDigits === 6 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualDigits === 6 && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualDigits === 6 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           6
@@ -332,13 +337,14 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                         onPress={() => setManualDigits(8)}
                         style={[
                           styles.segmentBtn,
-                          manualDigits === 8 && styles.segmentBtnActive,
+                          manualDigits === 8 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualDigits === 8 && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualDigits === 8 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           8
@@ -349,19 +355,20 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
 
                   {/* Period Toggle */}
                   <View style={styles.optionBox}>
-                    <Text style={styles.optionLabel}>PERIOD</Text>
-                    <View style={styles.segmentedToggle}>
+                    <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>PERIOD</Text>
+                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualPeriod(30)}
                         style={[
                           styles.segmentBtn,
-                          manualPeriod === 30 && styles.segmentBtnActive,
+                          manualPeriod === 30 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualPeriod === 30 && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualPeriod === 30 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           30s
@@ -371,13 +378,14 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                         onPress={() => setManualPeriod(60)}
                         style={[
                           styles.segmentBtn,
-                          manualPeriod === 60 && styles.segmentBtnActive,
+                          manualPeriod === 60 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualPeriod === 60 && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualPeriod === 60 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           60s
@@ -388,19 +396,20 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
 
                   {/* Algorithm Toggle */}
                   <View style={styles.optionBox}>
-                    <Text style={styles.optionLabel}>ALGORITHM</Text>
-                    <View style={styles.segmentedToggle}>
+                    <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>ALGORITHM</Text>
+                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualAlgorithm('SHA1')}
                         style={[
                           styles.segmentBtn,
-                          manualAlgorithm === 'SHA1' && styles.segmentBtnActive,
+                          manualAlgorithm === 'SHA1' && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualAlgorithm === 'SHA1' && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualAlgorithm === 'SHA1' && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           SHA1
@@ -410,13 +419,14 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                         onPress={() => setManualAlgorithm('SHA256')}
                         style={[
                           styles.segmentBtn,
-                          manualAlgorithm === 'SHA256' && styles.segmentBtnActive,
+                          manualAlgorithm === 'SHA256' && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.segmentBtnText,
-                            manualAlgorithm === 'SHA256' && styles.segmentBtnTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            manualAlgorithm === 'SHA256' && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           SHA256
@@ -429,7 +439,7 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                 {/* Error Message */}
                 {Boolean(errorMessage) && (
                   <View style={styles.errorInlineBanner}>
-                    <Ionicons name="alert-circle" size={16} color={colors.crimson} />
+                    <Ionicons name="alert-circle" size={16} color={activeColors.crimson} />
                     <Text style={styles.errorInlineText}>{errorMessage}</Text>
                   </View>
                 )}
@@ -440,6 +450,7 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   disabled={isProcessing}
                   style={({ pressed }) => [
                     styles.submitManualBtn,
+                    !isDark && { backgroundColor: activeColors.primary },
                     pressed && styles.pressedOpacity,
                     isProcessing && { opacity: 0.7 },
                   ]}
@@ -583,12 +594,12 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
             onMomentumScrollEnd={() => scrollContext?.notifyScrollEnd()}
           >
             {totpItems.length === 0 ? (
-              <View style={styles.emptyListCard}>
-                <View style={styles.emptyIconCircle}>
-                  <Ionicons name="shield-outline" size={32} color={colors.textMuted} />
+              <View style={[styles.emptyListCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+                <View style={[styles.emptyIconCircle, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+                  <Ionicons name="shield-outline" size={32} color={!isDark ? activeColors.primary : colors.textMuted} />
                 </View>
-                <Text style={styles.emptyTitle}>No 2FA Authenticators Yet</Text>
-                <Text style={styles.emptySubtitle}>
+                <Text style={[styles.emptyTitle, !isDark && { color: activeColors.textPrimary }]}>No 2FA Authenticators Yet</Text>
+                <Text style={[styles.emptySubtitle, !isDark && { color: activeColors.textSecondary }]}>
                   Scan a QR code from GitHub, Google, or any service to instantly generate zero-knowledge OTP codes.
                 </Text>
                 <Pressable
@@ -598,6 +609,7 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   }}
                   style={({ pressed }) => [
                     styles.emptyScanBtn,
+                    !isDark && { backgroundColor: activeColors.primary },
                     pressed && styles.pressedOpacity,
                   ]}
                 >
@@ -613,7 +625,7 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   const account = (p.username as string) || (p.accountName as string) || '';
 
                   return (
-                    <View key={item.id} style={styles.totpListItemCard}>
+                    <View key={item.id} style={[styles.totpListItemCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border, shadowColor: '#0F172A', shadowOpacity: 0.04, shadowRadius: 3, elevation: 2 }]}>
                       <View style={styles.totpListItemHeader}>
                         <ServiceIcon
                           iconType={item.icon}
@@ -621,9 +633,9 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                           size="sm"
                         />
                         <View style={{ flex: 1, marginLeft: 10 }}>
-                          <Text style={styles.totpListItemTitle}>{item.title}</Text>
+                          <Text style={[styles.totpListItemTitle, !isDark && { color: activeColors.textPrimary }]}>{item.title}</Text>
                           {Boolean(account) && (
-                            <Text style={styles.totpListItemSubtitle}>{account}</Text>
+                            <Text style={[styles.totpListItemSubtitle, !isDark && { color: activeColors.textSecondary }]}>{account}</Text>
                           )}
                         </View>
                         {onOpenItem && (
@@ -632,7 +644,7 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                             style={styles.openItemIconBtn}
                             hitSlop={8}
                           >
-                            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                            <Ionicons name="chevron-forward" size={18} color={activeColors.textTertiary} />
                           </Pressable>
                         )}
                       </View>
@@ -1029,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
-    paddingBottom: 110,
+    paddingBottom: 140,
   },
   emptyListCard: {
     backgroundColor: colors.surface,

@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 
 interface MnemonicGridProps {
   words: string[];
@@ -15,28 +15,63 @@ interface MnemonicGridProps {
 }
 
 export function MnemonicGrid({ words, onCopy, copied }: MnemonicGridProps) {
+  const { colors: themeColors, isDark } = useTheme();
   const [isRevealed, setIsRevealed] = useState(true);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        !isDark && {
+          backgroundColor: themeColors.surface,
+          borderColor: themeColors.border,
+          shadowColor: '#0F172A',
+          shadowOpacity: 0.04,
+          shadowOffset: { width: 0, height: 2 },
+          shadowRadius: 6,
+          elevation: 1,
+        },
+      ]}
+    >
       {/* Privacy Header */}
       <View style={styles.headerRow}>
         <View style={styles.badgeRow}>
-          <Ionicons name="key-outline" size={16} color={colors.primaryLight} />
-          <Text style={styles.headerTitle}>24-Word Emergency Kit</Text>
+          <Ionicons
+            name="key-outline"
+            size={16}
+            color={isDark ? colors.primaryLight : themeColors.primary}
+          />
+          <Text
+            style={[
+              styles.headerTitle,
+              !isDark && { color: themeColors.primary },
+            ]}
+          >
+            24-Word Emergency Kit
+          </Text>
         </View>
 
         <Pressable
-          style={styles.toggleBtn}
+          style={[
+            styles.toggleBtn,
+            !isDark && { backgroundColor: themeColors.surfaceSubtle },
+          ]}
           onPress={() => setIsRevealed(!isRevealed)}
           hitSlop={8}
         >
           <Ionicons
             name={isRevealed ? 'eye-off-outline' : 'eye-outline'}
             size={16}
-            color={colors.textSecondary}
+            color={themeColors.textSecondary}
           />
-          <Text style={styles.toggleBtnText}>{isRevealed ? 'Hide' : 'Reveal'}</Text>
+          <Text
+            style={[
+              styles.toggleBtnText,
+              !isDark && { color: themeColors.textSecondary },
+            ]}
+          >
+            {isRevealed ? 'Hide' : 'Reveal'}
+          </Text>
         </Pressable>
       </View>
 
@@ -45,9 +80,30 @@ export function MnemonicGrid({ words, onCopy, copied }: MnemonicGridProps) {
         {words.map((word, index) => {
           const numberLabel = (index + 1).toString().padStart(2, '0');
           return (
-            <View key={index} style={styles.wordChip}>
-              <Text style={styles.wordNumber}>{numberLabel}</Text>
-              <Text style={styles.wordText}>
+            <View
+              key={index}
+              style={[
+                styles.wordChip,
+                !isDark && {
+                  backgroundColor: themeColors.surfaceElevated,
+                  borderColor: themeColors.borderSubtle,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.wordNumber,
+                  !isDark && { color: themeColors.textTertiary },
+                ]}
+              >
+                {numberLabel}
+              </Text>
+              <Text
+                style={[
+                  styles.wordText,
+                  !isDark && { color: themeColors.textPrimary },
+                ]}
+              >
                 {isRevealed ? word : '••••••'}
               </Text>
             </View>
@@ -59,15 +115,41 @@ export function MnemonicGrid({ words, onCopy, copied }: MnemonicGridProps) {
       {onCopy && (
         <View style={styles.actionsRow}>
           <Pressable
-            style={[styles.copyButton, copied && styles.copyButtonActive]}
+            style={[
+              styles.copyButton,
+              !isDark && {
+                backgroundColor: themeColors.surfaceElevated,
+                borderColor: themeColors.border,
+              },
+              copied && styles.copyButtonActive,
+              copied && !isDark && {
+                backgroundColor: themeColors.emeraldMuted,
+                borderColor: themeColors.emerald,
+              },
+            ]}
             onPress={onCopy}
           >
             <Ionicons
               name={copied ? 'checkmark' : 'copy-outline'}
               size={16}
-              color={copied ? colors.emerald : colors.textPrimary}
+              color={
+                copied
+                  ? isDark
+                    ? colors.emerald
+                    : themeColors.emerald
+                  : isDark
+                  ? colors.textPrimary
+                  : themeColors.textPrimary
+              }
             />
-            <Text style={[styles.copyButtonText, copied && styles.copyButtonTextActive]}>
+            <Text
+              style={[
+                styles.copyButtonText,
+                !isDark && { color: themeColors.textPrimary },
+                copied && styles.copyButtonTextActive,
+                copied && !isDark && { color: themeColors.emerald },
+              ]}
+            >
               {copied ? 'Copied to Clipboard' : 'Copy All 24 Words'}
             </Text>
           </Pressable>
@@ -75,9 +157,26 @@ export function MnemonicGrid({ words, onCopy, copied }: MnemonicGridProps) {
       )}
 
       {/* Warning Alert */}
-      <View style={styles.warningBox}>
-        <Ionicons name="warning-outline" size={16} color={colors.amber} />
-        <Text style={styles.warningText}>
+      <View
+        style={[
+          styles.warningBox,
+          !isDark && {
+            backgroundColor: themeColors.amberMuted,
+            borderColor: themeColors.amberBorder,
+          },
+        ]}
+      >
+        <Ionicons
+          name="warning-outline"
+          size={16}
+          color={isDark ? colors.amber : themeColors.amber}
+        />
+        <Text
+          style={[
+            styles.warningText,
+            !isDark && { color: themeColors.amber },
+          ]}
+        >
           Write these words down on paper and keep them offline in a safe place. They cannot be recovered if lost.
         </Text>
       </View>

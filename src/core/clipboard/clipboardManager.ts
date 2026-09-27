@@ -60,7 +60,7 @@ class ClipboardManagerClass {
       };
       this.notifyListeners();
 
-      this.intervalId = setInterval(() => {
+      this.intervalId = setInterval(async () => {
         if (this.state.remainingSeconds > 1) {
           this.state = {
             ...this.state,
@@ -68,7 +68,8 @@ class ClipboardManagerClass {
           };
           this.notifyListeners();
         } else {
-          this.resetTimer();
+          // Auto-purge clipboard content on countdown expiration
+          await this.clearNow();
         }
       }, 1000);
 

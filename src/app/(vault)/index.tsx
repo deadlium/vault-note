@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { CategoryChipBar } from '../../components/category/CategoryChipBar';
 import { VaultItemRow, VaultItemRowData } from '../../components/item/VaultItemRow';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -50,6 +50,7 @@ export default function VaultHomeScreen({
   onOpenBackup,
   refreshTrigger,
 }: VaultHomeDashboardProps) {
+  const { isDark, colors: activeColors } = useTheme();
   const scrollContext = useNavbarScroll();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -141,7 +142,7 @@ export default function VaultHomeScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header Bar */}
       <View style={styles.header}>
         <Pressable
@@ -153,11 +154,11 @@ export default function VaultHomeScreen({
           accessibilityRole="button"
           accessibilityLabel="Open Security Center"
         >
-          <View style={styles.brandIconWrapper}>
-            <Ionicons name="shield-checkmark" size={19} color="#A78BFA" />
+          <View style={[styles.brandIconWrapper, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.10)', borderColor: 'rgba(79, 70, 229, 0.25)' }]}>
+            <Ionicons name="shield-checkmark" size={19} color={!isDark ? activeColors.primary : '#A78BFA'} />
           </View>
           <View style={styles.brandTextGroup}>
-            <Text style={styles.brandTitle}>VaultNote</Text>
+            <Text style={[styles.brandTitle, { color: activeColors.textPrimary }]}>VaultNote</Text>
             <View style={styles.statusRow}>
               <View style={styles.pulsingDot} />
               <Text style={styles.statusText}>Hardware Protected</Text>
@@ -166,71 +167,35 @@ export default function VaultHomeScreen({
         </Pressable>
 
         <View style={styles.headerRightActions}>
-          {/* Quick Backup & Restore Button */}
-          {onOpenBackup && (
-            <Pressable
-              onPress={onOpenBackup}
-              style={({ pressed }) => [
-                styles.headerActionButton,
-                pressed && styles.headerActionButtonPressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Open Backup and Restore"
-            >
-              <Ionicons name="cloud-upload-outline" size={17} color="#8B5CF6" />
-            </Pressable>
-          )}
-
-          {/* Quick Security Center Shield Button */}
-          {onOpenSecurity && (
-            <Pressable
-              onPress={onOpenSecurity}
-              style={({ pressed }) => [
-                styles.headerActionButton,
-                pressed && styles.headerActionButtonPressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Open Security Center"
-            >
-              <Ionicons name="shield-checkmark-outline" size={17} color="#A78BFA" />
-            </Pressable>
-          )}
-
-          {/* Quick Favorites Star Button with Badge */}
-          {favoriteCount > 0 && onOpenFavorites && (
-            <Pressable
-              onPress={onOpenFavorites}
-              style={({ pressed }) => [
-                styles.headerActionButton,
-                styles.starActionButton,
-                pressed && styles.headerActionButtonPressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Open Favorites Hub"
-            >
-              <Ionicons name="star" size={15} color="#FBBF24" />
-              <Text style={styles.starBadgeText}>{favoriteCount}</Text>
-            </Pressable>
-          )}
 
           {/* Lock Vault Button */}
           <Pressable
             onPress={handleLockPress}
             style={({ pressed }) => [
               styles.headerActionButton,
+              !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
               pressed && styles.headerActionButtonPressed,
             ]}
             accessibilityRole="button"
             accessibilityLabel="Lock Vault"
           >
-            <Ionicons name="lock-closed-outline" size={17} color={colors.textSecondary} />
+            <Ionicons name="lock-closed-outline" size={17} color={activeColors.textSecondary} />
           </Pressable>
         </View>
       </View>
 
       {/* Instant Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+        <View style={[
+          styles.searchBar,
+          { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+          !isDark && {
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.05,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
+          }
+        ]}>
           <Pressable
             onPress={onOpenSearch}
             accessibilityRole="button"
@@ -239,7 +204,7 @@ export default function VaultHomeScreen({
             <Ionicons
               name="search"
               size={18}
-              color={isSearching ? colors.primaryLight : '#818CF8'}
+              color={isSearching ? activeColors.primaryLight : (!isDark ? activeColors.primary : '#818CF8')}
               style={styles.searchIcon}
             />
           </Pressable>
@@ -248,8 +213,8 @@ export default function VaultHomeScreen({
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search credentials, notes, keys..."
-            placeholderTextColor="#64748B"
-            style={styles.searchInput}
+            placeholderTextColor={activeColors.textTertiary}
+            style={[styles.searchInput, { color: activeColors.textPrimary }]}
             autoCapitalize="none"
             autoCorrect={false}
             clearButtonMode="never"
@@ -262,7 +227,7 @@ export default function VaultHomeScreen({
               accessibilityRole="button"
               accessibilityLabel="Clear search"
             >
-              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              <Ionicons name="close-circle" size={18} color={activeColors.textTertiary} />
             </Pressable>
           )}
 
@@ -273,7 +238,7 @@ export default function VaultHomeScreen({
               accessibilityRole="button"
               accessibilityLabel="Open full search screen"
             >
-              <Ionicons name="options-outline" size={17} color={colors.primaryLight} />
+              <Ionicons name="options-outline" size={17} color={activeColors.primary} />
             </Pressable>
           )}
         </View>
@@ -290,25 +255,25 @@ export default function VaultHomeScreen({
 
       {/* Security & Vault Metrics Strip */}
       <View style={styles.metricsContainer}>
-        <View style={styles.metricCard}>
-          <View style={styles.metricIconWrap}>
-            <Ionicons name="key" size={12} color={colors.primaryLight} />
+        <View style={[styles.metricCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+          <View style={[styles.metricIconWrap, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.10)' }]}>
+            <Ionicons name="key" size={12} color={!isDark ? activeColors.primary : colors.primaryLight} />
           </View>
-          <Text style={styles.metricLabel}>{allVaultItems.length} Records</Text>
+          <Text style={[styles.metricLabel, !isDark && { color: activeColors.textSecondary }]}>{allVaultItems.length} Records</Text>
         </View>
 
-        <View style={styles.metricCard}>
+        <View style={[styles.metricCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
           <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
             <Ionicons name="time" size={12} color={colors.emerald} />
           </View>
-          <Text style={styles.metricLabel}>{totpCount} with 2FA</Text>
+          <Text style={[styles.metricLabel, !isDark && { color: activeColors.textSecondary }]}>{totpCount} with 2FA</Text>
         </View>
 
-        <View style={styles.metricCard}>
-          <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(59, 130, 246, 0.12)' }]}>
-            <Ionicons name="shield-checkmark" size={12} color="#60A5FA" />
+        <View style={[styles.metricCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+          <View style={[styles.metricIconWrap, { backgroundColor: !isDark ? 'rgba(79, 70, 229, 0.10)' : 'rgba(59, 130, 246, 0.12)' }]}>
+            <Ionicons name="shield-checkmark" size={12} color={!isDark ? activeColors.primary : '#60A5FA'} />
           </View>
-          <Text style={styles.metricLabel}>AES-256-GCM</Text>
+          <Text style={[styles.metricLabel, !isDark && { color: activeColors.textSecondary }]}>AES-256-GCM</Text>
         </View>
       </View>
 
@@ -395,9 +360,9 @@ export default function VaultHomeScreen({
                 >
                   <View style={styles.sectionHeaderLeft}>
                     <Ionicons name="star" size={14} color="#FBBF24" />
-                    <Text style={styles.sectionTitle}>PINNED FAVORITES</Text>
-                    <View style={styles.countBadge}>
-                      <Text style={styles.countBadgeText}>{favoriteItems.length}</Text>
+                    <Text style={[styles.sectionTitle, !isDark && { color: activeColors.textSecondary }]}>PINNED FAVORITES</Text>
+                    <View style={[styles.countBadge, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.12)' }]}>
+                      <Text style={[styles.countBadgeText, !isDark && { color: activeColors.primary }]}>{favoriteItems.length}</Text>
                     </View>
                   </View>
                   {onOpenFavorites && (
@@ -425,14 +390,14 @@ export default function VaultHomeScreen({
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="layers-outline" size={14} color="#94A3B8" />
-                  <Text style={styles.sectionTitle}>
+                  <Ionicons name="layers-outline" size={14} color={!isDark ? activeColors.textSecondary : '#94A3B8'} />
+                  <Text style={[styles.sectionTitle, !isDark && { color: activeColors.textSecondary }]}>
                     {activeCategory === 'all'
                       ? 'ALL CREDENTIALS'
                       : `${activeCategory.toUpperCase()} ITEMS`}
                   </Text>
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>
+                  <View style={[styles.countBadge, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.12)' }]}>
+                    <Text style={[styles.countBadgeText, !isDark && { color: activeColors.primary }]}>
                       {favoriteItems.length > 0 ? otherItems.length : filteredItems.length}
                     </Text>
                   </View>
@@ -656,7 +621,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 110,
+    paddingBottom: 140,
   },
   section: {
     marginTop: spacing.md,

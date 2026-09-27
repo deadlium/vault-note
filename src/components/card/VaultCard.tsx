@@ -7,7 +7,7 @@ import {
   StyleProp,
   GestureResponderEvent,
 } from 'react-native';
-import { colors, radius, spacing } from '../../theme';
+import { colors, radius, spacing, useTheme } from '../../theme';
 
 export interface VaultCardProps {
   children: React.ReactNode;
@@ -26,10 +26,19 @@ export const VaultCard: React.FC<VaultCardProps> = ({
   active = false,
   padding = 'lg',
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
+
   const cardStyle: ViewStyle = {
-    backgroundColor: elevated ? colors.surfaceElevated : colors.surface,
-    borderColor: active ? colors.borderFocus : colors.border,
+    backgroundColor: elevated ? activeColors.surfaceElevated : activeColors.surface,
+    borderColor: active ? activeColors.borderFocus : activeColors.border,
     padding: spacing[padding],
+    ...(!isDark && {
+      shadowColor: '#0F172A',
+      shadowOpacity: 0.04,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 6,
+      elevation: 1,
+    }),
   };
 
   if (onPress) {
@@ -39,7 +48,7 @@ export const VaultCard: React.FC<VaultCardProps> = ({
         style={({ pressed }) => [
           styles.card,
           cardStyle,
-          pressed && styles.pressed,
+          pressed && [styles.pressed, { backgroundColor: activeColors.surfaceActive }],
           style,
         ]}
       >
@@ -59,6 +68,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
-    backgroundColor: colors.surfaceActive,
   },
 });

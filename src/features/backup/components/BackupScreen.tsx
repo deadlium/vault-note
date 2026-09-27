@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing } from '../../../theme';
+import { colors, radius, spacing, useTheme } from '../../../theme';
 import { useVaultStore } from '../../vault/store/useVaultStore';
 import { useBackup } from '../useBackup';
 import { RestoreMode } from '../types';
@@ -32,6 +32,7 @@ export interface BackupScreenProps {
 type TabType = 'export' | 'restore';
 
 export function BackupScreen({ onBack }: BackupScreenProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('export');
 
   // Export form state
@@ -47,6 +48,41 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
   const [selectedRestoreMode, setSelectedRestoreMode] = useState<RestoreMode>('merge');
 
   const currentItems = useVaultStore((state) => state.items);
+
+  const dynamicCardStyle = [
+    styles.card,
+    !isDark && {
+      backgroundColor: activeColors.surface,
+      borderColor: activeColors.border,
+      shadowColor: '#0F172A',
+      shadowOpacity: 0.04,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 6,
+      elevation: 1,
+    },
+  ];
+  const dynamicPillStyle = [
+    styles.categoryPill,
+    !isDark && {
+      backgroundColor: activeColors.surfaceSubtle,
+      borderColor: activeColors.border,
+    },
+  ];
+  const dynamicInputContainerStyle = [
+    styles.inputContainer,
+    !isDark && {
+      backgroundColor: activeColors.surfaceSubtle,
+      borderColor: activeColors.border,
+    },
+  ];
+  const dynamicTextAreaStyle = [
+    styles.textAreaInput,
+    !isDark && {
+      backgroundColor: activeColors.surfaceSubtle,
+      borderColor: activeColors.border,
+      color: activeColors.textPrimary,
+    },
+  ];
 
   const {
     isExporting,
@@ -160,27 +196,36 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDark && { borderBottomColor: activeColors.border }]}>
         <Pressable
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressedOpacity]}
+          style={({ pressed }) => [
+            styles.backButton,
+            !isDark && { backgroundColor: activeColors.surfaceSubtle },
+            pressed && styles.pressedOpacity,
+          ]}
           onPress={onBack}
           accessibilityLabel="Back to Security Center"
         >
-          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color={activeColors.textPrimary} />
         </Pressable>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Backup & Restore</Text>
-          <Text style={styles.headerSubtitle}>Zero-Knowledge Encrypted .vaultnote</Text>
+          <Text style={[styles.headerTitle, { color: activeColors.textPrimary }]}>Backup & Restore</Text>
+          <Text style={[styles.headerSubtitle, { color: activeColors.textSecondary }]}>Zero-Knowledge Encrypted .vaultnote</Text>
         </View>
         <View style={styles.headerRightPlaceholder} />
       </View>
 
       {/* Segmented Tab Controls */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderBottomColor: activeColors.border }]}>
         <Pressable
-          style={[styles.tabButton, activeTab === 'export' && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+            activeTab === 'export' && styles.tabButtonActive,
+            activeTab === 'export' && !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary },
+          ]}
           onPress={() => {
             setActiveTab('export');
             clearError();
@@ -189,12 +234,14 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
           <Ionicons
             name="cloud-upload-outline"
             size={18}
-            color={activeTab === 'export' ? colors.primary : colors.textTertiary}
+            color={activeTab === 'export' ? (isDark ? colors.primary : activeColors.primary) : activeColors.textTertiary}
           />
           <Text
             style={[
               styles.tabButtonText,
+              { color: activeColors.textSecondary },
               activeTab === 'export' && styles.tabButtonTextActive,
+              activeTab === 'export' && !isDark && { color: activeColors.primary },
             ]}
           >
             Export Backup
@@ -202,7 +249,12 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
         </Pressable>
 
         <Pressable
-          style={[styles.tabButton, activeTab === 'restore' && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+            activeTab === 'restore' && styles.tabButtonActive,
+            activeTab === 'restore' && !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary },
+          ]}
           onPress={() => {
             setActiveTab('restore');
             clearError();
@@ -211,12 +263,14 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
           <Ionicons
             name="cloud-download-outline"
             size={18}
-            color={activeTab === 'restore' ? colors.primary : colors.textTertiary}
+            color={activeTab === 'restore' ? (isDark ? colors.primary : activeColors.primary) : activeColors.textTertiary}
           />
           <Text
             style={[
               styles.tabButtonText,
+              { color: activeColors.textSecondary },
               activeTab === 'restore' && styles.tabButtonTextActive,
+              activeTab === 'restore' && !isDark && { color: activeColors.primary },
             ]}
           >
             Restore Vault
@@ -245,73 +299,73 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
           /* ==================== EXPORT TAB ==================== */
           <View style={styles.tabContent}>
             {/* Vault Overview Card */}
-            <View style={styles.card}>
+            <View style={dynamicCardStyle}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardIconBox}>
                   <Ionicons name="shield-checkmark" size={20} color={colors.emerald} />
                 </View>
                 <View style={styles.cardHeaderText}>
-                  <Text style={styles.cardTitle}>Current Vault Scope</Text>
-                  <Text style={styles.cardSubtitle}>
+                  <Text style={[styles.cardTitle, { color: activeColors.textPrimary }]}>Current Vault Scope</Text>
+                  <Text style={[styles.cardSubtitle, { color: activeColors.textSecondary }]}>
                     {currentItems.length} items ready for zero-knowledge encapsulation
                   </Text>
                 </View>
               </View>
 
               <View style={styles.categoryGrid}>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.LOGIN}</Text>
-                  <Text style={styles.categoryLabel}>Logins</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.LOGIN}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>Logins</Text>
                 </View>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.CARD}</Text>
-                  <Text style={styles.categoryLabel}>Cards</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.CARD}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>Cards</Text>
                 </View>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.SECURE_NOTE}</Text>
-                  <Text style={styles.categoryLabel}>Notes</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.SECURE_NOTE}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>Notes</Text>
                 </View>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.TOTP}</Text>
-                  <Text style={styles.categoryLabel}>2FA / TOTP</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.TOTP}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>2FA / TOTP</Text>
                 </View>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.API_KEY}</Text>
-                  <Text style={styles.categoryLabel}>API Keys</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.API_KEY}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>API Keys</Text>
                 </View>
-                <View style={styles.categoryPill}>
-                  <Text style={styles.categoryCount}>{categoryCounts.IDENTITY}</Text>
-                  <Text style={styles.categoryLabel}>Identities</Text>
+                <View style={dynamicPillStyle}>
+                  <Text style={[styles.categoryCount, !isDark && { color: activeColors.primary }]}>{categoryCounts.IDENTITY}</Text>
+                  <Text style={[styles.categoryLabel, { color: activeColors.textSecondary }]}>Identities</Text>
                 </View>
               </View>
 
-              <View style={styles.securitySpecBadge}>
-                <Ionicons name="lock-closed" size={14} color={colors.primaryLight} />
-                <Text style={styles.securitySpecText}>
+              <View style={[styles.securitySpecBadge, !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.20)' }]}>
+                <Ionicons name="lock-closed" size={14} color={isDark ? colors.primaryLight : activeColors.primary} />
+                <Text style={[styles.securitySpecText, !isDark && { color: activeColors.primary }]}>
                   Argon2id (RFC 9106) + AES-256-GCM Authenticated Encryption
                 </Text>
               </View>
             </View>
 
             {/* Passphrase Card */}
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Set Backup Passphrase</Text>
-              <Text style={styles.sectionDescription}>
+            <View style={dynamicCardStyle}>
+              <Text style={[styles.sectionTitle, { color: activeColors.textPrimary }]}>Set Backup Passphrase</Text>
+              <Text style={[styles.sectionDescription, { color: activeColors.textSecondary }]}>
                 This passphrase derives the master key encryption key. TOTP secrets, passwords,
                 and notes are never stored as plaintext inside the backup file.
               </Text>
 
               {/* Passphrase Input */}
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>Passphrase</Text>
-                <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: activeColors.textSecondary }]}>Passphrase</Text>
+                <View style={dynamicInputContainerStyle}>
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: activeColors.textPrimary }]}
                     value={exportPassphrase}
                     onChangeText={setExportPassphrase}
                     secureTextEntry={!showExportPassphrase}
                     placeholder="Enter strong backup passphrase"
-                    placeholderTextColor={colors.textTertiary}
+                    placeholderTextColor={activeColors.textMuted}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
@@ -383,6 +437,7 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
               <Pressable
                 style={({ pressed }) => [
                   styles.primaryActionButton,
+                  !isDark && { backgroundColor: activeColors.primary },
                   (!exportPassphrase ||
                     exportPassphrase !== confirmPassphrase ||
                     isExporting) &&
@@ -411,12 +466,12 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
 
             {/* Export Success Result Card */}
             {exportResult ? (
-              <View style={[styles.card, styles.exportResultCard]}>
+              <View style={[styles.card, styles.exportResultCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.emeraldBorder }]}>
                 <View style={styles.exportSuccessHeader}>
                   <Ionicons name="checkmark-circle" size={24} color={colors.emerald} />
                   <View style={styles.exportSuccessTitles}>
                     <Text style={styles.exportSuccessTitle}>Backup Generated Successfully</Text>
-                    <Text style={styles.exportSuccessSubtitle}>
+                    <Text style={[styles.exportSuccessSubtitle, { color: activeColors.textSecondary }]}>
                       {(exportResult.length / 1024).toFixed(1)} KB encrypted container ready
                     </Text>
                   </View>
@@ -426,6 +481,7 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
                   <Pressable
                     style={({ pressed }) => [
                       styles.exportActionButton,
+                      !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                       copiedExport && styles.exportActionButtonSuccess,
                       pressed && styles.pressedOpacity,
                     ]}
@@ -434,11 +490,12 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
                     <Ionicons
                       name={copiedExport ? 'checkmark' : 'copy-outline'}
                       size={18}
-                      color={copiedExport ? colors.emerald : colors.textPrimary}
+                      color={copiedExport ? colors.emerald : activeColors.textPrimary}
                     />
                     <Text
                       style={[
                         styles.exportActionButtonText,
+                        { color: activeColors.textPrimary },
                         copiedExport && styles.exportActionButtonTextSuccess,
                       ]}
                     >
@@ -474,23 +531,23 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
           /* ==================== RESTORE TAB ==================== */
           <View style={styles.tabContent}>
             {/* Step 1: Input .vaultnote container */}
-            <View style={styles.card}>
+            <View style={dynamicCardStyle}>
               <View style={styles.stepHeader}>
                 <View style={styles.stepBadge}>
                   <Text style={styles.stepBadgeText}>1</Text>
                 </View>
-                <Text style={styles.stepTitle}>Provide .vaultnote Backup File</Text>
+                <Text style={[styles.stepTitle, { color: activeColors.textPrimary }]}>Provide .vaultnote Backup File</Text>
               </View>
-              <Text style={styles.sectionDescription}>
+              <Text style={[styles.sectionDescription, { color: activeColors.textSecondary }]}>
                 Paste the contents of your exported .vaultnote backup container below.
               </Text>
 
               <TextInput
-                style={styles.textAreaInput}
+                style={dynamicTextAreaStyle}
                 value={restoreContent}
                 onChangeText={setRestoreContent}
                 placeholder="Paste { &quot;magic&quot;: &quot;VAULTNOTE_BACKUP_V1&quot;, ... } content here"
-                placeholderTextColor={colors.textTertiary}
+                placeholderTextColor={activeColors.textMuted}
                 multiline
                 numberOfLines={5}
                 autoCapitalize="none"
@@ -501,18 +558,20 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
                 <Pressable
                   style={({ pressed }) => [
                     styles.smallHelperButton,
+                    !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                     pressed && styles.pressedOpacity,
                   ]}
                   onPress={handlePasteRestoreContent}
                 >
-                  <Ionicons name="clipboard-outline" size={16} color={colors.primaryLight} />
-                  <Text style={styles.smallHelperButtonText}>Paste from Clipboard</Text>
+                  <Ionicons name="clipboard-outline" size={16} color={isDark ? colors.primaryLight : activeColors.primary} />
+                  <Text style={[styles.smallHelperButtonText, !isDark && { color: activeColors.primary }]}>Paste from Clipboard</Text>
                 </Pressable>
 
                 {restoreContent ? (
                   <Pressable
                     style={({ pressed }) => [
                       styles.smallHelperButton,
+                      !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                       pressed && styles.pressedOpacity,
                     ]}
                     onPress={() => {
@@ -520,8 +579,8 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
                       clearError();
                     }}
                   >
-                    <Ionicons name="trash-outline" size={16} color={colors.textTertiary} />
-                    <Text style={[styles.smallHelperButtonText, { color: colors.textTertiary }]}>
+                    <Ionicons name="trash-outline" size={16} color={activeColors.textTertiary} />
+                    <Text style={[styles.smallHelperButtonText, { color: activeColors.textTertiary }]}>
                       Clear
                     </Text>
                   </Pressable>
@@ -530,23 +589,23 @@ export function BackupScreen({ onBack }: BackupScreenProps) {
             </View>
 
             {/* Step 2: Enter Passphrase */}
-            <View style={styles.card}>
+            <View style={dynamicCardStyle}>
               <View style={styles.stepHeader}>
                 <View style={styles.stepBadge}>
                   <Text style={styles.stepBadgeText}>2</Text>
                 </View>
-                <Text style={styles.stepTitle}>Enter Backup Passphrase</Text>
+                <Text style={[styles.stepTitle, { color: activeColors.textPrimary }]}>Enter Backup Passphrase</Text>
               </View>
 
               <View style={styles.inputWrapper}>
-                <View style={styles.inputContainer}>
+                <View style={dynamicInputContainerStyle}>
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: activeColors.textPrimary }]}
                     value={restorePassphrase}
                     onChangeText={setRestorePassphrase}
                     secureTextEntry={!showRestorePassphrase}
                     placeholder="Passphrase used during export"
-                    placeholderTextColor={colors.textTertiary}
+                    placeholderTextColor={activeColors.textMuted}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />

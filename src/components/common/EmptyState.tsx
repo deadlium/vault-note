@@ -7,7 +7,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 
 export interface EmptyStateQuickAction {
   label: string;
@@ -36,17 +36,44 @@ export function EmptyState({
   onSecondaryActionPress,
   quickActions,
 }: EmptyStateProps) {
+  const { isDark, colors: activeColors } = useTheme();
+
   return (
-    <View style={styles.cardContainer}>
+    <View style={[
+      styles.cardContainer,
+      !isDark && {
+        backgroundColor: activeColors.surface,
+        borderColor: activeColors.border,
+        shadowColor: '#0F172A',
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+    ]}>
       {/* Glowing Dual-Ring Icon Container */}
-      <View style={styles.outerGlowRing}>
-        <View style={styles.innerIconCircle}>
-          <Ionicons name={icon} size={32} color={colors.primaryLight} />
+      <View style={[
+        styles.outerGlowRing,
+        !isDark && {
+          backgroundColor: 'rgba(79, 70, 229, 0.06)',
+          borderColor: 'rgba(79, 70, 229, 0.18)',
+          shadowColor: activeColors.primary,
+          shadowOpacity: 0.2,
+        },
+      ]}>
+        <View style={[
+          styles.innerIconCircle,
+          !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.12)' },
+        ]}>
+          <Ionicons
+            name={icon}
+            size={32}
+            color={!isDark ? activeColors.primary : colors.primaryLight}
+          />
         </View>
       </View>
 
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.title, !isDark && { color: activeColors.textPrimary }]}>{title}</Text>
+      <Text style={[styles.description, !isDark && { color: activeColors.textSecondary }]}>{description}</Text>
 
       {/* Quick Action Tiles (e.g. + Login, + Card, + Note) */}
       {quickActions && quickActions.length > 0 && (
@@ -57,13 +84,26 @@ export function EmptyState({
               onPress={qa.onPress}
               style={({ pressed }) => [
                 styles.quickActionTile,
-                pressed && styles.quickActionTilePressed,
+                !isDark && {
+                  backgroundColor: activeColors.surfaceSubtle,
+                  borderColor: activeColors.border,
+                },
+                pressed && (isDark ? styles.quickActionTilePressed : {
+                  backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                  borderColor: activeColors.primary,
+                }),
               ]}
               accessibilityRole="button"
               accessibilityLabel={qa.label}
             >
-              <Ionicons name={qa.icon} size={15} color={colors.primaryLight} />
-              <Text style={styles.quickActionText}>{qa.label}</Text>
+              <Ionicons
+                name={qa.icon}
+                size={15}
+                color={!isDark ? activeColors.primary : colors.primaryLight}
+              />
+              <Text style={[styles.quickActionText, !isDark && { color: activeColors.textPrimary }]}>
+                {qa.label}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -76,6 +116,7 @@ export function EmptyState({
             onPress={onActionPress}
             style={({ pressed }) => [
               styles.primaryBtn,
+              !isDark && { backgroundColor: activeColors.primary },
               pressed && styles.primaryBtnPressed,
             ]}
             accessibilityRole="button"
@@ -98,8 +139,14 @@ export function EmptyState({
           accessibilityRole="button"
           accessibilityLabel={secondaryActionLabel}
         >
-          <Ionicons name="refresh-outline" size={14} color={colors.textSecondary} />
-          <Text style={styles.secondaryBtnText}>{secondaryActionLabel}</Text>
+          <Ionicons
+            name="refresh-outline"
+            size={14}
+            color={!isDark ? activeColors.textSecondary : colors.textSecondary}
+          />
+          <Text style={[styles.secondaryBtnText, !isDark && { color: activeColors.textSecondary }]}>
+            {secondaryActionLabel}
+          </Text>
         </Pressable>
       )}
     </View>

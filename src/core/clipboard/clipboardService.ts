@@ -195,9 +195,19 @@ class ClipboardService {
   private scheduleWipe(expectedContent: string, delayMs: number): void {
     this.pendingWipeTimeout = setTimeout(async () => {
       try {
-        const currentContent = await this.adapter.getString();
-        // Only wipe if the clipboard still contains the sensitive content we copied
-        if (currentContent === expectedContent) {
+        let shouldClear = true;
+        try {
+          const currentContent = await this.adapter.getString();
+          // Only preserve if another non-empty string was intentionally copied
+          if (currentContent && currentContent !== expectedContent) {
+            shouldClear = false;
+          }
+        } catch {
+          // If reading failed (e.g. background restriction), proceed to clear
+          shouldClear = true;
+        }
+
+        if (shouldClear) {
           await this.adapter.clear();
         }
       } catch {

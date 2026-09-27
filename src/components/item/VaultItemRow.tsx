@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { ServiceIcon } from '../icon/ServiceIcon';
 import { VaultItemType, VaultItemRowData } from '../../types/vault';
 
@@ -23,13 +23,29 @@ export function VaultItemRow({
   onPress,
   onToggleFavorite,
 }: VaultItemRowProps) {
+  const { isDark, colors: activeColors } = useTheme();
   const displaySubtitle = item.subtitle ?? '';
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.container,
-        pressed && styles.containerPressed,
+        !isDark && {
+          backgroundColor: '#FFFFFF',
+          borderColor: '#E2E8F0',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+        },
+        pressed &&
+          (isDark
+            ? styles.containerPressed
+            : {
+                backgroundColor: '#F1F5F9',
+                borderColor: '#CBD5E1',
+                transform: [{ scale: 0.985 }],
+              }),
       ]}
       onPress={onPress}
     >
@@ -44,29 +60,31 @@ export function VaultItemRow({
       {/* Item Information */}
       <View style={styles.centerInfo}>
         <View style={styles.titleRow}>
-          <Text style={styles.titleText} numberOfLines={1}>
+          <Text style={[styles.titleText, { color: activeColors.textPrimary }]} numberOfLines={1}>
             {item.title}
           </Text>
           {item.isProtected && (
             <Ionicons
               name="lock-closed"
               size={12}
-              color={colors.primaryLight}
+              color={activeColors.primaryLight}
               style={{ marginLeft: 4 }}
             />
           )}
         </View>
 
         {displaySubtitle.length > 0 && (
-          <Text style={styles.subtitleText} numberOfLines={1}>
+          <Text style={[styles.subtitleText, { color: activeColors.textSecondary }]} numberOfLines={1}>
             {displaySubtitle}
           </Text>
         )}
 
         {/* Feature Badges & Category Tags */}
         <View style={styles.badgesRow}>
-          <View style={styles.categoryPill}>
-            <Text style={styles.categoryPillText}>{item.tag ?? item.category}</Text>
+          <View style={[styles.categoryPill, !isDark && { backgroundColor: '#F1F5F9' }]}>
+            <Text style={[styles.categoryPillText, { color: activeColors.textSecondary }]}>
+              {item.tag ?? item.category}
+            </Text>
           </View>
 
           {item.hasTOTP && (
@@ -89,17 +107,17 @@ export function VaultItemRow({
         <Pressable
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           onPress={() => onToggleFavorite?.(item.id)}
-          style={styles.starBtn}
+          style={[styles.starBtn, !isDark && { backgroundColor: '#F1F5F9' }]}
           accessibilityLabel={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
           <Ionicons
             name={item.isFavorite ? 'star' : 'star-outline'}
             size={18}
-            color={item.isFavorite ? '#FBBF24' : colors.textTertiary}
+            color={item.isFavorite ? '#FBBF24' : activeColors.textTertiary}
           />
         </Pressable>
 
-        <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+        <Ionicons name="chevron-forward" size={16} color={activeColors.textTertiary} />
       </View>
     </Pressable>
   );

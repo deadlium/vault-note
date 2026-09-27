@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { useVaultUnlock } from '../../features/authentication/hooks/useVaultUnlock';
 
 interface UnlockProps {
@@ -33,6 +33,7 @@ export default function VaultUnlockScreen({
   onUnlockComplete,
   onNavigateToRestore,
 }: UnlockProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const {
     isBiometricAvailable,
     biometricLabel,
@@ -121,7 +122,7 @@ export default function VaultUnlockScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardAvoidingContainer}
@@ -136,11 +137,11 @@ export default function VaultUnlockScreen({
         >
           {/* Top Status Bar - Fixed position that never shifts on keyboard appearance */}
           <View style={styles.topStatusRow}>
-            <View style={styles.brandPill}>
-              <Ionicons name="lock-closed" size={13} color={colors.primaryLight} />
-              <Text style={styles.brandPillText}>VAULTNOTE</Text>
-              <View style={styles.versionBadge}>
-                <Text style={styles.versionText}>v2.4</Text>
+            <View style={[styles.brandPill, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+              <Ionicons name="lock-closed" size={13} color={isDark ? colors.primaryLight : activeColors.primary} />
+              <Text style={[styles.brandPillText, { color: activeColors.textPrimary }]}>VAULTNOTE</Text>
+              <View style={[styles.versionBadge, !isDark && { backgroundColor: activeColors.primaryMuted }]}>
+                <Text style={[styles.versionText, !isDark && { color: activeColors.primary }]}>v2.4</Text>
               </View>
             </View>
 
@@ -186,11 +187,24 @@ export default function VaultUnlockScreen({
               ]}
               pointerEvents="none"
             >
-              <View style={styles.radarOuterRing} />
-              <View style={styles.radarInnerRing} />
+              <View style={[styles.radarOuterRing, !isDark && { borderColor: activeColors.border }]} />
+              <View style={[styles.radarInnerRing, !isDark && { borderColor: activeColors.border }]} />
             </Animated.View>
 
-            <View style={styles.avatarSquircle}>
+            <View
+              style={[
+                styles.avatarSquircle,
+                !isDark && {
+                  backgroundColor: activeColors.surface,
+                  borderColor: activeColors.border,
+                  shadowColor: '#0F172A',
+                  shadowOpacity: 0.06,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowRadius: 10,
+                  elevation: 2,
+                },
+              ]}
+            >
               <Animated.View
                 style={[
                   styles.squircleLaserLine,
@@ -206,23 +220,24 @@ export default function VaultUnlockScreen({
                 <MaterialCommunityIcons
                   name="lock-outline"
                   size={44}
-                  color={colors.primaryLight}
+                  color={isDark ? colors.primaryLight : activeColors.primary}
                 />
                 <View style={styles.fingerprintOverlay}>
                   <MaterialCommunityIcons
                     name="fingerprint"
                     size={22}
-                    color={colors.primaryLight}
+                    color={isDark ? colors.primaryLight : activeColors.primary}
                   />
                 </View>
               </View>
               <View style={styles.squircleDot} />
             </View>
 
-            <Text style={styles.titleText}>Vault Locked</Text>
+            <Text style={[styles.titleText, { color: activeColors.textPrimary }]}>Vault Locked</Text>
             <Animated.Text
               style={[
                 styles.subtitleText,
+                { color: activeColors.textSecondary },
                 {
                   opacity: focusAnim.interpolate({
                     inputRange: [0, 1],
@@ -248,30 +263,32 @@ export default function VaultUnlockScreen({
           <View style={styles.passwordContainer}>
             <View style={styles.passwordInputGroup}>
               <View style={styles.passwordLabelRow}>
-                <Text style={styles.inputLabel}>MASTER PASSWORD</Text>
+                <Text style={[styles.inputLabel, { color: activeColors.textSecondary }]}>MASTER PASSWORD</Text>
               </View>
 
               <Pressable
                 style={[
                   styles.passwordInputWrapper,
+                  !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
                   isInputFocused && styles.passwordInputWrapperFocused,
+                  isInputFocused && !isDark && { borderColor: activeColors.primary },
                 ]}
                 onPress={handleFocusInput}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={18}
-                  color={isInputFocused ? colors.primaryLight : colors.textTertiary}
+                  color={isInputFocused ? (isDark ? colors.primaryLight : activeColors.primary) : activeColors.textTertiary}
                   style={styles.inputIconLeft}
                 />
                 <TextInput
                   ref={textInputRef}
-                  style={styles.passwordInput}
+                  style={[styles.passwordInput, { color: activeColors.textPrimary }]}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter master passphrase..."
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={activeColors.textMuted}
                   autoCapitalize="none"
                   autoCorrect={false}
                   onSubmitEditing={handlePasswordSubmit}
@@ -291,7 +308,7 @@ export default function VaultUnlockScreen({
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={colors.textSecondary}
+                    color={activeColors.textSecondary}
                   />
                 </Pressable>
               </Pressable>
@@ -301,6 +318,7 @@ export default function VaultUnlockScreen({
             <Pressable
               style={[
                 styles.unlockButton,
+                !isDark && { backgroundColor: activeColors.primary },
                 (isVerifyingPassword || isAuthenticating) && styles.buttonDisabled,
               ]}
               onPress={handlePasswordSubmit}
@@ -317,6 +335,7 @@ export default function VaultUnlockScreen({
               <Pressable
                 style={({ pressed }) => [
                   styles.useBiometricButton,
+                  !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
                   pressed && styles.useBiometricButtonPressed,
                   (isVerifyingPassword || isAuthenticating) && styles.buttonDisabled,
                 ]}
@@ -326,10 +345,10 @@ export default function VaultUnlockScreen({
                 <Ionicons
                   name="scan-outline"
                   size={18}
-                  color={colors.primaryLight}
+                  color={isDark ? colors.primaryLight : activeColors.primary}
                   style={styles.useBiometricIcon}
                 />
-                <Text style={styles.useBiometricButtonText}>Use Biometric</Text>
+                <Text style={[styles.useBiometricButtonText, !isDark && { color: activeColors.primary }]}>Use Biometric</Text>
               </Pressable>
             )}
 
@@ -340,8 +359,8 @@ export default function VaultUnlockScreen({
                 onPress={onNavigateToRestore}
                 disabled={isVerifyingPassword || isAuthenticating}
               >
-                <Text style={styles.restoreLinkText}>Forgot master password? </Text>
-                <Text style={styles.restoreLinkHighlight}>Restore with 24 Words</Text>
+                <Text style={[styles.restoreLinkText, { color: activeColors.textSecondary }]}>Forgot master password? </Text>
+                <Text style={[styles.restoreLinkHighlight, !isDark && { color: activeColors.primary }]}>Restore with 24 Words</Text>
               </Pressable>
             )}
 

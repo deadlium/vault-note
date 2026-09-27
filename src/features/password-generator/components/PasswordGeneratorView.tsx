@@ -17,7 +17,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { usePasswordGenerator } from '../hooks/usePasswordGenerator';
 import { GeneratorMode } from '../types';
 import { useNavbarScroll } from '../../../components/navigation/NavbarScrollContext';
@@ -35,6 +35,7 @@ export function PasswordGeneratorView({
   isModal = false,
   onClose,
 }: PasswordGeneratorViewProps) {
+  const { isDark, colors: activeColors } = useTheme();
   const scrollContext = useNavbarScroll();
   const {
     mode,
@@ -84,15 +85,15 @@ export function PasswordGeneratorView({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, !isDark && { backgroundColor: activeColors.background }]}>
       {/* Header bar if modal */}
       {isModal && (
-        <View style={styles.modalHeader}>
+        <View style={[styles.modalHeader, !isDark && { borderBottomColor: activeColors.borderSubtle }]}>
           <View style={styles.modalHeaderLeft}>
-            <View style={styles.headerIconSquircle}>
-              <Ionicons name="key" size={16} color={colors.primaryLight} />
+            <View style={[styles.headerIconSquircle, !isDark && { backgroundColor: activeColors.primaryMuted }]}>
+              <Ionicons name="key" size={16} color={!isDark ? activeColors.primary : colors.primaryLight} />
             </View>
-            <Text style={styles.modalTitle}>Password Generator</Text>
+            <Text style={[styles.modalTitle, !isDark && { color: activeColors.textPrimary }]}>Password Generator</Text>
           </View>
           {onClose && (
             <Pressable
@@ -100,15 +101,15 @@ export function PasswordGeneratorView({
               style={({ pressed }) => [styles.closeBtn, pressed && styles.btnPressed]}
               hitSlop={8}
             >
-              <Ionicons name="close" size={20} color={colors.textSecondary} />
+              <Ionicons name="close" size={20} color={!isDark ? activeColors.textSecondary : colors.textSecondary} />
             </Pressable>
           )}
         </View>
       )}
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={[styles.scrollView, !isDark && { backgroundColor: activeColors.background }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScrollBeginDrag={() => scrollContext?.notifyScrollStart()}
@@ -117,24 +118,24 @@ export function PasswordGeneratorView({
         onMomentumScrollEnd={() => scrollContext?.notifyScrollEnd()}
       >
         {/* Output Display Card */}
-        <View style={styles.outputCard}>
+        <View style={[styles.outputCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border, shadowColor: '#0F172A', shadowOpacity: 0.04, shadowRadius: 3, elevation: 2 }]}>
           <View style={styles.outputTopRow}>
-            <View style={styles.modeBadge}>
-              <Text style={styles.modeBadgeText}>
+            <View style={[styles.modeBadge, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+              <Text style={[styles.modeBadgeText, !isDark && { color: activeColors.primary }]}>
                 {mode === 'password' ? 'RANDOM PASSWORD' : 'DICEWARE PASSPHRASE'}
               </Text>
             </View>
-            <View style={styles.charCountBadge}>
-              <Text style={styles.charCountText}>
+            <View style={[styles.charCountBadge, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+              <Text style={[styles.charCountText, !isDark && { color: activeColors.textSecondary }]}>
                 {currentValue.length} {mode === 'password' ? 'CHARS' : 'CHARS'}
               </Text>
             </View>
           </View>
 
           {/* Generated Text View */}
-          <View style={styles.secretTextContainer}>
+          <View style={[styles.secretTextContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
             <Text
-              style={styles.secretText}
+              style={[styles.secretText, !isDark && { color: activeColors.textPrimary }]}
               selectable
               numberOfLines={3}
               adjustsFontSizeToFit
@@ -149,19 +150,21 @@ export function PasswordGeneratorView({
               onPress={handleRegenerate}
               style={({ pressed }) => [
                 styles.actionPillButton,
+                !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
                 pressed && styles.actionPillPressed,
               ]}
             >
               <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                <Ionicons name="refresh" size={17} color={colors.primaryLight} />
+                <Ionicons name="refresh" size={17} color={!isDark ? activeColors.primary : colors.primaryLight} />
               </Animated.View>
-              <Text style={styles.actionPillText}>Regenerate</Text>
+              <Text style={[styles.actionPillText, !isDark && { color: activeColors.textPrimary }]}>Regenerate</Text>
             </Pressable>
 
             <Pressable
               onPress={copySecret}
               style={({ pressed }) => [
                 styles.actionPillButton,
+                !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
                 isCopied && styles.actionPillSuccess,
                 pressed && styles.actionPillPressed,
               ]}
@@ -169,11 +172,12 @@ export function PasswordGeneratorView({
               <Ionicons
                 name={isCopied ? 'checkmark-circle' : 'copy-outline'}
                 size={16}
-                color={isCopied ? colors.emerald : colors.textPrimary}
+                color={isCopied ? colors.emerald : (!isDark ? activeColors.textPrimary : colors.textPrimary)}
               />
               <Text
                 style={[
                   styles.actionPillText,
+                  !isDark && { color: activeColors.textPrimary },
                   isCopied && { color: colors.emerald, fontWeight: '700' },
                 ]}
               >
@@ -183,7 +187,7 @@ export function PasswordGeneratorView({
           </View>
 
           {/* Real-Time Entropy & Strength Meter */}
-          <View style={styles.entropySection}>
+          <View style={[styles.entropySection, !isDark && { borderTopColor: activeColors.borderSubtle }]}>
             <View style={styles.entropyScoreRow}>
               <View style={styles.entropyBadgeGroup}>
                 <View
@@ -197,7 +201,7 @@ export function PasswordGeneratorView({
                 </Text>
               </View>
 
-              <Text style={styles.entropyBitsText}>
+              <Text style={[styles.entropyBitsText, !isDark && { color: activeColors.textSecondary }]}>
                 {evaluation.entropyBits} bits entropy
               </Text>
             </View>
@@ -211,6 +215,7 @@ export function PasswordGeneratorView({
                     key={step}
                     style={[
                       styles.strengthSegment,
+                      !isDark && { backgroundColor: activeColors.surfaceSubtle },
                       isActive && { backgroundColor: evaluation.color },
                     ]}
                   />
@@ -220,8 +225,8 @@ export function PasswordGeneratorView({
 
             {/* Estimated Crack Time */}
             <View style={styles.crackTimeRow}>
-              <Feather name="shield" size={12} color={colors.textTertiary} />
-              <Text style={styles.crackTimeText}>
+              <Feather name="shield" size={12} color={activeColors.textTertiary} />
+              <Text style={[styles.crackTimeText, !isDark && { color: activeColors.textTertiary }]}>
                 Estimated brute-force crack time: {evaluation.crackTimeDisplay}
               </Text>
             </View>
@@ -229,20 +234,24 @@ export function PasswordGeneratorView({
         </View>
 
         {/* Mode Selector Segmented Tabs */}
-        <View style={styles.modeTabs}>
+        <View style={[styles.modeTabs, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
           <Pressable
             onPress={() => setMode('password')}
-            style={[styles.modeTab, mode === 'password' && styles.modeTabActive]}
+            style={[
+              styles.modeTab,
+              mode === 'password' && [styles.modeTabActive, !isDark && { backgroundColor: activeColors.surface, shadowColor: '#0F172A', shadowOpacity: 0.05 }],
+            ]}
           >
             <Ionicons
               name="key"
               size={15}
-              color={mode === 'password' ? colors.primaryLight : colors.textMuted}
+              color={mode === 'password' ? (!isDark ? activeColors.primary : colors.primaryLight) : activeColors.textSecondary}
             />
             <Text
               style={[
                 styles.modeTabText,
-                mode === 'password' && styles.modeTabTextActive,
+                !isDark && { color: activeColors.textSecondary },
+                mode === 'password' && [styles.modeTabTextActive, !isDark && { color: activeColors.primary }],
               ]}
             >
               Password
@@ -251,17 +260,21 @@ export function PasswordGeneratorView({
 
           <Pressable
             onPress={() => setMode('passphrase')}
-            style={[styles.modeTab, mode === 'passphrase' && styles.modeTabActive]}
+            style={[
+              styles.modeTab,
+              mode === 'passphrase' && [styles.modeTabActive, !isDark && { backgroundColor: activeColors.surface, shadowColor: '#0F172A', shadowOpacity: 0.05 }],
+            ]}
           >
             <Ionicons
               name="text"
               size={15}
-              color={mode === 'passphrase' ? colors.primaryLight : colors.textMuted}
+              color={mode === 'passphrase' ? (!isDark ? activeColors.primary : colors.primaryLight) : activeColors.textSecondary}
             />
             <Text
               style={[
                 styles.modeTabText,
-                mode === 'passphrase' && styles.modeTabTextActive,
+                !isDark && { color: activeColors.textSecondary },
+                mode === 'passphrase' && [styles.modeTabTextActive, !isDark && { color: activeColors.primary }],
               ]}
             >
               Passphrase
@@ -270,19 +283,19 @@ export function PasswordGeneratorView({
         </View>
 
         {/* Configuration Controls */}
-        <View style={styles.configCard}>
+        <View style={[styles.configCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border, shadowColor: '#0F172A', shadowOpacity: 0.04, shadowRadius: 3, elevation: 2 }]}>
           {mode === 'password' ? (
             <>
               {/* Length Stepper */}
               <View style={styles.configRow}>
                 <View>
-                  <Text style={styles.configLabel}>LENGTH</Text>
-                  <Text style={styles.configDescription}>
+                  <Text style={[styles.configLabel, !isDark && { color: activeColors.textSecondary }]}>LENGTH</Text>
+                  <Text style={[styles.configDescription, !isDark && { color: activeColors.textTertiary }]}>
                     Recommended: 16+ characters
                   </Text>
                 </View>
 
-                <View style={styles.stepperContainer}>
+                <View style={[styles.stepperContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                   <Pressable
                     onPress={() => handleLengthDelta(-1)}
                     style={({ pressed }) => [
@@ -291,11 +304,11 @@ export function PasswordGeneratorView({
                     ]}
                     hitSlop={6}
                   >
-                    <Ionicons name="remove" size={16} color={colors.textPrimary} />
+                    <Ionicons name="remove" size={16} color={!isDark ? activeColors.textPrimary : colors.textPrimary} />
                   </Pressable>
 
                   <View style={styles.stepperValueBox}>
-                    <Text style={styles.stepperValueText}>
+                    <Text style={[styles.stepperValueText, !isDark && { color: activeColors.textPrimary }]}>
                       {passwordOptions.length}
                     </Text>
                   </View>
@@ -308,83 +321,83 @@ export function PasswordGeneratorView({
                     ]}
                     hitSlop={6}
                   >
-                    <Ionicons name="add" size={16} color={colors.textPrimary} />
+                    <Ionicons name="add" size={16} color={!isDark ? activeColors.textPrimary : colors.textPrimary} />
                   </Pressable>
                 </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               {/* Character Pool Toggles */}
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Uppercase Letters (A-Z)</Text>
-                  <Text style={styles.toggleSub}>ABCDEF...</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Uppercase Letters (A-Z)</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>ABCDEF...</Text>
                 </View>
                 <Switch
                   value={passwordOptions.includeUppercase}
                   onValueChange={(val) => updatePasswordOption('includeUppercase', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Lowercase Letters (a-z)</Text>
-                  <Text style={styles.toggleSub}>abcdef...</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Lowercase Letters (a-z)</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>abcdef...</Text>
                 </View>
                 <Switch
                   value={passwordOptions.includeLowercase}
                   onValueChange={(val) => updatePasswordOption('includeLowercase', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Numbers (0-9)</Text>
-                  <Text style={styles.toggleSub}>0123456789</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Numbers (0-9)</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>0123456789</Text>
                 </View>
                 <Switch
                   value={passwordOptions.includeNumbers}
                   onValueChange={(val) => updatePasswordOption('includeNumbers', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Special Symbols</Text>
-                  <Text style={styles.toggleSub}>!@#$%^&*()_+-=</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Special Symbols</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>!@#$%^&*()_+-=</Text>
                 </View>
                 <Switch
                   value={passwordOptions.includeSymbols}
                   onValueChange={(val) => updatePasswordOption('includeSymbols', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Avoid Ambiguous Characters</Text>
-                  <Text style={styles.toggleSub}>Exclude 1, l, I, 0, O, o</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Avoid Ambiguous Characters</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>Exclude 1, l, I, 0, O, o</Text>
                 </View>
                 <Switch
                   value={passwordOptions.excludeAmbiguous}
                   onValueChange={(val) => updatePasswordOption('excludeAmbiguous', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
@@ -394,13 +407,13 @@ export function PasswordGeneratorView({
               {/* Passphrase Word Count */}
               <View style={styles.configRow}>
                 <View>
-                  <Text style={styles.configLabel}>WORD COUNT</Text>
-                  <Text style={styles.configDescription}>
+                  <Text style={[styles.configLabel, !isDark && { color: activeColors.textSecondary }]}>WORD COUNT</Text>
+                  <Text style={[styles.configDescription, !isDark && { color: activeColors.textTertiary }]}>
                     BIP-39 dictionary entropy
                   </Text>
                 </View>
 
-                <View style={styles.stepperContainer}>
+                <View style={[styles.stepperContainer, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                   <Pressable
                     onPress={() => handleWordCountDelta(-1)}
                     style={({ pressed }) => [
@@ -409,11 +422,11 @@ export function PasswordGeneratorView({
                     ]}
                     hitSlop={6}
                   >
-                    <Ionicons name="remove" size={16} color={colors.textPrimary} />
+                    <Ionicons name="remove" size={16} color={!isDark ? activeColors.textPrimary : colors.textPrimary} />
                   </Pressable>
 
                   <View style={styles.stepperValueBox}>
-                    <Text style={styles.stepperValueText}>
+                    <Text style={[styles.stepperValueText, !isDark && { color: activeColors.textPrimary }]}>
                       {passphraseOptions.wordCount}
                     </Text>
                   </View>
@@ -426,16 +439,16 @@ export function PasswordGeneratorView({
                     ]}
                     hitSlop={6}
                   >
-                    <Ionicons name="add" size={16} color={colors.textPrimary} />
+                    <Ionicons name="add" size={16} color={!isDark ? activeColors.textPrimary : colors.textPrimary} />
                   </Pressable>
                 </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               {/* Separator Selection */}
               <View style={styles.separatorSection}>
-                <Text style={styles.configLabel}>WORD SEPARATOR</Text>
+                <Text style={[styles.configLabel, !isDark && { color: activeColors.textSecondary }]}>WORD SEPARATOR</Text>
                 <View style={styles.separatorPills}>
                   {[
                     { key: '-', label: 'Hyphen (-)' },
@@ -450,13 +463,15 @@ export function PasswordGeneratorView({
                         onPress={() => updatePassphraseOption('separator', sep.key)}
                         style={[
                           styles.separatorPill,
-                          isSelected && styles.separatorPillActive,
+                          !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
+                          isSelected && (isDark ? styles.separatorPillActive : { borderColor: activeColors.primary, backgroundColor: 'rgba(79, 70, 229, 0.10)' }),
                         ]}
                       >
                         <Text
                           style={[
                             styles.separatorPillText,
-                            isSelected && styles.separatorPillTextActive,
+                            !isDark && { color: activeColors.textSecondary },
+                            isSelected && (!isDark ? { color: activeColors.primary, fontWeight: '700' } : styles.separatorPillTextActive),
                           ]}
                         >
                           {sep.label}
@@ -467,32 +482,32 @@ export function PasswordGeneratorView({
                 </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Capitalize Words</Text>
-                  <Text style={styles.toggleSub}>e.g. Correct-Horse-Battery</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Capitalize Words</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>e.g. Correct-Horse-Battery</Text>
                 </View>
                 <Switch
                   value={passphraseOptions.capitalize}
                   onValueChange={(val) => updatePassphraseOption('capitalize', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, !isDark && { backgroundColor: activeColors.borderSubtle }]} />
 
               <View style={styles.toggleRow}>
                 <View>
-                  <Text style={styles.toggleLabel}>Append Random Number</Text>
-                  <Text style={styles.toggleSub}>Adds 2-digit number (10-99)</Text>
+                  <Text style={[styles.toggleLabel, !isDark && { color: activeColors.textPrimary }]}>Append Random Number</Text>
+                  <Text style={[styles.toggleSub, !isDark && { color: activeColors.textTertiary }]}>Adds 2-digit number (10-99)</Text>
                 </View>
                 <Switch
                   value={passphraseOptions.includeNumber}
                   onValueChange={(val) => updatePassphraseOption('includeNumber', val)}
-                  trackColor={{ false: colors.border, true: colors.primary }}
+                  trackColor={{ false: !isDark ? activeColors.border : colors.border, true: activeColors.primary }}
                   thumbColor="#FFFFFF"
                 />
               </View>
@@ -503,21 +518,22 @@ export function PasswordGeneratorView({
         {/* History of Recent Passwords */}
         {history.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.sectionHeader}>RECENTLY GENERATED (EPHEMERAL)</Text>
-            <View style={styles.historyList}>
+            <Text style={[styles.sectionHeader, !isDark && { color: activeColors.textTertiary }]}>RECENTLY GENERATED (EPHEMERAL)</Text>
+            <View style={[styles.historyList, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
               {history.map((item, index) => (
                 <Pressable
                   key={index}
                   onPress={() => selectHistoryItem(item)}
                   style={({ pressed }) => [
                     styles.historyItem,
-                    pressed && styles.historyItemPressed,
+                    !isDark && { borderBottomColor: activeColors.borderSubtle },
+                    pressed && (isDark ? styles.historyItemPressed : { backgroundColor: activeColors.surfaceSubtle }),
                   ]}
                 >
-                  <Text style={styles.historyItemText} numberOfLines={1}>
+                  <Text style={[styles.historyItemText, !isDark && { color: activeColors.textPrimary }]} numberOfLines={1}>
                     {item}
                   </Text>
-                  <Feather name="corner-down-left" size={13} color={colors.textTertiary} />
+                  <Feather name="corner-down-left" size={13} color={activeColors.textTertiary} />
                 </Pressable>
               ))}
             </View>
@@ -527,11 +543,12 @@ export function PasswordGeneratorView({
 
       {/* Bottom Action Button (When inside a form / modal) */}
       {onSelectPassword && (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, !isDark && { backgroundColor: activeColors.surface, borderTopColor: activeColors.border }]}>
           <Pressable
             onPress={() => onSelectPassword(currentValue)}
             style={({ pressed }) => [
               styles.primaryActionBtn,
+              !isDark && { backgroundColor: activeColors.primary },
               pressed && styles.btnPressed,
             ]}
           >
@@ -587,7 +604,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.md,
     gap: spacing.md,
-    paddingBottom: 110,
+    paddingBottom: 140,
   },
   outputCard: {
     backgroundColor: colors.surface,

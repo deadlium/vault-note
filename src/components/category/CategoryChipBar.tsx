@@ -7,7 +7,7 @@
 import React from 'react';
 import { ScrollView, View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { CategoryOption, VAULT_CATEGORY_OPTIONS } from '../../types/vault';
 
 export type { CategoryOption };
@@ -35,6 +35,8 @@ export function CategoryChipBar({
   onSelectCategory,
   counts = {},
 }: CategoryChipBarProps) {
+  const { isDark, colors: activeColors } = useTheme();
+
   return (
     <ScrollView
       horizontal
@@ -47,6 +49,10 @@ export function CategoryChipBar({
         const iconName = CATEGORY_ICONS[cat.id] || 'folder-outline';
         const shouldShowBadge = count !== undefined && (count > 0 || isActive);
 
+        const iconColor = isActive
+          ? (isDark ? colors.primaryLight : activeColors.primary)
+          : (isDark ? colors.textSecondary : activeColors.textSecondary);
+
         return (
           <Pressable
             key={cat.id}
@@ -54,6 +60,7 @@ export function CategoryChipBar({
             style={({ pressed }) => [
               styles.chip,
               isActive ? styles.chipActive : styles.chipInactive,
+              !isDark && (isActive ? styles.chipActiveLight : styles.chipInactiveLight),
               pressed && styles.chipPressed,
             ]}
             accessibilityRole="button"
@@ -63,7 +70,7 @@ export function CategoryChipBar({
             <Ionicons
               name={iconName}
               size={14}
-              color={isActive ? colors.primaryLight : colors.textSecondary}
+              color={iconColor}
               style={styles.chipIcon}
             />
 
@@ -71,6 +78,7 @@ export function CategoryChipBar({
               style={[
                 styles.chipLabel,
                 isActive ? styles.chipLabelActive : styles.chipLabelInactive,
+                !isDark && (isActive ? styles.chipLabelActiveLight : styles.chipLabelInactiveLight),
               ]}
             >
               {cat.label}
@@ -81,12 +89,14 @@ export function CategoryChipBar({
                 style={[
                   styles.countBadge,
                   isActive ? styles.countBadgeActive : styles.countBadgeInactive,
+                  !isDark && (isActive ? styles.countBadgeActiveLight : styles.countBadgeInactiveLight),
                 ]}
               >
                 <Text
                   style={[
                     styles.countText,
                     isActive ? styles.countTextActive : styles.countTextInactive,
+                    !isDark && (isActive ? styles.countTextActiveLight : styles.countTextInactiveLight),
                   ]}
                 >
                   {count}
@@ -178,5 +188,43 @@ const styles = StyleSheet.create({
   },
   countTextInactive: {
     color: colors.textSecondary,
+  },
+  chipActiveLight: {
+    backgroundColor: 'rgba(79, 70, 229, 0.10)',
+    borderColor: '#4F46E5',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#4F46E5',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.18,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  chipInactiveLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+  },
+  chipLabelActiveLight: {
+    color: '#4F46E5',
+    fontWeight: '700',
+  },
+  chipLabelInactiveLight: {
+    color: '#475569',
+  },
+  countBadgeActiveLight: {
+    backgroundColor: 'rgba(79, 70, 229, 0.18)',
+  },
+  countBadgeInactiveLight: {
+    backgroundColor: '#F1F5F9',
+  },
+  countTextActiveLight: {
+    color: '#4F46E5',
+  },
+  countTextInactiveLight: {
+    color: '#64748B',
   },
 });

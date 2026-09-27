@@ -6,6 +6,9 @@
 import { create } from 'zustand';
 import { secureWipe } from '../crypto/csprng';
 import { VaultSessionState, VaultSessionStatus, AutoLockTimeout } from './types';
+import { getEnclaveAdapter } from '../storage/enclave';
+
+const PRIVACY_SHIELD_KEY = 'vaultnote.pref.privacy_shield';
 
 export const useSessionStore = create<VaultSessionState>((set, get) => ({
   status: 'UNINITIALIZED',
@@ -15,6 +18,7 @@ export const useSessionStore = create<VaultSessionState>((set, get) => ({
   lastBackgroundTimestamp: null,
   autoLockTimeout: '5m',
   isPrivacyShieldActive: false,
+  isPrivacyShieldEnabled: true,
 
   setStatus: (status: VaultSessionStatus) => {
     set({ status });
@@ -41,6 +45,17 @@ export const useSessionStore = create<VaultSessionState>((set, get) => ({
 
   setPrivacyShieldActive: (active: boolean) => {
     set({ isPrivacyShieldActive: active });
+  },
+
+  setPrivacyShieldEnabled: (enabled: boolean) => {
+    set({ isPrivacyShieldEnabled: enabled });
+    try {
+      getEnclaveAdapter()
+        .setItem(PRIVACY_SHIELD_KEY, enabled ? 'true' : 'false')
+        .catch(() => {});
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   lock: () => {
@@ -80,6 +95,7 @@ export const useSessionStore = create<VaultSessionState>((set, get) => ({
       lastActiveTimestamp: Date.now(),
       lastBackgroundTimestamp: null,
       isPrivacyShieldActive: false,
+      isPrivacyShieldEnabled: true,
     });
   },
 }));

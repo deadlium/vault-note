@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography } from '../../theme';
+import { colors, typography, useTheme } from '../../theme';
 import {
   NavbarScrollProvider,
   useNavbarScroll,
@@ -119,6 +119,7 @@ function FloatingGlassNavbar({
   const insets = useSafeAreaInsets();
   const scrollContext = useNavbarScroll();
   const navScaleAnim = scrollContext?.navScaleAnim ?? useRef(new Animated.Value(1)).current;
+  const { isDark, colors: activeColors } = useTheme();
 
   const { width: windowWidth } = useWindowDimensions();
   const barWidth = Math.min(windowWidth - 24, 440);
@@ -219,16 +220,31 @@ function FloatingGlassNavbar({
           bottom: Math.max(insets.bottom + 8, 16),
           transform: [{ scale: navScaleAnim }],
         },
+        !isDark && {
+          shadowColor: '#0F172A',
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 8,
+        },
       ]}
     >
       {/* Main Capsule: 4 Navigation Tabs */}
-      <View style={[styles.glassContainer, { width: capsuleWidth }]}>
+      <View
+        style={[
+          styles.glassContainer,
+          { width: capsuleWidth },
+          !isDark && {
+            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            borderColor: activeColors.border,
+          },
+        ]}
+      >
         {/* Draggable Navigation Tabs Area */}
         <View
           style={[styles.tabsArea, { width: tabsWidth }]}
           {...panResponder.panHandlers}
         >
-          {/* Sliding Purple Shiny Active Indicator Pill */}
+          {/* Sliding Shiny Active Indicator Pill */}
           <Animated.View
             style={[
               styles.slidingIndicator,
@@ -238,11 +254,25 @@ function FloatingGlassNavbar({
               },
             ]}
           >
-            <View style={styles.shinyIndicatorInner} />
+            <View
+              style={[
+                styles.shinyIndicatorInner,
+                !isDark && {
+                  backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                  borderColor: 'rgba(79, 70, 229, 0.35)',
+                  shadowColor: activeColors.primary,
+                  shadowOpacity: 0.25,
+                },
+              ]}
+            />
           </Animated.View>
 
           {TAB_SLOT_CONFIGS.map((tabConfig) => {
             const isSelected = currentTab === tabConfig.key;
+            const tabColor = isSelected
+              ? (!isDark ? activeColors.primary : activeColors.textPrimary)
+              : activeColors.textSecondary;
+
             return (
               <Pressable
                 key={tabConfig.key}
@@ -255,12 +285,14 @@ function FloatingGlassNavbar({
                 <Ionicons
                   name={isSelected ? tabConfig.iconActive : tabConfig.iconInactive}
                   size={20}
-                  color={isSelected ? colors.textPrimary : colors.textSecondary}
+                  color={tabColor}
                 />
                 <Text
                   style={[
                     styles.tabLabel,
-                    isSelected ? styles.tabLabelActive : styles.tabLabelInactive,
+                    isSelected
+                      ? [styles.tabLabelActive, { color: tabColor }]
+                      : [styles.tabLabelInactive, { color: activeColors.textSecondary }],
                   ]}
                   numberOfLines={1}
                 >
@@ -277,6 +309,13 @@ function FloatingGlassNavbar({
         onPress={() => onAddItem?.()}
         style={({ pressed }) => [
           styles.standaloneAddButton,
+          !isDark && {
+            backgroundColor: activeColors.primary,
+            borderColor: activeColors.primaryDark,
+            shadowColor: activeColors.primary,
+            shadowOpacity: 0.35,
+            shadowRadius: 10,
+          },
           pressed && styles.buttonPressed,
         ]}
         accessibilityRole="button"
@@ -285,7 +324,7 @@ function FloatingGlassNavbar({
         <Ionicons
           name="add"
           size={28}
-          color={colors.fabPurple}
+          color={!isDark ? '#FFFFFF' : activeColors.primary}
         />
       </Pressable>
     </Animated.View>
@@ -299,6 +338,7 @@ export default function VaultTabLayout({
   onAddItem,
   renderContent,
 }: VaultLayoutProps) {
+  const { colors: activeColors } = useTheme();
   const [internalTab, setInternalTab] = useState<VaultTab>('vault');
   const currentTab = externalTab ?? internalTab;
 
@@ -312,7 +352,7 @@ export default function VaultTabLayout({
 
   return (
     <NavbarScrollProvider>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: activeColors.background }]}>
         {/* Active Screen Content */}
         <View style={styles.content}>
           {renderContent ? renderContent(currentTab) : children}

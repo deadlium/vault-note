@@ -7,7 +7,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { colors, typography } from '../../../theme';
+import { colors, typography, useTheme } from '../../../theme';
 import { SecurityRating } from '../types';
 
 export interface SecurityScoreRingProps {
@@ -25,6 +25,7 @@ export const SecurityScoreRing: React.FC<SecurityScoreRingProps> = ({
   size = 136,
   strokeWidth = 10,
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
   const animatedScore = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export const SecurityScoreRing: React.FC<SecurityScoreRingProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="rgba(255, 255, 255, 0.08)"
+          stroke={isDark ? 'rgba(255, 255, 255, 0.08)' : activeColors.border}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -149,12 +150,12 @@ export const SecurityScoreRing: React.FC<SecurityScoreRingProps> = ({
         />
       </Svg>
 
-      {/* Center Metrics Display */}
+      {/* Center Metrics Presentation */}
       <View style={styles.centerContent}>
-        <Text style={[styles.scoreNumber, { color: colors.textPrimary }]}>
+        <Text style={[styles.scoreNumber, { color: activeColors.textPrimary }]}>
           {Math.round(score)}
         </Text>
-        <Text style={styles.subtext}>{label}</Text>
+        <Text style={[styles.subtext, { color: activeColors.textSecondary }]}>{label}</Text>
       </View>
     </View>
   );

@@ -37,7 +37,7 @@ export function useSecurityAudit(): UseSecurityAuditReturn {
   }, []);
 
   const autoLockTimeout = useSessionStore((s) => s.autoLockTimeout);
-  const isPrivacyShieldActive = useSessionStore((s) => s.isPrivacyShieldActive);
+  const isPrivacyShieldActive = useSessionStore((s) => s.isPrivacyShieldEnabled);
 
   const protectionConfig: VaultProtectionConfig = useMemo(
     () => ({

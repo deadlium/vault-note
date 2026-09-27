@@ -19,6 +19,7 @@ export interface PrivacyShieldProps {
 
 export function PrivacyShield({ forceVisible = false }: PrivacyShieldProps) {
   const storeShieldActive = useSessionStore((s) => s.isPrivacyShieldActive);
+  const isShieldEnabled = useSessionStore((s) => s.isPrivacyShieldEnabled);
   const [appStateShield, setAppStateShield] = useState<boolean>(() => {
     const current = AppState.currentState;
     return current === 'background' || current === 'inactive';
@@ -35,7 +36,7 @@ export function PrivacyShield({ forceVisible = false }: PrivacyShieldProps) {
     };
   }, []);
 
-  const isVisible = forceVisible || storeShieldActive || appStateShield;
+  const isVisible = forceVisible || (isShieldEnabled && (storeShieldActive || appStateShield));
 
   if (!isVisible) {
     return null;

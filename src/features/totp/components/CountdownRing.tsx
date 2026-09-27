@@ -7,7 +7,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { colors, typography } from '../../../theme';
+import { colors, typography, useTheme } from '../../../theme';
 
 export interface CountdownRingProps {
   /** Remaining seconds until next rotation */
@@ -32,6 +32,7 @@ export const CountdownRing: React.FC<CountdownRingProps> = ({
   strokeWidth = 3,
   showSecondsText = true,
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
   const calculatedProgress =
     externalProgress !== undefined
       ? externalProgress
@@ -67,12 +68,12 @@ export const CountdownRing: React.FC<CountdownRingProps> = ({
 
   // Color cadence based on time threshold
   const activeColor = isCritical
-    ? colors.crimson
+    ? activeColors.crimson
     : isWarning
-    ? colors.gold
-    : colors.emerald;
+    ? activeColors.gold
+    : activeColors.emerald;
 
-  const trackColor = '#1F2329';
+  const trackColor = isDark ? '#1F2329' : activeColors.border;
   const center = size / 2;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;

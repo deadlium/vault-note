@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { useTOTP } from '../hooks/useTOTP';
 import { CountdownRing } from './CountdownRing';
 import { useClipboardManager } from '../../../core/clipboard';
@@ -32,6 +32,7 @@ export const TOTPRow: React.FC<TOTPRowProps> = ({
   period = 30,
   onCopy,
 }) => {
+  const { isDark, colors: activeColors } = useTheme();
   const { code, formattedCode, remainingSeconds, progress, isExpiringSoon, isValidSecret, error } =
     useTOTP(secret, { period });
 
@@ -48,16 +49,24 @@ export const TOTPRow: React.FC<TOTPRowProps> = ({
   };
 
   const codeColor = isExpiringSoon
-    ? colors.crimson
+    ? activeColors.crimson
     : remainingSeconds <= 7
-    ? colors.gold
-    : colors.textPrimary;
+    ? (isDark ? colors.gold : '#D97706')
+    : activeColors.textPrimary;
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        isExpiringSoon && styles.cardExpiring,
+        !isDark && {
+          backgroundColor: activeColors.surface,
+          borderColor: activeColors.border,
+          shadowColor: '#0F172A',
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+        isExpiringSoon && (isDark ? styles.cardExpiring : styles.cardExpiringLight),
         pressed && styles.cardPressed,
       ]}
       onPress={handleCopy}
@@ -69,19 +78,20 @@ export const TOTPRow: React.FC<TOTPRowProps> = ({
             <Ionicons
               name="shield-checkmark"
               size={12}
-              color={isExpiringSoon ? colors.crimson : colors.primaryLight}
+              color={isExpiringSoon ? activeColors.crimson : (!isDark ? activeColors.primary : colors.primaryLight)}
             />
             <Text
               style={[
                 styles.labelText,
-                isExpiringSoon && { color: colors.crimson },
+                !isDark && { color: activeColors.textSecondary },
+                isExpiringSoon && { color: activeColors.crimson },
               ]}
               numberOfLines={1}
             >
               {label.toUpperCase()}
             </Text>
             {accountName && (
-              <Text style={styles.accountText} numberOfLines={1}>
+              <Text style={[styles.accountText, !isDark && { color: activeColors.textTertiary }]} numberOfLines={1}>
                 • {accountName}
               </Text>
             )}
@@ -116,11 +126,11 @@ export const TOTPRow: React.FC<TOTPRowProps> = ({
             strokeWidth={3}
             showSecondsText={true}
           />
-          <View style={styles.copyIconWrapper}>
+          <View style={[styles.copyIconWrapper, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
             <Ionicons
               name={copied ? 'checkmark' : 'copy-outline'}
               size={16}
-              color={copied ? colors.emerald : colors.textMuted}
+              color={copied ? colors.emerald : activeColors.textMuted}
             />
           </View>
         </View>
@@ -142,6 +152,10 @@ const styles = StyleSheet.create({
   cardExpiring: {
     borderColor: 'rgba(239, 68, 68, 0.35)',
     backgroundColor: '#1B1416',
+  },
+  cardExpiringLight: {
+    borderColor: '#E11D48',
+    backgroundColor: '#FFF1F2',
   },
   cardPressed: {
     opacity: 0.88,

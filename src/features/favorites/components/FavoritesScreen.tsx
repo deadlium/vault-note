@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { CategoryChipBar } from '../../../components/category/CategoryChipBar';
 import { VaultItemRow, VaultItemRowData } from '../../../components/item/VaultItemRow';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -27,6 +27,7 @@ export interface FavoritesScreenProps {
 }
 
 export function FavoritesScreen({ onBack, onSelectItem }: FavoritesScreenProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const { favoriteItems, favoriteCount, toggleFavorite, getFavoritesByCategory } =
     useFavorites();
 
@@ -63,26 +64,30 @@ export function FavoritesScreen({ onBack, onSelectItem }: FavoritesScreenProps) 
   }, [getFavoritesByCategory, activeCategory]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Navigation Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDark && { borderBottomColor: activeColors.border }]}>
         {onBack && (
           <Pressable
             onPress={onBack}
-            style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+            style={({ pressed }) => [
+              styles.backButton,
+              !isDark && { backgroundColor: activeColors.surfaceSubtle },
+              pressed && styles.backButtonPressed,
+            ]}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+            <Ionicons name="arrow-back" size={20} color={activeColors.textPrimary} />
           </Pressable>
         )}
 
         <View style={styles.headerTitleCol}>
           <View style={styles.titleRow}>
             <Ionicons name="star" size={16} color={colors.amber} style={{ marginRight: 6 }} />
-            <Text style={styles.headerTitle}>Favorites Hub</Text>
+            <Text style={[styles.headerTitle, { color: activeColors.textPrimary }]}>Favorites Hub</Text>
           </View>
-          <Text style={styles.headerSubtitle}>
+          <Text style={[styles.headerSubtitle, { color: activeColors.textSecondary }]}>
             {favoriteCount} {favoriteCount === 1 ? 'item pinned' : 'items pinned'} for quick access
           </Text>
         </View>

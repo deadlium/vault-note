@@ -262,6 +262,18 @@ export class EphemeralSearchIndex {
     this.isWiped = true;
   }
 
+  public wipe(): void {
+    this.clear();
+  }
+
+  public getAllEntries(): SearchIndexEntry[] {
+    return this.isWiped ? [] : [...this.entries];
+  }
+
+  public query(query: string, options: SearchOptions = {}): SearchResult[] {
+    return this.search(query, options);
+  }
+
   /**
    * Returns current count of indexed items in RAM
    */
@@ -335,3 +347,4 @@ export class EphemeralSearchIndex {
 
 // Global volatile singleton instance
 export const globalEphemeralSearchIndex = new EphemeralSearchIndex();
+export const SearchIndex = globalEphemeralSearchIndex;

@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { CategoryChipBar } from '../../../components/category/CategoryChipBar';
 import { VaultItemRow, VaultItemRowData } from '../../../components/item/VaultItemRow';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -38,6 +38,7 @@ export function SearchScreen({
   initialQuery = '',
   initialCategory = 'all',
 }: SearchScreenProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const inputRef = useRef<TextInput>(null);
 
   const {
@@ -75,29 +76,51 @@ export function SearchScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Search Header Bar */}
-      <View style={styles.searchHeader}>
+      <View style={[styles.searchHeader, !isDark && { borderBottomColor: activeColors.border }]}>
         {onBack && (
           <Pressable
             onPress={onBack}
-            style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+            style={({ pressed }) => [
+              styles.backButton,
+              !isDark && { backgroundColor: activeColors.surfaceSubtle },
+              pressed && styles.backButtonPressed,
+            ]}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+            <Ionicons name="arrow-back" size={20} color={activeColors.textPrimary} />
           </Pressable>
         )}
 
-        <View style={styles.inputContainer}>
-          <Ionicons name="search" size={18} color={colors.primaryLight} style={styles.inputIcon} />
+        <View
+          style={[
+            styles.inputContainer,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 1,
+            },
+          ]}
+        >
+          <Ionicons
+            name="search"
+            size={18}
+            color={isDark ? colors.primaryLight : activeColors.primary}
+            style={styles.inputIcon}
+          />
           <TextInput
             ref={inputRef}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search credentials, notes, keys..."
-            placeholderTextColor={colors.textMuted}
-            style={styles.textInput}
+            placeholderTextColor={activeColors.textMuted}
+            style={[styles.textInput, { color: activeColors.textPrimary }]}
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"
@@ -110,7 +133,7 @@ export function SearchScreen({
               accessibilityRole="button"
               accessibilityLabel="Clear search text"
             >
-              <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+              <Ionicons name="close-circle" size={18} color={activeColors.textSecondary} />
             </Pressable>
           )}
         </View>
@@ -136,10 +159,10 @@ export function SearchScreen({
             {selectedTag && (
               <Pressable
                 onPress={() => setSelectedTag(null)}
-                style={styles.activeTagResetPill}
+                style={[styles.activeTagResetPill, !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary }]}
               >
-                <Text style={styles.activeTagResetText}>Clear Tag</Text>
-                <Ionicons name="close" size={12} color={colors.primaryLight} />
+                <Text style={[styles.activeTagResetText, !isDark && { color: activeColors.primary }]}>Clear Tag</Text>
+                <Ionicons name="close" size={12} color={isDark ? colors.primaryLight : activeColors.primary} />
               </Pressable>
             )}
 
@@ -152,12 +175,15 @@ export function SearchScreen({
                   style={[
                     styles.tagPill,
                     isSelected ? styles.tagPillActive : styles.tagPillInactive,
+                    !isSelected && !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
+                    isSelected && !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary },
                   ]}
                 >
                   <Text
                     style={[
                       styles.tagText,
                       isSelected ? styles.tagTextActive : styles.tagTextInactive,
+                      !isSelected ? { color: activeColors.textSecondary } : !isDark ? { color: activeColors.primary } : { color: colors.textPrimary },
                     ]}
                   >
                     #{tag}
@@ -166,12 +192,16 @@ export function SearchScreen({
                     style={[
                       styles.tagBadge,
                       isSelected ? styles.tagBadgeActive : styles.tagBadgeInactive,
+                      !isSelected && !isDark && { backgroundColor: activeColors.surfaceSubtle },
+                      isSelected && !isDark && { backgroundColor: activeColors.primary },
                     ]}
                   >
                     <Text
                       style={[
                         styles.tagBadgeText,
                         isSelected ? styles.tagBadgeTextActive : styles.tagBadgeTextInactive,
+                        !isSelected && !isDark && { color: activeColors.textTertiary },
+                        isSelected && !isDark && { color: '#FFFFFF' },
                       ]}
                     >
                       {count}
@@ -186,7 +216,7 @@ export function SearchScreen({
 
       {/* Search Results Summary Header */}
       <View style={styles.resultSummaryRow}>
-        <Text style={styles.resultSummaryText}>
+        <Text style={[styles.resultSummaryText, { color: activeColors.textTertiary }]}>
           {isSearching
             ? `${totalMatches} ${totalMatches === 1 ? 'MATCH' : 'MATCHES'} IN RAM`
             : `${totalMatches} TOTAL ENTRIES`}

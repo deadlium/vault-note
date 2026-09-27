@@ -7,7 +7,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 
 interface BiometricPromptButtonProps {
   onPress: () => void;
@@ -22,6 +22,7 @@ export function BiometricPromptButton({
   isAuthenticating = false,
   disabled = false,
 }: BiometricPromptButtonProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const isFaceId = biometricLabel.toLowerCase().includes('face');
 
   return (
@@ -29,34 +30,50 @@ export function BiometricPromptButton({
       <Pressable
         style={({ pressed }) => [
           styles.outerRing,
-          pressed && styles.outerRingPressed,
+          !isDark && {
+            borderColor: activeColors.primaryGlow,
+            backgroundColor: activeColors.primaryMuted,
+          },
+          pressed && [styles.outerRingPressed, !isDark && { borderColor: activeColors.primary }],
           disabled && styles.disabled,
         ]}
         onPress={onPress}
         disabled={disabled || isAuthenticating}
       >
-        <View style={styles.middleRing}>
-          <View style={styles.innerCircle}>
+        <View style={[
+          styles.middleRing,
+          !isDark && {
+            borderColor: activeColors.primaryMuted,
+            backgroundColor: activeColors.surfaceSubtle,
+          },
+        ]}>
+          <View style={[
+            styles.innerCircle,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+            },
+          ]}>
             {isAuthenticating ? (
-              <ActivityIndicator size="large" color={colors.primaryLight} />
+              <ActivityIndicator size="large" color={isDark ? colors.primaryLight : activeColors.primary} />
             ) : isFaceId ? (
               <MaterialCommunityIcons
                 name="face-recognition"
                 size={44}
-                color={colors.primaryLight}
+                color={isDark ? colors.primaryLight : activeColors.primary}
               />
             ) : (
               <Ionicons
                 name="finger-print"
                 size={48}
-                color={colors.primaryLight}
+                color={isDark ? colors.primaryLight : activeColors.primary}
               />
             )}
           </View>
         </View>
       </Pressable>
 
-      <Text style={styles.promptLabel}>
+      <Text style={[styles.promptLabel, !isDark && { color: activeColors.textSecondary }]}>
         {isAuthenticating ? 'Scanning...' : `Tap to scan ${biometricLabel}`}
       </Text>
     </View>

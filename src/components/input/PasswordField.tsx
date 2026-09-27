@@ -15,7 +15,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { authenticateBiometric } from '../../core/biometric';
 
 export interface PasswordFieldProps {
@@ -39,6 +39,7 @@ export function PasswordField({
   style,
   helperText,
 }: PasswordFieldProps) {
+  const { colors: activeColors, isDark } = useTheme();
   const [isRevealed, setIsRevealed] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -81,14 +82,15 @@ export function PasswordField({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, !isDark && { color: activeColors.textSecondary }]}>{label}</Text>}
 
-      <View style={styles.card}>
+      <View style={[styles.card, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
         <View style={styles.textContainer}>
           <Text
             style={[
               styles.valueText,
               !isRevealed && styles.valueMasked,
+              !isDark && { color: !isRevealed ? activeColors.textSecondary : activeColors.textPrimary },
             ]}
             numberOfLines={1}
             ellipsizeMode="middle"
@@ -104,21 +106,22 @@ export function PasswordField({
             style={({ pressed }) => [
               styles.actionButton,
               pressed && styles.actionButtonPressed,
+              !isDark && { backgroundColor: '#FFFFFF', borderColor: activeColors.border },
             ]}
             accessibilityRole="button"
             accessibilityLabel={isRevealed ? 'Hide Password' : 'Reveal Password'}
           >
             {isAuthenticating ? (
-              <ActivityIndicator size="small" color={colors.primaryLight} />
+              <ActivityIndicator size="small" color={activeColors.primary} />
             ) : (
               <>
                 <Ionicons
                   name={isRevealed ? 'eye-off-outline' : 'eye-outline'}
                   size={15}
-                  color={colors.textSecondary}
+                  color={activeColors.textSecondary}
                   style={styles.actionIcon}
                 />
-                <Text style={styles.actionText}>
+                <Text style={[styles.actionText, !isDark && { color: activeColors.textSecondary }]}>
                   {isRevealed ? 'Hide' : 'Reveal'}
                 </Text>
               </>
@@ -131,6 +134,7 @@ export function PasswordField({
               style={({ pressed }) => [
                 styles.copyButton,
                 pressed && styles.copyButtonPressed,
+                !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
               ]}
               accessibilityRole="button"
               accessibilityLabel="Copy Password"
@@ -138,10 +142,10 @@ export function PasswordField({
               <Ionicons
                 name="copy-outline"
                 size={14}
-                color={colors.primaryLight}
+                color={isDark ? colors.primaryLight : activeColors.primary}
                 style={styles.actionIcon}
               />
-              <Text style={styles.copyText}>Copy</Text>
+              <Text style={[styles.copyText, !isDark && { color: activeColors.primary }]}>Copy</Text>
             </Pressable>
           )}
         </View>
@@ -152,10 +156,10 @@ export function PasswordField({
           <Ionicons
             name="finger-print-outline"
             size={13}
-            color={colors.amber}
+            color={activeColors.amber}
             style={styles.helperIcon}
           />
-          <Text style={styles.helperText}>
+          <Text style={[styles.helperText, !isDark && { color: activeColors.textTertiary }]}>
             {helperText ?? 'Biometric auth required to reveal raw plaintext'}
           </Text>
         </View>

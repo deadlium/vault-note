@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { useSecurityAudit } from '../hooks/useSecurityAudit';
 import { SecurityScoreRing } from './SecurityScoreRing';
 import { SecurityAuditIssueCard } from './SecurityAuditIssueCard';
@@ -47,6 +47,7 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
   onEditItem,
   onOpenBackup,
 }) => {
+  const { colors: activeColors, isDark } = useTheme();
   const {
     auditResult,
     reAudit,
@@ -172,34 +173,35 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: activeColors.background }]} edges={['top', 'left', 'right']}>
       {/* Toast Notification */}
       {feedbackToast && (
-        <View style={styles.toastContainer}>
+        <View style={[styles.toastContainer, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.emeraldBorder }]}>
           <Ionicons name="checkmark-circle" size={16} color={colors.emerald} />
-          <Text style={styles.toastText}>{feedbackToast}</Text>
+          <Text style={[styles.toastText, !isDark && { color: activeColors.textPrimary }]}>{feedbackToast}</Text>
         </View>
       )}
 
       {/* Navigation Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isDark && { borderBottomColor: activeColors.border }]}>
         <Pressable
           onPress={onBack}
           style={({ pressed }) => [
             styles.backButton,
+            !isDark && { backgroundColor: activeColors.surfaceSubtle },
             pressed && styles.backButtonPressed,
           ]}
           accessibilityRole="button"
           accessibilityLabel="Go Back"
         >
-          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={activeColors.textPrimary} />
         </Pressable>
 
         <View style={styles.headerTitleGroup}>
-          <Text style={styles.headerTitle}>Security Center</Text>
+          <Text style={[styles.headerTitle, { color: activeColors.textPrimary }]}>Security Center</Text>
           <View style={styles.badgeRow}>
             <View style={styles.zeroKnowledgeDot} />
-            <Text style={styles.badgeText}>Zero-Knowledge Audit</Text>
+            <Text style={[styles.badgeText, { color: activeColors.textSecondary }]}>Zero-Knowledge Audit</Text>
           </View>
         </View>
 
@@ -210,12 +212,13 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
           }}
           style={({ pressed }) => [
             styles.reAuditButton,
+            !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: 'rgba(79, 70, 229, 0.25)' },
             pressed && styles.reAuditButtonPressed,
           ]}
           accessibilityRole="button"
           accessibilityLabel="Scan Now"
         >
-          <Ionicons name="refresh" size={17} color="#A78BFA" />
+          <Ionicons name="refresh" size={17} color={isDark ? '#A78BFA' : activeColors.primary} />
         </Pressable>
       </View>
 
@@ -224,7 +227,20 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Score Showcase Card */}
-        <View style={styles.heroCard}>
+        <View
+          style={[
+            styles.heroCard,
+            !isDark && {
+              backgroundColor: activeColors.surface,
+              borderColor: activeColors.border,
+              shadowColor: '#0F172A',
+              shadowOpacity: 0.04,
+              shadowOffset: { width: 0, height: 2 },
+              shadowRadius: 6,
+              elevation: 1,
+            },
+          ]}
+        >
           <View style={styles.heroLeft}>
             <SecurityScoreRing
               score={auditResult.overallScore}
@@ -256,35 +272,35 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
               </Text>
             </View>
 
-            <Text style={styles.summaryText}>{auditResult.summary}</Text>
+            <Text style={[styles.summaryText, { color: activeColors.textSecondary }]}>{auditResult.summary}</Text>
 
-            <View style={styles.heroStatsRow}>
+            <View style={[styles.heroStatsRow, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
               <View style={styles.heroStatItem}>
-                <Text style={styles.heroStatValue}>
+                <Text style={[styles.heroStatValue, { color: activeColors.textPrimary }]}>
                   {auditResult.criticalCount}
                 </Text>
-                <Text style={styles.heroStatLabel}>Critical</Text>
+                <Text style={[styles.heroStatLabel, { color: activeColors.textTertiary }]}>Critical</Text>
               </View>
-              <View style={styles.heroStatDivider} />
+              <View style={[styles.heroStatDivider, !isDark && { backgroundColor: activeColors.border }]} />
               <View style={styles.heroStatItem}>
-                <Text style={styles.heroStatValue}>
+                <Text style={[styles.heroStatValue, { color: activeColors.textPrimary }]}>
                   {auditResult.warningCount}
                 </Text>
-                <Text style={styles.heroStatLabel}>Warnings</Text>
+                <Text style={[styles.heroStatLabel, { color: activeColors.textTertiary }]}>Warnings</Text>
               </View>
-              <View style={styles.heroStatDivider} />
+              <View style={[styles.heroStatDivider, !isDark && { backgroundColor: activeColors.border }]} />
               <View style={styles.heroStatItem}>
-                <Text style={styles.heroStatValue}>
+                <Text style={[styles.heroStatValue, { color: activeColors.textPrimary }]}>
                   {auditResult.passwordHealth.totalCredentials}
                 </Text>
-                <Text style={styles.heroStatLabel}>Audited</Text>
+                <Text style={[styles.heroStatLabel, { color: activeColors.textTertiary }]}>Audited</Text>
               </View>
             </View>
           </View>
         </View>
 
         {/* 3 Pillars of Vault Hygiene Breakdown */}
-        <Text style={styles.sectionHeading}>HYGIENE PILLARS</Text>
+        <Text style={[styles.sectionHeading, { color: activeColors.textTertiary }]}>HYGIENE PILLARS</Text>
 
         <View style={styles.pillarsContainer}>
           {/* Pillar 1: Password Health */}
@@ -292,22 +308,31 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             onPress={() => setActiveTab('warning')}
             style={({ pressed }) => [
               styles.pillarCard,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.03,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 4,
+                elevation: 1,
+              },
               pressed && styles.pillarCardPressed,
             ]}
           >
             <View style={styles.pillarHeader}>
               <View style={styles.pillarTitleGroup}>
-                <Ionicons name="key" size={15} color="#A78BFA" />
-                <Text style={styles.pillarTitle}>Password Health</Text>
+                <Ionicons name="key" size={15} color={isDark ? '#A78BFA' : activeColors.primary} />
+                <Text style={[styles.pillarTitle, { color: activeColors.textPrimary }]}>Password Health</Text>
               </View>
-              <Text style={styles.pillarScore}>
+              <Text style={[styles.pillarScore, { color: activeColors.textPrimary }]}>
                 {auditResult.passwordHealth.score}
-                <Text style={styles.pillarScoreMax}>/100</Text>
+                <Text style={[styles.pillarScoreMax, { color: activeColors.textTertiary }]}>/100</Text>
               </Text>
             </View>
 
             {/* Meter Bar */}
-            <View style={styles.meterTrack}>
+            <View style={[styles.meterTrack, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
               <View
                 style={[
                   styles.meterFill,
@@ -325,11 +350,11 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             </View>
 
             <View style={styles.pillarFooter}>
-              <Text style={styles.pillarFootnote}>
+              <Text style={[styles.pillarFootnote, { color: activeColors.textSecondary }]}>
                 {auditResult.passwordHealth.weakPasswordCount} weak ·{' '}
                 {auditResult.passwordHealth.reusedPasswordCount} reused
               </Text>
-              <Text style={styles.pillarActionHint}>Inspect issues →</Text>
+              <Text style={[styles.pillarActionHint, !isDark && { color: activeColors.primary }]}>Inspect issues →</Text>
             </View>
           </Pressable>
 
@@ -338,22 +363,31 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             onPress={() => setActiveTab('warning')}
             style={({ pressed }) => [
               styles.pillarCard,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.03,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 4,
+                elevation: 1,
+              },
               pressed && styles.pillarCardPressed,
             ]}
           >
             <View style={styles.pillarHeader}>
               <View style={styles.pillarTitleGroup}>
                 <Ionicons name="finger-print" size={15} color="#34D399" />
-                <Text style={styles.pillarTitle}>2FA Coverage</Text>
+                <Text style={[styles.pillarTitle, { color: activeColors.textPrimary }]}>2FA Coverage</Text>
               </View>
-              <Text style={styles.pillarScore}>
+              <Text style={[styles.pillarScore, { color: activeColors.textPrimary }]}>
                 {auditResult.totpCoverage.score}
-                <Text style={styles.pillarScoreMax}>/100</Text>
+                <Text style={[styles.pillarScoreMax, { color: activeColors.textTertiary }]}>/100</Text>
               </Text>
             </View>
 
             {/* Meter Bar */}
-            <View style={styles.meterTrack}>
+            <View style={[styles.meterTrack, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
               <View
                 style={[
                   styles.meterFill,
@@ -371,11 +405,11 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             </View>
 
             <View style={styles.pillarFooter}>
-              <Text style={styles.pillarFootnote}>
+              <Text style={[styles.pillarFootnote, { color: activeColors.textSecondary }]}>
                 {auditResult.totpCoverage.coveragePercentage}% accounts protected ·{' '}
                 {auditResult.totpCoverage.missing2FACount} single-factor
               </Text>
-              <Text style={styles.pillarActionHint}>Inspect issues →</Text>
+              <Text style={[styles.pillarActionHint, !isDark && { color: activeColors.primary }]}>Inspect issues →</Text>
             </View>
           </Pressable>
 
@@ -384,22 +418,31 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             onPress={() => setIsAutoLockModalOpen(true)}
             style={({ pressed }) => [
               styles.pillarCard,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.03,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 4,
+                elevation: 1,
+              },
               pressed && styles.pillarCardPressed,
             ]}
           >
             <View style={styles.pillarHeader}>
               <View style={styles.pillarTitleGroup}>
                 <Ionicons name="lock-closed" size={15} color="#60A5FA" />
-                <Text style={styles.pillarTitle}>Vault Perimeter</Text>
+                <Text style={[styles.pillarTitle, { color: activeColors.textPrimary }]}>Vault Perimeter</Text>
               </View>
-              <Text style={styles.pillarScore}>
+              <Text style={[styles.pillarScore, { color: activeColors.textPrimary }]}>
                 {auditResult.vaultProtection.score}
-                <Text style={styles.pillarScoreMax}>/100</Text>
+                <Text style={[styles.pillarScoreMax, { color: activeColors.textTertiary }]}>/100</Text>
               </Text>
             </View>
 
             {/* Meter Bar */}
-            <View style={styles.meterTrack}>
+            <View style={[styles.meterTrack, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
               <View
                 style={[
                   styles.meterFill,
@@ -415,10 +458,10 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             </View>
 
             <View style={styles.pillarFooter}>
-              <Text style={styles.pillarFootnote}>
+              <Text style={[styles.pillarFootnote, { color: activeColors.textSecondary }]}>
                 Lock: {auditResult.vaultProtection.autoLockTimeout} · Biometrics: Active
               </Text>
-              <Text style={styles.pillarActionHint}>Adjust lock →</Text>
+              <Text style={[styles.pillarActionHint, !isDark && { color: activeColors.primary }]}>Adjust lock →</Text>
             </View>
           </Pressable>
         </View>
@@ -429,27 +472,36 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             onPress={onOpenBackup}
             style={({ pressed }) => [
               styles.backupBannerCard,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.04,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 1,
+              },
               pressed && styles.pillarCardPressed,
             ]}
             accessibilityRole="button"
             accessibilityLabel="Encrypted Backup and Restore"
           >
             <View style={styles.backupBannerIconBox}>
-              <Ionicons name="cloud-upload" size={18} color="#8B5CF6" />
+              <Ionicons name="cloud-upload" size={18} color={isDark ? '#8B5CF6' : activeColors.primary} />
             </View>
             <View style={styles.backupBannerText}>
-              <Text style={styles.backupBannerTitle}>Encrypted .vaultnote Backup</Text>
-              <Text style={styles.backupBannerSubtitle}>
+              <Text style={[styles.backupBannerTitle, { color: activeColors.textPrimary }]}>Encrypted .vaultnote Backup</Text>
+              <Text style={[styles.backupBannerSubtitle, { color: activeColors.textSecondary }]}>
                 Zero-knowledge export &amp; pre-flight restore
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            <Ionicons name="chevron-forward" size={18} color={activeColors.textTertiary} />
           </Pressable>
         )}
 
         {/* Actionable Findings Header & Tabs */}
         <View style={styles.issuesHeader}>
-          <Text style={styles.sectionHeading}>
+          <Text style={[styles.sectionHeading, { color: activeColors.textTertiary }]}>
             FINDINGS & RECOMMENDATIONS ({auditResult.issues.length})
           </Text>
 
@@ -471,13 +523,17 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
                   onPress={() => setActiveTab(tab)}
                   style={[
                     styles.tabButton,
+                    !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border },
                     isActive && styles.tabButtonActive,
+                    isActive && !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary },
                   ]}
                 >
                   <Text
                     style={[
                       styles.tabText,
+                      { color: activeColors.textSecondary },
                       isActive && styles.tabTextActive,
+                      isActive && !isDark && { color: activeColors.primary },
                     ]}
                   >
                     {tab.toUpperCase()} ({count})
@@ -499,12 +555,12 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
             />
           ))
         ) : (
-          <View style={styles.pristineCard}>
+          <View style={[styles.pristineCard, !isDark && { backgroundColor: activeColors.surface, borderColor: 'rgba(16, 185, 129, 0.25)' }]}>
             <View style={styles.pristineIconWrapper}>
               <Ionicons name="checkmark-circle" size={32} color={colors.emerald} />
             </View>
             <Text style={styles.pristineTitle}>No Issues Found</Text>
-            <Text style={styles.pristineSubtitle}>
+            <Text style={[styles.pristineSubtitle, { color: activeColors.textSecondary }]}>
               {activeTab === 'all'
                 ? 'All credentials and perimeter protection settings meet elite zero-knowledge standards.'
                 : `No ${activeTab} issues detected in this category.`}
@@ -524,19 +580,22 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
           style={styles.modalOverlay}
           onPress={() => setIsAutoLockModalOpen(false)}
         >
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[styles.modalContent, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
-              <Ionicons name="timer-outline" size={20} color="#A78BFA" />
-              <Text style={styles.modalTitle}>Auto-Lock Timeout</Text>
+              <Ionicons name="timer-outline" size={20} color={isDark ? '#A78BFA' : activeColors.primary} />
+              <Text style={[styles.modalTitle, { color: activeColors.textPrimary }]}>Auto-Lock Timeout</Text>
               <Pressable
                 onPress={() => setIsAutoLockModalOpen(false)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={18} color={colors.textSecondary} />
+                <Ionicons name="close" size={18} color={activeColors.textSecondary} />
               </Pressable>
             </View>
 
-            <Text style={styles.modalSubtitle}>
+            <Text style={[styles.modalSubtitle, { color: activeColors.textSecondary }]}>
               Select inactivity window before master cryptographic keys are wiped from volatile memory.
             </Text>
 
@@ -549,18 +608,27 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
                     onPress={() => handleSelectAutoLock(opt.id)}
                     style={({ pressed }) => [
                       styles.optionRow,
+                      !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                       isSelected && styles.optionRowSelected,
+                      isSelected && !isDark && { backgroundColor: activeColors.primaryMuted, borderColor: activeColors.primary },
                       pressed && styles.optionRowPressed,
                     ]}
                   >
                     <View style={styles.optionLeft}>
-                      <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
+                      <Text
+                        style={[
+                          styles.optionLabel,
+                          { color: activeColors.textPrimary },
+                          isSelected && styles.optionLabelSelected,
+                          isSelected && !isDark && { color: activeColors.primary },
+                        ]}
+                      >
                         {opt.label}
                       </Text>
-                      <Text style={styles.optionDesc}>{opt.desc}</Text>
+                      <Text style={[styles.optionDesc, { color: activeColors.textSecondary }]}>{opt.desc}</Text>
                     </View>
                     {isSelected && (
-                      <Ionicons name="checkmark-circle" size={18} color="#A78BFA" />
+                      <Ionicons name="checkmark-circle" size={18} color={isDark ? '#A78BFA' : activeColors.primary} />
                     )}
                   </Pressable>
                 );
@@ -581,19 +649,22 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
           style={styles.modalOverlay}
           onPress={() => setAccountPickerIssue(null)}
         >
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[styles.modalContent, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
-              <Ionicons name="shield-outline" size={20} color="#A78BFA" />
-              <Text style={styles.modalTitle}>Select Account to Resolve</Text>
+              <Ionicons name="shield-outline" size={20} color={isDark ? '#A78BFA' : activeColors.primary} />
+              <Text style={[styles.modalTitle, { color: activeColors.textPrimary }]}>Select Account to Resolve</Text>
               <Pressable
                 onPress={() => setAccountPickerIssue(null)}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={18} color={colors.textSecondary} />
+                <Ionicons name="close" size={18} color={activeColors.textSecondary} />
               </Pressable>
             </View>
 
-            <Text style={styles.modalSubtitle}>
+            <Text style={[styles.modalSubtitle, { color: activeColors.textSecondary }]}>
               {accountPickerIssue?.title ?? 'Multiple credentials affected'}
             </Text>
 
@@ -607,21 +678,22 @@ export const SecurityCenterScreen: React.FC<SecurityCenterScreenProps> = ({
                     onPress={() => handlePickAccount(itemId)}
                     style={({ pressed }) => [
                       styles.accountPickerRow,
+                      !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                       pressed && styles.accountPickerRowPressed,
                     ]}
                   >
                     <View style={styles.accountIconCircle}>
-                      <Ionicons name="key" size={14} color="#C4B5FD" />
+                      <Ionicons name="key" size={14} color={isDark ? '#C4B5FD' : activeColors.primary} />
                     </View>
                     <View style={styles.accountInfoGroup}>
-                      <Text style={styles.accountTitle}>{title}</Text>
-                      <Text style={styles.accountSubtext}>
+                      <Text style={[styles.accountTitle, { color: activeColors.textPrimary }]}>{title}</Text>
+                      <Text style={[styles.accountSubtext, { color: activeColors.textSecondary }]}>
                         {accountPickerIssue.type === 'MISSING_2FA'
                           ? 'Setup 2FA Key'
                           : 'Update Password'}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+                    <Ionicons name="chevron-forward" size={16} color={activeColors.textSecondary} />
                   </Pressable>
                 );
               })}

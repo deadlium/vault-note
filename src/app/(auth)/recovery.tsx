@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../theme';
 import { validateRecoveryPhrase, recoveryPhraseToSeed } from '../../core/crypto/bip39';
 import { deriveKeyArgon2id } from '../../core/crypto/kdf';
 import { generateMasterEnclaveToken, bytesToHex } from '../../core/crypto/csprng';
@@ -38,6 +38,7 @@ interface RecoveryProps {
 }
 
 export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: RecoveryProps) {
+  const { colors: themeColors, isDark } = useTheme();
   const [phraseInput, setPhraseInput] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -101,7 +102,12 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        !isDark && { backgroundColor: themeColors.background },
+      ]}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -110,15 +116,33 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
         {/* Header */}
         <View style={styles.header}>
           {onCancel && (
-            <Pressable style={styles.backBtn} onPress={onCancel}>
-              <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
+            <Pressable
+              style={[
+                styles.backBtn,
+                !isDark && { backgroundColor: themeColors.surfaceElevated },
+              ]}
+              onPress={onCancel}
+            >
+              <Ionicons name="arrow-back" size={20} color={themeColors.textPrimary} />
             </Pressable>
           )}
-          <Text style={styles.headerTitle}>Restore from Backup</Text>
+          <Text
+            style={[
+              styles.headerTitle,
+              !isDark && { color: themeColors.textPrimary },
+            ]}
+          >
+            Restore from Backup
+          </Text>
           <View style={{ width: 36 }} />
         </View>
 
-        <Text style={styles.subtitle}>
+        <Text
+          style={[
+            styles.subtitle,
+            !isDark && { color: themeColors.textSecondary },
+          ]}
+        >
           Enter your 24-word emergency recovery phrase to decrypt and restore your vault onto this device.
         </Text>
 
@@ -132,27 +156,78 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
         {/* Phrase Input Box */}
         <View style={styles.inputGroup}>
           <View style={styles.labelRow}>
-            <Text style={styles.inputLabel}>EMERGENCY RECOVERY PHRASE</Text>
+            <Text
+              style={[
+                styles.inputLabel,
+                !isDark && { color: themeColors.textTertiary },
+              ]}
+            >
+              EMERGENCY RECOVERY PHRASE
+            </Text>
             <View style={styles.labelActionsRow}>
-              <Pressable onPress={handlePaste} style={styles.pasteButton}>
-                <Ionicons name="clipboard-outline" size={12} color={colors.primaryLight} style={{ marginRight: 3 }} />
-                <Text style={styles.pasteButtonText}>Paste</Text>
+              <Pressable
+                onPress={handlePaste}
+                style={[
+                  styles.pasteButton,
+                  !isDark && {
+                    backgroundColor: themeColors.surfaceElevated,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="clipboard-outline"
+                  size={12}
+                  color={isDark ? colors.primaryLight : themeColors.primary}
+                  style={{ marginRight: 3 }}
+                />
+                <Text
+                  style={[
+                    styles.pasteButtonText,
+                    !isDark && { color: themeColors.primary },
+                  ]}
+                >
+                  Paste
+                </Text>
               </Pressable>
-              <Text style={[styles.wordCount, isPhraseValid && styles.wordCountValid]}>
+              <Text
+                style={[
+                  styles.wordCount,
+                  !isDark && { color: themeColors.textTertiary },
+                  isPhraseValid && styles.wordCountValid,
+                ]}
+              >
                 {words.length} / 24 words
               </Text>
             </View>
           </View>
 
-          <View style={[styles.phraseBox, isPhraseValid && styles.phraseBoxValid]}>
+          <View
+            style={[
+              styles.phraseBox,
+              !isDark && {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+                shadowColor: '#0F172A',
+                shadowOpacity: 0.04,
+                shadowOffset: { width: 0, height: 2 },
+                shadowRadius: 6,
+                elevation: 1,
+              },
+              isPhraseValid && styles.phraseBoxValid,
+            ]}
+          >
             <TextInput
-              style={styles.phraseInput}
+              style={[
+                styles.phraseInput,
+                !isDark && { color: themeColors.textPrimary },
+              ]}
               multiline
               numberOfLines={4}
               value={phraseInput}
               onChangeText={setPhraseInput}
               placeholder="Paste or type your 24 words separated by spaces..."
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={isDark ? colors.textTertiary : themeColors.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -167,15 +242,33 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
 
         {/* New Device Master Password */}
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>NEW MASTER PASSWORD FOR THIS DEVICE</Text>
-          <View style={styles.inputWrapper}>
+          <Text
+            style={[
+              styles.inputLabel,
+              !isDark && { color: themeColors.textTertiary },
+            ]}
+          >
+            NEW MASTER PASSWORD FOR THIS DEVICE
+          </Text>
+          <View
+            style={[
+              styles.inputWrapper,
+              !isDark && {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+              },
+            ]}
+          >
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                !isDark && { color: themeColors.textPrimary },
+              ]}
               secureTextEntry={!showPassword}
               value={newPassword}
               onChangeText={setNewPassword}
               placeholder="Create new master passphrase..."
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={isDark ? colors.textTertiary : themeColors.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -187,7 +280,7 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                 size={18}
-                color={colors.textSecondary}
+                color={themeColors.textSecondary}
               />
             </Pressable>
           </View>
@@ -195,15 +288,33 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>CONFIRM NEW PASSWORD</Text>
-          <View style={styles.inputWrapper}>
+          <Text
+            style={[
+              styles.inputLabel,
+              !isDark && { color: themeColors.textTertiary },
+            ]}
+          >
+            CONFIRM NEW PASSWORD
+          </Text>
+          <View
+            style={[
+              styles.inputWrapper,
+              !isDark && {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.border,
+              },
+            ]}
+          >
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                !isDark && { color: themeColors.textPrimary },
+              ]}
               secureTextEntry={!showPassword}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               placeholder="Re-enter password..."
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={isDark ? colors.textTertiary : themeColors.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -212,16 +323,31 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
 
         {/* Restore Button */}
         <Pressable
-          style={[styles.primaryActionBtn, !canRestore && styles.primaryActionBtnDisabled]}
+          style={[
+            styles.primaryActionBtn,
+            !canRestore && styles.primaryActionBtnDisabled,
+            !isDark && { backgroundColor: '#4F46E5' },
+          ]}
           disabled={!canRestore || isLoading}
           onPress={handleRestore}
         >
           {isLoading ? (
-            <ActivityIndicator color="#0D0E11" />
+            <ActivityIndicator color={isDark ? '#0D0E11' : '#FFFFFF'} />
           ) : (
             <>
-              <Text style={styles.primaryActionBtnText}>Restore Vault</Text>
-              <Ionicons name="refresh" size={18} color="#0D0E11" />
+              <Text
+                style={[
+                  styles.primaryActionBtnText,
+                  !isDark && { color: '#FFFFFF' },
+                ]}
+              >
+                Restore Vault
+              </Text>
+              <Ionicons
+                name="refresh"
+                size={18}
+                color={isDark ? '#0D0E11' : '#FFFFFF'}
+              />
             </>
           )}
         </Pressable>

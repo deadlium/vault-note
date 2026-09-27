@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { useTOTP } from '../hooks/useTOTP';
 import { CountdownRing } from './CountdownRing';
 import { useClipboardManager } from '../../../core/clipboard';
@@ -57,6 +57,8 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
   const effectiveDigits = (record?.digits || directDigits || 6) as 6 | 8;
   const effectivePeriod = record?.period || directPeriod || 30;
 
+  const { isDark, colors: activeColors } = useTheme();
+
   const {
     code,
     formattedCode,
@@ -88,22 +90,22 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
     if (!onOpenSettings) return null;
     return (
       <View style={styles.cardContainer}>
-        <View style={styles.setupCard}>
-          <View style={styles.setupIconCircle}>
-            <Ionicons name="shield-outline" size={24} color={colors.primaryLight} />
+        <View style={[styles.setupCard, !isDark && { backgroundColor: activeColors.surface, borderColor: activeColors.border }]}>
+          <View style={[styles.setupIconCircle, !isDark && { backgroundColor: 'rgba(79, 70, 229, 0.10)' }]}>
+            <Ionicons name="shield-outline" size={24} color={!isDark ? activeColors.primary : colors.primaryLight} />
           </View>
           <View style={styles.setupInfo}>
-            <Text style={styles.setupTitle}>Two-Factor Authentication</Text>
-            <Text style={styles.setupSubtitle}>Protect this login with time-based OTP codes</Text>
+            <Text style={[styles.setupTitle, !isDark && { color: activeColors.textPrimary }]}>Two-Factor Authentication</Text>
+            <Text style={[styles.setupSubtitle, !isDark && { color: activeColors.textSecondary }]}>Protect this login with time-based OTP codes</Text>
           </View>
           <Pressable
-            style={({ pressed }) => [styles.setupButton, pressed && styles.buttonPressed]}
+            style={({ pressed }) => [styles.setupButton, !isDark && { backgroundColor: activeColors.primary }, pressed && styles.buttonPressed]}
             onPress={onOpenSettings}
             accessibilityRole="button"
             accessibilityLabel="Set up Two-Factor Authentication"
           >
-            <Ionicons name="add" size={16} color={colors.textPrimary} style={{ marginRight: 4 }} />
-            <Text style={styles.setupButtonText}>Setup</Text>
+            <Ionicons name="add" size={16} color={!isDark ? '#FFFFFF' : colors.textPrimary} style={{ marginRight: 4 }} />
+            <Text style={[styles.setupButtonText, !isDark && { color: '#FFFFFF' }]}>Setup</Text>
           </Pressable>
         </View>
       </View>
@@ -111,24 +113,32 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
   }
 
   const codeColor = isExpiringSoon
-    ? colors.crimson
+    ? activeColors.crimson
     : remainingSeconds <= 7
-    ? colors.gold
-    : colors.textPrimary;
+    ? (isDark ? colors.gold : '#D97706')
+    : activeColors.textPrimary;
 
   return (
     <View style={styles.cardContainer}>
       <View
         style={[
           styles.card,
-          isExpiringSoon && styles.cardExpiring,
+          !isDark && {
+            backgroundColor: activeColors.surface,
+            borderColor: activeColors.border,
+            shadowColor: '#0F172A',
+            shadowOpacity: 0.04,
+            shadowRadius: 3,
+            elevation: 2,
+          },
+          isExpiringSoon && (isDark ? styles.cardExpiring : styles.cardExpiringLight),
         ]}
       >
         {/* Card Header Row */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <View style={[styles.statusDot, isExpiringSoon && styles.statusDotExpiring]} />
-            <Text style={styles.headerTitle}>TWO-FACTOR AUTHENTICATION</Text>
+            <Text style={[styles.headerTitle, !isDark && { color: activeColors.textSecondary }]}>TWO-FACTOR AUTHENTICATION</Text>
           </View>
 
           <View style={styles.headerRight}>
@@ -142,13 +152,14 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
                 onPress={onOpenSettings}
                 style={({ pressed }) => [
                   styles.settingsButton,
+                  !isDark && { backgroundColor: activeColors.surfaceSubtle },
                   pressed && styles.buttonPressed,
                 ]}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="TOTP Settings"
               >
-                <Feather name="settings" size={14} color={colors.textSecondary} />
+                <Feather name="settings" size={14} color={activeColors.textSecondary} />
               </Pressable>
             )}
           </View>
@@ -157,25 +168,25 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
         {/* Account and Parameters Meta Row */}
         <View style={styles.metaRow}>
           {effectiveAccount.length > 0 && (
-            <Text style={styles.accountText} numberOfLines={1}>
+            <Text style={[styles.accountText, !isDark && { color: activeColors.textSecondary }]} numberOfLines={1}>
               {effectiveAccount}
             </Text>
           )}
 
           <View style={styles.specChips}>
             {effectiveAlgorithm !== 'SHA1' && (
-              <View style={styles.specChip}>
-                <Text style={styles.specChipText}>{effectiveAlgorithm}</Text>
+              <View style={[styles.specChip, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+                <Text style={[styles.specChipText, !isDark && { color: activeColors.textTertiary }]}>{effectiveAlgorithm}</Text>
               </View>
             )}
             {effectiveDigits !== 6 && (
-              <View style={styles.specChip}>
-                <Text style={styles.specChipText}>{effectiveDigits} DIGITS</Text>
+              <View style={[styles.specChip, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+                <Text style={[styles.specChipText, !isDark && { color: activeColors.textTertiary }]}>{effectiveDigits} DIGITS</Text>
               </View>
             )}
             {effectivePeriod !== 30 && (
-              <View style={styles.specChip}>
-                <Text style={styles.specChipText}>{effectivePeriod}s</Text>
+              <View style={[styles.specChip, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+                <Text style={[styles.specChipText, !isDark && { color: activeColors.textTertiary }]}>{effectivePeriod}s</Text>
               </View>
             )}
           </View>
@@ -186,7 +197,11 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
           onPress={handleCopy}
           style={({ pressed }) => [
             styles.codeDisplayContainer,
-            pressed && styles.codeDisplayPressed,
+            !isDark && {
+              backgroundColor: activeColors.surfaceSubtle,
+              borderColor: activeColors.border,
+            },
+            pressed && (isDark ? styles.codeDisplayPressed : { backgroundColor: activeColors.surfaceActive }),
           ]}
           accessibilityRole="button"
           accessibilityLabel={`Copy OTP Code ${formattedCode}`}
@@ -225,6 +240,10 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
             onPress={handleCopy}
             style={({ pressed }) => [
               styles.copyButton,
+              !isDark && {
+                backgroundColor: activeColors.surface,
+                borderColor: activeColors.border,
+              },
               copied && styles.copyButtonActive,
               pressed && styles.buttonPressed,
             ]}
@@ -234,15 +253,15 @@ export const TOTPCard: React.FC<TOTPCardProps> = ({
             <Ionicons
               name={copied ? 'checkmark-circle' : 'copy-outline'}
               size={15}
-              color={copied ? colors.emerald : colors.textPrimary}
+              color={copied ? colors.emerald : activeColors.textPrimary}
               style={{ marginRight: 6 }}
             />
-            <Text style={[styles.copyButtonText, copied && styles.copyButtonTextActive]}>
+            <Text style={[styles.copyButtonText, !isDark && { color: activeColors.textPrimary }, copied && styles.copyButtonTextActive]}>
               {copied ? 'Copied to Clipboard' : 'Copy OTP'}
             </Text>
           </Pressable>
 
-          <Text style={styles.footerCadenceText}>
+          <Text style={[styles.footerCadenceText, !isDark && { color: activeColors.textTertiary }]}>
             Rotates in <Text style={{ color: codeColor, fontWeight: '700' }}>{remainingSeconds}s</Text>
           </Text>
         </View>
@@ -265,6 +284,10 @@ const styles = StyleSheet.create({
   cardExpiring: {
     borderColor: 'rgba(239, 68, 68, 0.4)',
     backgroundColor: '#1A1417',
+  },
+  cardExpiringLight: {
+    borderColor: '#E11D48',
+    backgroundColor: '#FFF1F2',
   },
   headerRow: {
     flexDirection: 'row',

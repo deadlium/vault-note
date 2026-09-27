@@ -15,6 +15,7 @@ import { SearchScreen } from './features/search/components/SearchScreen';
 import { FavoritesScreen } from './features/favorites/components/FavoritesScreen';
 import { SecurityCenterScreen } from './features/security-center/components/SecurityCenterScreen';
 import { BackupScreen } from './features/backup/components/BackupScreen';
+import { SettingsScreen } from './features/settings';
 import { VaultSessionManager, useSessionStore } from './core/session';
 import { useAutoLock } from './hooks/useAutoLock';
 
@@ -207,6 +208,20 @@ export default function App() {
                     setIsEditingItem(false);
                     setSelectedItemId(item.id);
                   }}
+                />
+              </View>
+
+              <View
+                style={[
+                  styles.tabScreenWrapper,
+                  { display: activeTab === 'settings' ? 'flex' : 'none' },
+                ]}
+              >
+                <SettingsScreen
+                  onOpenSecurity={() => setIsSecurityOpen(true)}
+                  onOpenBackup={() => setIsBackupOpen(true)}
+                  onOpenFavorites={() => setIsFavoritesOpen(true)}
+                  onLock={() => VaultSessionManager.lock()}
                 />
               </View>
             </VaultTabLayout>

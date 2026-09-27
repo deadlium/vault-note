@@ -7,7 +7,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../../../theme';
+import { colors, radius, spacing, typography, useTheme } from '../../../theme';
 import { AuditIssue, AuditSeverity } from '../types';
 
 export interface SecurityAuditIssueCardProps {
@@ -21,33 +21,35 @@ export const SecurityAuditIssueCard: React.FC<SecurityAuditIssueCardProps> = ({
   onResolve,
   onSelectItemId,
 }) => {
+  const { isDark, colors: activeColors } = useTheme();
+
   const getSeverityStyle = (severity: AuditSeverity) => {
     switch (severity) {
       case 'critical':
         return {
-          accentColor: colors.crimson,
-          badgeBg: 'rgba(239, 68, 68, 0.15)',
-          badgeText: '#FCA5A5',
-          badgeBorder: 'rgba(239, 68, 68, 0.35)',
+          accentColor: activeColors.crimson,
+          badgeBg: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FFF1F2',
+          badgeText: isDark ? '#FCA5A5' : '#E11D48',
+          badgeBorder: isDark ? 'rgba(239, 68, 68, 0.35)' : '#FECDD3',
           iconName: 'alert-circle' as const,
           label: 'CRITICAL',
         };
       case 'warning':
         return {
-          accentColor: colors.amber,
-          badgeBg: 'rgba(245, 158, 11, 0.15)',
-          badgeText: '#FCD34D',
-          badgeBorder: 'rgba(245, 158, 11, 0.35)',
+          accentColor: isDark ? colors.amber : '#D97706',
+          badgeBg: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FFFBEB',
+          badgeText: isDark ? '#FCD34D' : '#D97706',
+          badgeBorder: isDark ? 'rgba(245, 158, 11, 0.35)' : '#FDE68A',
           iconName: 'warning' as const,
           label: 'WARNING',
         };
       case 'info':
       default:
         return {
-          accentColor: '#818CF8',
-          badgeBg: 'rgba(129, 140, 248, 0.15)',
-          badgeText: '#C7D2FE',
-          badgeBorder: 'rgba(129, 140, 248, 0.35)',
+          accentColor: !isDark ? activeColors.primary : '#818CF8',
+          badgeBg: isDark ? 'rgba(129, 140, 248, 0.15)' : '#EEF2FF',
+          badgeText: isDark ? '#C7D2FE' : activeColors.primary,
+          badgeBorder: isDark ? 'rgba(129, 140, 248, 0.35)' : '#C7D2FE',
           iconName: 'information-circle' as const,
           label: 'RECOMMENDATION',
         };
@@ -77,6 +79,14 @@ export const SecurityAuditIssueCard: React.FC<SecurityAuditIssueCardProps> = ({
     <View
       style={[
         styles.card,
+        !isDark && {
+          backgroundColor: activeColors.surface,
+          borderColor: activeColors.border,
+          shadowColor: '#0F172A',
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+          elevation: 2,
+        },
         {
           borderLeftColor: styleConfig.accentColor,
         },
@@ -107,20 +117,20 @@ export const SecurityAuditIssueCard: React.FC<SecurityAuditIssueCardProps> = ({
         </View>
 
         {issue.metric && (
-          <View style={styles.metricBadge}>
-            <Text style={styles.metricText}>{issue.metric}</Text>
+          <View style={[styles.metricBadge, !isDark && { backgroundColor: activeColors.surfaceSubtle }]}>
+            <Text style={[styles.metricText, !isDark && { color: activeColors.textSecondary }]}>{issue.metric}</Text>
           </View>
         )}
       </View>
 
       {/* Title & Description */}
-      <Text style={styles.title}>{issue.title}</Text>
-      <Text style={styles.description}>{issue.description}</Text>
+      <Text style={[styles.title, !isDark && { color: activeColors.textPrimary }]}>{issue.title}</Text>
+      <Text style={[styles.description, !isDark && { color: activeColors.textSecondary }]}>{issue.description}</Text>
 
       {/* Affected Items Chips */}
       {issue.affectedItemTitles.length > 0 && (
         <View style={styles.affectedSection}>
-          <Text style={styles.affectedLabel}>Affected Accounts:</Text>
+          <Text style={[styles.affectedLabel, !isDark && { color: activeColors.textTertiary }]}>Affected Accounts:</Text>
           <View style={styles.chipRow}>
             {issue.affectedItemTitles.slice(0, 4).map((title, idx) => {
               const itemId = issue.affectedItemIds[idx];
@@ -130,19 +140,20 @@ export const SecurityAuditIssueCard: React.FC<SecurityAuditIssueCardProps> = ({
                   onPress={() => itemId && onSelectItemId?.(itemId)}
                   style={({ pressed }) => [
                     styles.itemChip,
+                    !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border },
                     pressed && styles.itemChipPressed,
                   ]}
                 >
-                  <Ionicons name="key-outline" size={11} color="#C4B5FD" />
-                  <Text style={styles.chipText} numberOfLines={1}>
+                  <Ionicons name="key-outline" size={11} color={!isDark ? activeColors.primary : '#C4B5FD'} />
+                  <Text style={[styles.chipText, !isDark && { color: activeColors.textPrimary }]} numberOfLines={1}>
                     {title}
                   </Text>
                 </Pressable>
               );
             })}
             {issue.affectedItemTitles.length > 4 && (
-              <View style={styles.moreChip}>
-                <Text style={styles.moreChipText}>
+              <View style={[styles.moreChip, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                <Text style={[styles.moreChipText, !isDark && { color: activeColors.textSecondary }]}>
                   +{issue.affectedItemTitles.length - 4} more
                 </Text>
               </View>
@@ -158,6 +169,7 @@ export const SecurityAuditIssueCard: React.FC<SecurityAuditIssueCardProps> = ({
             onPress={() => onResolve(issue)}
             style={({ pressed }) => [
               styles.actionButton,
+              !isDark && { backgroundColor: styleConfig.badgeBg },
               { borderColor: styleConfig.badgeBorder },
               pressed && styles.actionButtonPressed,
             ]}
