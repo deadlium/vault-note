@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.vaultnote.app",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Allow VaultNote to use Face ID to authenticate and unlock your encrypted private vault."
+        "NSFaceIDUsageDescription": "Allow VaultNote to use Face ID to authenticate and unlock your encrypted private vault.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -21,7 +22,11 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,6 +40,11 @@
           "faceIDPermission": "Allow VaultNote to use Face ID to authenticate and unlock your encrypted private vault."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e3a7ea35-1eba-496c-b163-5ebcb5507ca4"
+      }
+    }
   }
 }
