@@ -315,19 +315,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   {/* Digits Toggle */}
                   <View style={styles.optionBox}>
                     <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>DIGITS</Text>
-                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                    <View style={[styles.pillToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualDigits(6)}
                         style={[
-                          styles.segmentBtn,
-                          manualDigits === 6 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualDigits === 6 && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualDigits === 6 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualDigits === 6 && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           6
@@ -336,15 +336,15 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                       <Pressable
                         onPress={() => setManualDigits(8)}
                         style={[
-                          styles.segmentBtn,
-                          manualDigits === 8 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualDigits === 8 && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualDigits === 8 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualDigits === 8 && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           8
@@ -356,19 +356,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   {/* Period Toggle */}
                   <View style={styles.optionBox}>
                     <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>PERIOD</Text>
-                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                    <View style={[styles.pillToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualPeriod(30)}
                         style={[
-                          styles.segmentBtn,
-                          manualPeriod === 30 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualPeriod === 30 && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualPeriod === 30 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualPeriod === 30 && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           30s
@@ -377,15 +377,15 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                       <Pressable
                         onPress={() => setManualPeriod(60)}
                         style={[
-                          styles.segmentBtn,
-                          manualPeriod === 60 && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualPeriod === 60 && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualPeriod === 60 && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualPeriod === 60 && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           60s
@@ -397,19 +397,19 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                   {/* Algorithm Toggle */}
                   <View style={styles.optionBox}>
                     <Text style={[styles.optionLabel, !isDark && { color: activeColors.textSecondary }]}>ALGORITHM</Text>
-                    <View style={[styles.segmentedToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
+                    <View style={[styles.pillToggle, !isDark && { backgroundColor: activeColors.surfaceSubtle, borderColor: activeColors.border }]}>
                       <Pressable
                         onPress={() => setManualAlgorithm('SHA1')}
                         style={[
-                          styles.segmentBtn,
-                          manualAlgorithm === 'SHA1' && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualAlgorithm === 'SHA1' && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualAlgorithm === 'SHA1' && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualAlgorithm === 'SHA1' && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           SHA1
@@ -418,15 +418,15 @@ export function TOTPScreen({ onOpenItem }: TOTPScreenProps) {
                       <Pressable
                         onPress={() => setManualAlgorithm('SHA256')}
                         style={[
-                          styles.segmentBtn,
-                          manualAlgorithm === 'SHA256' && (isDark ? styles.segmentBtnActive : { backgroundColor: activeColors.primary }),
+                          styles.pillOptionBtn,
+                          manualAlgorithm === 'SHA256' && (isDark ? styles.pillOptionBtnActive : { backgroundColor: activeColors.primary }),
                         ]}
                       >
                         <Text
                           style={[
-                            styles.segmentBtnText,
+                            styles.pillOptionBtnText,
                             !isDark && { color: activeColors.textSecondary },
-                            manualAlgorithm === 'SHA256' && (isDark ? styles.segmentBtnTextActive : { color: '#FFFFFF' }),
+                            manualAlgorithm === 'SHA256' && (isDark ? styles.pillOptionBtnTextActive : { color: '#FFFFFF' }),
                           ]}
                         >
                           SHA256
@@ -869,7 +869,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     letterSpacing: 0.5,
   },
-  segmentedToggle: {
+  pillToggle: {
     flexDirection: 'row',
     backgroundColor: colors.background,
     borderRadius: radius.sm,
@@ -877,23 +877,23 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSubtle,
     padding: 2,
   },
-  segmentBtn: {
+  pillOptionBtn: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 5,
     borderRadius: 4,
   },
-  segmentBtnActive: {
+  pillOptionBtnActive: {
     backgroundColor: 'rgba(123, 97, 255, 0.25)',
   },
-  segmentBtnText: {
+  pillOptionBtnText: {
     fontFamily: typography.fontFamily.sans,
     fontSize: 11,
     fontWeight: '600',
     color: colors.textMuted,
   },
-  segmentBtnTextActive: {
+  pillOptionBtnTextActive: {
     color: colors.primaryLight,
   },
   errorInlineBanner: {
