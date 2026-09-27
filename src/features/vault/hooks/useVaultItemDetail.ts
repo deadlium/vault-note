@@ -4,29 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { VaultItem, AnyVaultPayload, LoginPayload } from '../../../types/vault';
+import { VaultItem, AnyVaultPayload } from '../../../types/vault';
 import { VaultRepository } from '../repository/vaultRepository';
 import { useVaultStore } from '../store/useVaultStore';
 import { VaultSessionManager } from '../../../core/session';
-
-// Demo item fallback for development & interactive prototypes
-const DEMO_DETAIL_ITEM: VaultItem<LoginPayload> = {
-  id: 'demo-google',
-  type: 'LOGIN',
-  title: 'Google',
-  payload: {
-    username: 'alex.turner@gmail.com',
-    password: 'CorrectHorseBatteryStaple!2026',
-    websiteUrl: 'https://accounts.google.com',
-    totpSecret: 'JBSWY3DPEHPK3PXP',
-    notes: 'Recovery phone: +1 (555) 019-2834.\nStore fallback 8-digit emergency backup codes in physical biometric safe drawer.',
-  },
-  tags: ['personal', 'google', 'primary-email'],
-  isFavorite: true,
-  isProtected: true,
-  createdAt: Date.now() - 3600 * 1000 * 4,
-  updatedAt: Date.now() - 3600 * 1000 * 4,
-};
 
 export function useVaultItemDetail(itemId?: string) {
   const storeItem = useVaultStore((s) => (itemId ? s.getItemById(itemId) : undefined));
@@ -64,21 +45,11 @@ export function useVaultItemDetail(itemId?: string) {
         }
       }
 
-      // Check if itemId matches demo pattern or fallback
-      if (itemId === 'demo-google' || itemId === 'google') {
-        setItem(DEMO_DETAIL_ITEM as VaultItem<AnyVaultPayload>);
-      } else {
-        // Return a mock item derived from ID if not in DB for seamless UX
-        setItem({
-          ...DEMO_DETAIL_ITEM,
-          id: itemId,
-          title: itemId.replace('demo-', '').toUpperCase(),
-        } as VaultItem<AnyVaultPayload>);
-      }
+      setItem(null);
+      setError('Vault item not found');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to decrypt vault item');
-      // Fallback to demo detail item
-      setItem(DEMO_DETAIL_ITEM as VaultItem<AnyVaultPayload>);
+      setItem(null);
     } finally {
       setIsLoading(false);
     }

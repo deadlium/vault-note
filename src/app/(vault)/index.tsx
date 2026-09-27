@@ -340,12 +340,6 @@ export default function VaultHomeScreen({
                 onAddItem();
               }
             }}
-            secondaryActionLabel={
-              allVaultItems.length === 0 ? 'Load Sample Credentials' : undefined
-            }
-            onSecondaryActionPress={() => {
-              useVaultStore.getState().resetToDemo();
-            }}
           />
         ) : (
           <>

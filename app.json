@@ -1,15 +1,21 @@
 {
   "expo": {
-    "name": "vault-note",
+    "name": "VaultNote",
     "slug": "vault-note",
+    "scheme": "vaultnote",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vaultnote.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Allow VaultNote to use Face ID to authenticate and unlock your encrypted private vault."
+      }
     },
     "android": {
+      "package": "com.vaultnote.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

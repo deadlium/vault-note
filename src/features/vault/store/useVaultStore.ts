@@ -182,7 +182,7 @@ export interface VaultStoreState {
 }
 
 export const useVaultStore = create<VaultStoreState>((set, get) => ({
-  items: INITIAL_DEMO_VAULT_ITEMS,
+  items: [],
   isLoading: false,
   error: null,
 
@@ -270,19 +270,11 @@ export const useVaultStore = create<VaultStoreState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const records = await VaultRepository.getAllItems(effectiveKey);
-      if (records && records.length > 0) {
-        set((state) => {
-          // Merge SQLite records with existing demo items so demo entries stay available
-          const dbIds = new Set(records.map((r) => r.id));
-          const remainingDemo = state.items.filter((item) => !dbIds.has(item.id));
-          return {
-            items: [...records, ...remainingDemo],
-            isLoading: false,
-          };
-        });
-        return;
-      }
-      set({ isLoading: false });
+      set({
+        items: records ?? [],
+        isLoading: false,
+      });
+      return;
     } catch (err: unknown) {
       set({
         isLoading: false,

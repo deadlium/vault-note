@@ -39,7 +39,7 @@ export interface VaultItemDetailProps {
 }
 
 export default function VaultItemDetailScreen({
-  id = 'demo-google',
+  id,
   onBack,
   onEdit,
 }: VaultItemDetailProps) {
@@ -48,10 +48,45 @@ export default function VaultItemDetailScreen({
   const { isActive, remainingSeconds, totalSeconds, label, copySecret, copyPlain } =
     useClipboardManager();
 
-  if (isLoading || !item) {
+  if (isLoading) {
     return (
       <SafeAreaView style={[styles.loadingContainer, !isDark && { backgroundColor: activeColors.background }]}>
         <ActivityIndicator size="large" color={activeColors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!item) {
+    return (
+      <SafeAreaView style={[styles.loadingContainer, !isDark && { backgroundColor: activeColors.background }]}>
+        <View style={styles.notFoundContent}>
+          <View
+            style={[
+              styles.notFoundIconContainer,
+              { backgroundColor: isDark ? activeColors.surface : '#F1F5F9' },
+            ]}
+          >
+            <Ionicons name="document-text-outline" size={44} color={activeColors.textSecondary} />
+          </View>
+          <Text style={[styles.notFoundTitle, { color: activeColors.textPrimary }]}>Record Not Found</Text>
+          <Text style={[styles.notFoundSubtitle, { color: activeColors.textSecondary }]}>
+            This vault record does not exist or has been removed.
+          </Text>
+          {onBack && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.notFoundBackButton,
+                { backgroundColor: activeColors.primary, opacity: pressed ? 0.85 : 1 },
+              ]}
+              onPress={onBack}
+              accessibilityRole="button"
+              accessibilityLabel="Return to Vault"
+            >
+              <Ionicons name="arrow-back" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.notFoundBackButtonText}>Return to Vault</Text>
+            </Pressable>
+          )}
+        </View>
       </SafeAreaView>
     );
   }
@@ -209,7 +244,7 @@ export default function VaultItemDetailScreen({
               iconType={
                 ((item as unknown as Record<string, unknown>).icon as string) ||
                 ((item.payload as unknown as Record<string, unknown>)?.icon as string) ||
-                item.id.replace('demo-', '')
+                item.title
               }
               category={item.type}
               title={item.title}
@@ -1121,5 +1156,45 @@ const styles = StyleSheet.create({
     ...typography.body2,
     color: colors.textPrimary,
     lineHeight: 20,
+  },
+  notFoundContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  notFoundIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  notFoundTitle: {
+    ...typography.subheading,
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  notFoundSubtitle: {
+    ...typography.body2,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    maxWidth: 280,
+    lineHeight: 20,
+  },
+  notFoundBackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: radius.md,
+  },
+  notFoundBackButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 15,
   },
 });
