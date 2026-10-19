@@ -18,6 +18,8 @@ import {
 import { runMigrations } from '../../../core/database/migrations';
 import { setMetadata } from '../../../core/database/repository';
 import { evaluatePasswordStrength } from '../components/PasswordStrengthBar';
+import { VaultSessionManager } from '../../../core/session';
+import { useVaultStore } from '../../vault/store/useVaultStore';
 
 export type SetupStep =
   | 'welcome'           // Screen from first_time_setup.png
@@ -139,7 +141,7 @@ export function useMasterPasswordSetup() {
 
       // 4. Store tokens in hardware Secure Enclave
       await storeMasterEnclaveToken(enclaveToken);
-      await storeBiometricSecret(enclaveToken);
+      await storeBiometricSecret(bytesToHex(derivation.key));
       await setEnclaveItem(ENCLAVE_KEYS.PASS_SALT, derivation.saltHex);
       await setVaultInitialized(true);
 
@@ -150,6 +152,10 @@ export function useMasterPasswordSetup() {
       await setMetadata('vault_created_at', Date.now().toString());
       await setMetadata('vault_kdf_algo', derivation.algorithm);
       await setMetadata('vault_kdf_params', JSON.stringify(derivation.params));
+
+      // 7. Initialize active session with derived key
+      VaultSessionManager.unlock(derivation.key, enclaveToken);
+      await useVaultStore.getState().loadItems(derivation.key);
 
       setIsLoading(false);
       setStep('complete');
