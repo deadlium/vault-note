@@ -1,6 +1,6 @@
 {
   "name": "vault-note",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Offline-first, zero-knowledge personal credentials and encrypted note vault for iOS & Android.",
   "author": "VaultNote Contributors",
   "license": "MIT",

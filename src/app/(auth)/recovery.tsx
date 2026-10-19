@@ -29,6 +29,8 @@ import {
 } from '../../core/storage/enclave';
 import { runMigrations } from '../../core/database/migrations';
 import { setMetadata } from '../../core/database/repository';
+import { VaultSessionManager } from '../../core/session';
+import { useVaultStore } from '../../features/vault/store/useVaultStore';
 import { PasswordStrengthBar, evaluatePasswordStrength } from '../../features/authentication/components/PasswordStrengthBar';
 import { getClipboardText } from '../../core/clipboard';
 
@@ -82,7 +84,7 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
 
       // 4. Update Secure Enclave
       await storeMasterEnclaveToken(enclaveToken);
-      await storeBiometricSecret(enclaveToken);
+      await storeBiometricSecret(bytesToHex(derivation.key));
       await setEnclaveItem(ENCLAVE_KEYS.PASS_SALT, derivation.saltHex);
       await setVaultInitialized(true);
 
@@ -92,6 +94,10 @@ export default function VaultRecoveryScreen({ onCancel, onRestoreComplete }: Rec
       // 6. Record metadata
       await setMetadata('vault_restored_at', Date.now().toString());
       await setMetadata('vault_kdf_algo', derivation.algorithm);
+
+      // 7. Initialize active session with derived key
+      VaultSessionManager.unlock(derivation.key, enclaveToken);
+      await useVaultStore.getState().loadItems(derivation.key);
 
       setIsLoading(false);
       onRestoreComplete?.();

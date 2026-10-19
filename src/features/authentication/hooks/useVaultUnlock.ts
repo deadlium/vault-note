@@ -15,10 +15,12 @@ import {
 import {
   getMasterEnclaveToken,
   storeBiometricSecret,
+  getBiometricSecret,
   getEnclaveItem,
   ENCLAVE_KEYS,
 } from '../../../core/storage/enclave';
 import { deriveKeyArgon2id, deriveKeyEncryptionKey } from '../../../core/crypto/kdf';
+import { bytesToHex, hexToBytes } from '../../../core/crypto/csprng';
 import { VaultSessionManager } from '../../../core/session';
 import { useVaultStore } from '../../vault/store/useVaultStore';
 
@@ -92,19 +94,37 @@ export function useVaultUnlock(options?: UseVaultUnlockOptions) {
       });
 
       if (result.success) {
-        // Retrieve master token without triggering extra biometric prompts
-        const masterToken = await getMasterEnclaveToken();
+        // Retrieve master token and stored biometric secret key
+        const [masterToken, bioSecret] = await Promise.all([
+          getMasterEnclaveToken(),
+          getBiometricSecret(),
+        ]);
 
-        if (masterToken) {
-          // Re-arm biometric secret cleanly without requiring authentication flag
-          await storeBiometricSecret(masterToken).catch(() => {});
+        let masterKey: Uint8Array | null = null;
+        if (bioSecret) {
+          try {
+            masterKey = hexToBytes(bioSecret);
+          } catch {
+            masterKey = null;
+          }
         }
 
-        setIsUnlocked(true);
+        if (masterKey) {
+          VaultSessionManager.unlock(masterKey, masterToken ?? undefined);
+          await useVaultStore.getState().loadItems(masterKey);
+          setIsUnlocked(true);
+          setIsAuthenticating(false);
+          isAuthenticatingRef.current = false;
+          optionsRef.current?.onUnlockSuccess?.();
+          return true;
+        }
+
+        // Biometric secret not found: fallback to password
+        setUsePasswordFallback(true);
+        setError('Master password required to unlock vault.');
         setIsAuthenticating(false);
         isAuthenticatingRef.current = false;
-        optionsRef.current?.onUnlockSuccess?.();
-        return true;
+        return false;
       }
 
       if (result.error) {
@@ -162,10 +182,8 @@ export function useVaultUnlock(options?: UseVaultUnlockOptions) {
       // 2. Retrieve master enclave token
       const masterToken = await getMasterEnclaveToken();
 
-      if (masterToken) {
-        // Re-arm biometric secret in case it was purged
-        await storeBiometricSecret(masterToken);
-      }
+      // Store derived key for biometric hardware unlock
+      await storeBiometricSecret(bytesToHex(derivedKey)).catch(() => {});
 
       // 3. Cache derived key in active session and reload items from SQLite
       VaultSessionManager.unlock(derivedKey, masterToken ?? undefined);
