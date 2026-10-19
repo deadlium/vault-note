@@ -4,6 +4,7 @@
  */
 
 import { isVaultInitialized, getEnclaveAdapter } from '../storage/enclave';
+import { runMigrations } from '../database/migrations';
 import { useSessionStore } from './useSessionStore';
 import {
   VaultSessionStatus,
@@ -18,6 +19,13 @@ export class VaultSessionManager {
   static async initializeSession(): Promise<VaultSessionStatus> {
     try {
       const initialized = await isVaultInitialized();
+      if (initialized) {
+        try {
+          await runMigrations();
+        } catch {
+          // Schema verify non-blocking
+        }
+      }
       const initialStatus: VaultSessionStatus = initialized ? 'LOCKED' : 'UNINITIALIZED';
       useSessionStore.getState().setStatus(initialStatus);
 

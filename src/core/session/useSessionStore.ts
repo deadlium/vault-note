@@ -73,13 +73,13 @@ export const useSessionStore = create<VaultSessionState>((set, get) => ({
   },
 
   unlock: (masterKey?: Uint8Array, sessionToken?: string) => {
-    set({
+    set((state) => ({
       status: 'UNLOCKED',
-      masterKey: masterKey ?? null,
-      sessionToken: sessionToken ?? null,
+      masterKey: masterKey !== undefined ? masterKey : state.masterKey,
+      sessionToken: sessionToken !== undefined ? sessionToken : state.sessionToken,
       lastActiveTimestamp: Date.now(),
       lastBackgroundTimestamp: null,
-    });
+    }));
   },
 
   resetSession: () => {

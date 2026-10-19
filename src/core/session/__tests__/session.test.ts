@@ -48,6 +48,19 @@ describe('VaultSessionManager Finite State Machine', () => {
     assert.deepStrictEqual(VaultSessionManager.getMasterKey(), mockKey);
   });
 
+  it('Preserves existing master key and session token when unlock is invoked without arguments', () => {
+    const mockKey = new Uint8Array([10, 20, 30, 40]);
+    VaultSessionManager.unlock(mockKey, 'token_abc');
+    assert.deepStrictEqual(VaultSessionManager.getMasterKey(), mockKey);
+    assert.strictEqual(VaultSessionManager.getSessionToken(), 'token_abc');
+
+    // Calling unlock with no arguments must preserve active key
+    VaultSessionManager.unlock();
+    assert.strictEqual(VaultSessionManager.getStatus(), 'UNLOCKED');
+    assert.deepStrictEqual(VaultSessionManager.getMasterKey(), mockKey);
+    assert.strictEqual(VaultSessionManager.getSessionToken(), 'token_abc');
+  });
+
   it('Cryptographic Zeroization: Overwrites master key buffer in memory on lock', () => {
     const secretBuffer = new Uint8Array([42, 42, 42, 42, 42]);
     VaultSessionManager.unlock(secretBuffer, 'active_token');
